@@ -1,0 +1,29 @@
+
+fac n = case n < 1 of {
+    True  -> 1;
+    False -> n * fac (n - 1)
+};
+
+s f g x = f x (g x) ;
+
+strange x y z = y / z % z * (x - z * y) ;
+
+test = letrec nop = BLACKHOLE in nop ;
+ 
+fool x = let {n = BLACKHOLE; m = BLACKHOLE} in x ;
+
+head li = case li of { 
+    Cons x xs -> x ;
+    _         -> head li 
+ };
+
+objects = let { 
+    x = FUN( a b c -> a (b c) );
+    y = PAP( BLACKHOLE 1 2 3 );
+    z = CON( Cons x y );
+    w = THUNK( head z );
+    u = BLACKHOLE 
+    } in u
+     
+
+     
