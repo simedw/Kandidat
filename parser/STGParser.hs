@@ -27,7 +27,7 @@ tok = makeTokenParser LanguageDef
   , commentEnd      = "-}"
   , commentLine     = "--"
   , nestedComments  = True
-  , identStart      = letter   <|> char '_'
+  , identStart      = letter   
   , identLetter     = alphaNum <|> oneOf "_'"
   , opStart         = oneOf "+-*/%<>=_"
   , opLetter        = oneOf "+-*/%<>=_"
@@ -39,12 +39,11 @@ tok = makeTokenParser LanguageDef
 -- The Parser type
 -- The state is Nothing if not parsing sugar,
 -- otherwise it is Just the next integer in the name supply.
-type P = GenParser Char (Maybe Integer) 
+type P = GenParser Char ()
 
 -- Run the parser
-parseStg,parseStgSugar :: String -> Either ParseError [Function String]
-parseStg      = runParser program Nothing  ""
-parseStgSugar = runParser program (Just 0) ""
+parseStg :: String -> Either ParseError [Function String]
+parseStg = runParser program () ""
 
 program :: P [Function String]
 program = do 
@@ -57,64 +56,40 @@ program = do
 ident :: P String
 ident = identifier tok
 
--- A new (string) name from the name supply
-newName :: P String
-newName = do
-    (Just x) <- getState
-    setState (Just (x+1))
-    return ("t." ++ show x)
-
--- Do the first parse if sugar is on, otherwise the second
-caseSugar :: P a -> P a -> P a
-caseSugar m1 m2 = do 
-    s <- getState 
-    case s of (Just _) -> m1
-              Nothing  -> m2
 
 -- Parses a Supercombinator (function or CAF)
--- with sugar: f x1 .. xn = expr 
--- without:    f = obj
+-- f = obj
 scdef :: P (Function String)
 scdef = do
     name <- ident
-    caseSugar 
-        (do 
-            vars <- many ident
-            reservedOp tok "="
-            body <- expr
-            return $ Function name (OFun vars body)) 
-        (do
-            reservedOp tok "="
-            body <- object
-            return $ Function name body)
+    reservedOp tok "="
+    body <- object
+    return $ Function name body
 
 -- Parses an expression, which is expr' between infix operators.
+-- (does this work?)
 expr :: P (Expr String)
-expr = buildExpressionParser table expr'
+expr = buildExpressionParser table expr' 
   where
     table = [ map (op AssocLeft) ["*","/","%"]
             , map (op AssocLeft) ["+","-"]
             , map (op AssocNone) ["<","==",">"]
             ]
 
-    -- unfortunately op returns a pure function, so I have to use the 
-    -- name-supply without knowing if they are going to be used!
     op assoc s = flip Infix assoc $ do
         reservedOp tok s 
-        names <- replicateM 2 newName
-        return $ \e1 e2 -> 
-            let (args,defs) = unzip $ zipWith mkDef [e1,e2] names 
-            in  eLet False (catMaybes defs) $ ECall s args
-
-    mkDef (EAtom e) n = (e,Nothing)
-    mkDef e         n = (AVar n,Just (n,OThunk e))
-        
+        return $ \e1 e2 ->
+            case (e1,e2) of
+                (EAtom a1,EAtom a2) -> ECall s [a1,a2]
+                -- This is very unfortunate that this function is not in the
+                -- monad. I have to use the IO errors instead.
+                _ -> error $ "expected atoms on both sides of " ++ s
 
 -- The two levels of expressions
 expr',expr2 :: P (Expr String)
 expr' = app <|> letdef <|> casedef <|> expr2
 
-expr2 = parens tok expr <|> (EAtom `fmap` atom)
+expr2 = parens tok expr <|> EAtom `fmap` atom
 
 -- Atoms, identifiers or integers. Extensible!
 atom :: P (Atom String)
@@ -125,46 +100,14 @@ atom = AVar `fmap` ident
 -- <|> AStr `fmap` stringLiteral tok
 
 -- Application
--- with sugar: f e1 .. en
---    becomes: let { a1 = THUNK e1 ; ..
---                   an = THUNK en }
---             in f a1 .. an
---             (but not for ei that are atoms already)
 -- without:    f a1 .. an
 app :: P (Expr String)
 app = do
     name <- ident 
-    caseSugar
-        (do 
-            args <- many expr2
-            case args of
-                [] -> return (EAtom (AVar name))
-                xs -> do
-                    (args',defs) <- heapNonAtoms args
-                    return $ eLet False (catMaybes defs)
-                           $ ECall name args')
-        (do 
-            args <- many atom
-            case args of
-                [] -> return (EAtom (AVar name))
-                xs -> return (ECall name args))
-
--- Takes a list of expressions, some may be atoms.
--- Makes a definition list, with atoms in lhs and in 
--- rhs maybe an allocation to an object, if it was not
--- an atom in the original list.
-heapNonAtoms :: [Expr String] -> P ([Atom String], [Maybe (String, Obj String)])
-heapNonAtoms = mapAndUnzipM $ \e ->
-    case e of
-         (EAtom a) -> return (a,Nothing)
-         _         -> do
-             n <- newName
-             return (AVar n,Just (n,OThunk e))
-
--- If the list is non-empty, return an ELet element
-eLet :: Bool -> [(t, Obj t)] -> Expr t -> Expr t
-eLet _ [] = id
-eLet b xs = ELet b xs
+    args <- many atom
+    case args of
+        [] -> return (EAtom (AVar name))
+        xs -> return (ECall name args)
 
 -- Let and letrec definitions. Two different forms:
 -- 1: let x = obj in e
@@ -186,6 +129,8 @@ letdef = rest =<< (let' <|> letrec')
         obj <- object 
         return (lhs,obj) 
         
+-- The default branch is here as
+--      { x } -> e x
 casedef :: P (Expr String)
 casedef = do
     reserved tok "case"
@@ -195,19 +140,17 @@ casedef = do
     return $ ECase e brs
   where
     branch = do
-        name <- ident <|> (reservedOp tok "_" >> return "_")
+        name <- ident <|> (('*':) `liftM` braces tok ident)
         args <- many ident
         reservedOp tok "->"
         e <- expr 
         case name of
-            "_" -> if null args then return (BDef  name e)
-                                else unexpected "arguments to default branch"
-            _   -> return (BCon name args e)
+           '*':name' -> if null args then return (BDef name' e)
+                                  else unexpected "arguments to default branch"
+           _     -> return (BCon name args e)
                                 
 
 -- Object
--- Still to implement: CON with non-atom arguments.
--- This is a bit tricky, because then the return type is Expr and not Obj.
 object :: P (Obj String)
 object = choice [fun, pap, con, thunk, blackhole]
   where
