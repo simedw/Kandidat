@@ -2,7 +2,7 @@ module SugarTree where
 
 -- The data type of the language, and auxilliary functions.
 
-data Function t = Function t (Obj t)
+data Function t = Function t [t] (Expr t)
   deriving Show
 
 data Expr t   = EAtom (Atom t)
