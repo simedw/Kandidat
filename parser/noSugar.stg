@@ -4,10 +4,10 @@
 
 fac = FUN( n -> case a of {
     True  -> 1;
-    False -> let t0 = THUNK (n - 1) in
+    False -> let t0 = THUNK (sub n 1) in
              let t1 = THUNK (fac t0) in
-             let t2 = THUNK (n * t2) in
-             n * t0
+             let t2 = THUNK (mul n t2) in
+             mul n t0
   }
 );
 
