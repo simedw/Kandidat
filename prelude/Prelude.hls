@@ -1,0 +1,140 @@
+-- Lists
+
+foldr f v li = case li of
+  { Nil       -> v
+  ; Cons x xs -> f x (foldr f v xs)
+  };
+
+foldl f v li = case li of
+  { Nil       -> v
+  ; Cons x xs -> foldl f (f v x) xs
+  };
+
+reverse xs = foldl snoc Nil xs;
+
+snoc xs x = Cons x xs;
+cons x xs = Cons x xs;
+
+sum xs = let add x y = x + y 
+          in foldr add 0 xs;
+
+append li ys = case li of
+  { Cons x xs -> Cons x (append xs ys)
+  ; Nil       -> ys
+  };
+
+concat xs = foldr append Nil xs;
+
+map f li = case li of
+  { Nil       -> Nil
+  ; Cons x xs -> Cons (f x) (map f xs)
+  };
+
+filter p li = case li of
+  { Nil -> Nil
+  ; Cons x xs -> let rest = filter p xs 
+                  in if (p x) (Cons x rest) rest
+  };
+
+length li = case li of
+  { Nil -> 0
+  ; Cons x xs -> 1 + length xs
+  };
+
+replicate n x = if (n == 0) 
+                   Nil 
+                   (Cons x (replicate (n - 1) x));
+
+repeat x = letrec xs = Cons x xs in xs;
+
+iterate f x = Cons x (iterate f (f x));
+
+take n li = if (n == 0)
+               Nil
+               (case li of
+                 { Nil -> Nil
+                 ; Cons x xs -> Cons x (take (n - 1) xs)
+                 }
+               );
+
+drop n li = if (n == 0)
+               li
+               (case li of
+                 { Nil -> Nil
+                 ; Cons x xs -> drop (n - 1) xs
+                 }
+               );
+
+head li = case li of { Cons x xs -> x };
+
+tail li = case li of { Cons x xs -> xs };
+
+zipWith f as bs = case as of
+  { Cons x xs -> case bs of
+                   { Cons y ys -> Cons (f x y) (zipWith f xs ys)
+                   ; Nil -> Nil
+                   }
+  ; Nil -> Nil
+  };
+
+-- Bools
+
+if b x y = case b of
+  { True -> x
+  ; False -> y
+  };
+
+and x y = if x y False;
+or  x y = if x True y;
+
+andList xs = foldr and True  xs;
+orList  xs = foldr or  False xs;
+
+-- Function functions
+
+s f g x = f x (g x);
+
+const x y = x;
+
+k = const;
+
+flip f x y = f y x;
+
+id x = x;
+
+compose f g x = f (g x);
+
+dot f g x y = f (g x y);
+
+fix f = letrec x = f x in x;
+
+-- Tuple functions
+
+fst t = case t of { Tuple x y -> x };
+snd t = case t of { Tuple x y -> y };
+
+first  f t = case t of { Tuple x y -> Tuple (f x) y };
+second f t = case t of { Tuple x y -> Tuple x (f y) };
+
+zip as bs = case as of
+  { Cons x xs -> case bs of
+                   { Cons y ys -> Cons (Tuple x y) (zip xs ys)
+                   ; Nil -> Nil
+                   }
+  ; Nil -> Nil
+  };
+
+-- Maybe functions
+
+maybe d f m = case m of 
+  { Just x  -> f x
+  ; Nothing -> d
+  };
+
+fromMaybe d m = case m of
+  { Just x  -> x
+  ; Nothing -> d
+  };
+
+isJust m = maybe False (const True) m;
+isNothing m = maybe True (const False) m;

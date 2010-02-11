@@ -1,9 +1,9 @@
 {-# LANGUAGE FlexibleInstances #-}
-module PrettyTest where
+module Parser.Pretty.Test where
 
-import AST
-import STGParser
-import Pretty
+import Stg.AST
+import Parser.STGParser
+import Parser.Pretty.Pretty
 
 import Control.Applicative
 import Control.Monad
@@ -21,8 +21,8 @@ test_if_equal f =
 
 
 
-getId = suchThat (`elem` keywords) $
-    listOf1 (elements $ ['a' .. 'z'] ++ ['A' .. 'Z'])
+getId = flip suchThat (\x -> not $ x `elem` keywords) 
+    $ listOf1 (elements $ ['a' .. 'z'] ++ ['A' .. 'Z'])
     {- case x `elem` keywords of
         True -> getId 
         False -> return x -}

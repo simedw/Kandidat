@@ -1,4 +1,4 @@
-module STGParser where
+module Parer.STGParser where
 
 import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Token
@@ -9,7 +9,7 @@ import Data.Maybe
 import Data.Char
 import Control.Monad
 
-import SugarTree
+import Parser.SugarTree
 
 
 -- The reserved operators

@@ -1,6 +1,7 @@
-module Pretty where
+module Parser.Pretty.Pretty where
 
-import AST
+import Stg.AST
+
 import Text.PrettyPrint
 
 prFun :: Function String -> Doc

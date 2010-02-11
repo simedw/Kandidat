@@ -1,4 +1,4 @@
-module STGParser where
+module Parser.STGParser where
 
 import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Token
@@ -8,7 +8,7 @@ import Text.ParserCombinators.Parsec.Prim
 import Data.Maybe
 import Control.Monad
 
-import AST
+import Stg.AST
 
 
 -- The reserved operators

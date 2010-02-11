@@ -1,0 +1,18 @@
+Name:                fegr
+Version:             0.1
+Author:              F.E.G.R
+Build-Type:          Custom
+Cabal-Version:       >=1.6
+
+flag test
+  description: Build test program.
+  default:     False
+
+Executable test
+  hs-source-dirs:  src, test
+  other-modules:   Parser.Pretty.Test
+  main-is:         Main.hs
+  build-depends:   base, QuickCheck, pretty, parsec, filepath
+                   , directory
+  if !flag(test)
+    buildable:     False
