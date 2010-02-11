@@ -1,0 +1,5 @@
+inc x = x + 1;
+
+twice f = compose f f;
+
+main = twice twice inc 2;

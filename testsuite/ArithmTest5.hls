@@ -1,0 +1,3 @@
+sumTo n = n * (n + 1) / 2;
+
+main = sumTo 100;

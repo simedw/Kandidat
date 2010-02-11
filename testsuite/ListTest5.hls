@@ -1,0 +1,4 @@
+
+aList = Cons 1 (Cons 3 Nil);
+
+main = sum (Cons (head aList) (tail aList)) == sum aList;

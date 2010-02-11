@@ -1,0 +1,7 @@
+cons x xs cc cn = cc x (xs cc cn);
+nil cc cn = cn;
+
+add x y = x + y;
+sum list = list add 0;
+
+main = sum (cons 2 (cons 4 (cons 3 nil))); 

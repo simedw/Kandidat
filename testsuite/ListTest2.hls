@@ -1,0 +1,1 @@
+main = length (take 3 (repeat 4)); 

@@ -1,0 +1,3 @@
+twice f x = f (f x);
+
+main = twice id 2;

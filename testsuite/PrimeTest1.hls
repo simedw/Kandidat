@@ -1,0 +1,8 @@
+isPrime n = isPrimer n 2;
+
+isPrimer n t = case t > n * n of
+  { True  -> True
+  ; False -> if (n % t == 0) False (isPrimer n (t + 1))
+  };
+                  
+main = isPrime 107;
