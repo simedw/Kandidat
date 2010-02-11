@@ -1,0 +1,6 @@
+list = Cons 5 (Cons 3 (Cons 1 (Cons 8 (Cons 2 Nil))));
+
+listEq = dot listAnd (zipWith (==));
+
+main = listEq (reverse (take 2 list))
+              (drop 3 (reverse list));

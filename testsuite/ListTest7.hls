@@ -1,0 +1,20 @@
+
+merge li1 li2 = case li1 of
+  { Nil -> li2
+  ; Cons x xs -> case li2 of
+    { Nil -> li1
+    ; Cons y ys -> if (x < y) 
+                      (Cons x (merge xs li2))
+                      (Cons y (merge li1 ys))
+    }
+  };
+
+mergesort li = case li of
+  { Nil -> Nil
+  ; Cons x xs ->
+    let { hlen  = length li / 2
+        ; begin = take hlen li 
+        ; end   = drop hlen li
+        }
+      in merge (mergesort begin) (mergesort end)
+  };

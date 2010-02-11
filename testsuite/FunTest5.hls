@@ -1,0 +1,12 @@
+zero s x = x;
+succ s x = s x;
+
+add m n s x = m s (n s x);
+
+mul m n s = m (n s);
+
+one = succ zero;
+two = succ one;
+three = succ two;
+
+main = add three (mul two three);
