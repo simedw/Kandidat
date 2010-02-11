@@ -1,13 +1,13 @@
 {-# LANGUAGE PackageImports #-}
 module Diabetes where
 
-import Pretty
+import Parser.Pretty.Pretty
 import Control.Monad
 import "mtl" Control.Monad.State
 import Data.Either
 
-import qualified SugarTree as ST
-import qualified AST       as AST
+import qualified Parser.SugarTree as ST
+import qualified Stg.AST          as AST
 
 type Dia a b = State [a] b 
 
