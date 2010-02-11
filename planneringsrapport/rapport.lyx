@@ -1,0 +1,983 @@
+#LyX 1.6.5 created this file. For more info see http://www.lyx.org/
+\lyxformat 345
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\language swedish
+\inputencoding auto
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation skip
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\bullet 1 0 9 -1
+\tracking_changes false
+\output_changes false
+\author "" 
+\author "" 
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Optimering under körningstid
+\end_layout
+
+\begin_layout Author
+Dan Rosén, Daniel Gustafsson, Simon Edwardsson och Olle Fredriksson
+\end_layout
+
+\begin_layout Section
+Bakgrund
+\end_layout
+
+\begin_layout Standard
+Lata funktionella programmeringsspråk har intressanta egenskaper som möjliggör
+ optimering.
+ Många av dessa optimeringar bygger på algebraiskt definerade lagar, som
+ tillåter att man skriver om ett givet program till ett ekvivalent program.
+ Dessa optimeringar körs vanligtvis under kompileringstid.
+ Vid den tidpunkten har man inte tillgång till alla värden, vilket gör att
+ de koncententrerar sig på mer allmänna regler som gäller för alla uttryck.
+ Ett exempel på kod som inte kan optimeras är följande
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+För läsbarhetens skull har vi gjort en mönstermatchning i vänsterledet i
+ det första argumentet till main.
+\end_layout
+
+\end_inset
+
+:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Box Shadowbox
+position "t"
+hor_pos "s"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "100col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+lstparams "basicstyle={\rmfamily},language=Haskell,tabsize=4"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+pythagoras a b c = a*a + b*b == c*c
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+main (a : b : xs) = filter (pythagoras a b) xs
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Detta program tar in en lista och skriver ut vilka element i xs (listan
+ utom de två första elementen) som utgör en pythagorastrippel med de första
+ två elementen a och b.
+ Här kan vi inte veta statiskt vad a och b är eftersom de ges till programmet
+ av användaren vid körningstid, vilket begränsar optimeringen med avseende
+ på a och b.
+\end_layout
+
+\begin_layout Section
+Syfte
+\end_layout
+
+\begin_layout Standard
+Vi kommer att skriva en tolk som erbjuder möjligheten för programmeraren
+ att tala om vilken kod som ska optimeras under körningstid då fler värden
+ är kända.
+ I exemplet ovan skall en programmerare kunna annotera att denna pythagorasfunkt
+ion kan vara värd att optimera under körningstid eftersom den kommer att
+ köras många gånger med samma argument.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Box Shadowbox
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "100col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+lstparams "basicstyle={\rmfamily},language=Haskell,tabsize=4"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+main (a : b : xs) = filter (optimise (pythagoras a b)) xs
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Där optimise kommer att ta funktionen som returneras av pythagoras a b och
+ ge tillbaka en optimerad version med samma funktionalitet.
+ Målet med projektet är att den nya funktionen ska vara snabbare om vi inte
+ räknar med tiden som optimeringen tar att utföra.
+ Därför får programmeraren själv avgöra var det kan vara lämpligt att använda
+ optimisefunktionen.
+ Som mål har vi också att programmet ovan kommer att vara snabbare om inputlista
+n är tillräckligt stor (ordning tusen).
+\end_layout
+
+\begin_layout Section
+Problemdomän och avgränsningar
+\end_layout
+
+\begin_layout Standard
+Vi kommer att använda Haskell för att skriva en tolk för ett enkelt funktionellt
+ språk.
+ När projektet är färdigt ska den uppfylla följande minimumkrav:
+\end_layout
+
+\begin_layout Subsection
+Frontend
+\end_layout
+
+\begin_layout Standard
+Vårt syntaxspråk kommer att vara likt Haskell men inte innehålla lika många
+ olika konstruktioner.
+ Det är inget krav att vi har mönstermatchning på vänster sida av definitioner,
+ utan detta kommer att ske via case-satser.
+ Andra språkkonstruktioner är let- och letrec-uttryck, lambdafunktioner,
+ samt datakonstruktorer.
+ Språket kommer inte att vara typat, men däremot kommer vi att anta att
+ programmen är vältypade.
+ Vårt fokus ligger på backend och vi ämnar inte lägga ner mer arbete på
+ frontend än nödvändigt.
+ I övrigt kommer språket att följa semantiken för vårt core-språk vilket
+ betyder att det kommer att använda lat evaluering.
+ Notera att syftet med frontenden är att vi enklare skall kunna testa backend.
+ Det underlättar att ha ett frontendspråk som ligger på en högre nivå än
+ corespråket.
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Lägg till exempel som visar olika språkkonstruktioner här
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Corespråk
+\end_layout
+
+\begin_layout Standard
+Vårt corespråk kommer att vara ett egenhändigt tillverkat och likna STG
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Spineless Tagless G-machine.
+ Se http://research.microsoft.com/en-us/um/people/simonpj/papers/eval-apply/index.h
+tm
+\end_layout
+
+\end_inset
+
+.
+ Det kommer att ha stöd för datakonstruktorer, samt en primitiv heltalsdatatyp
+ motsvarande Haskells Int.
+ På den skall följande operationer vara tillgängliga: +, -, *, div, mod,
+ <, >, ==.
+ De tre sista kommer att returnera en Bool som är definierad i standardbibliotek
+et.
+ Vi kommer även att ha en pretty printer som gör det enklare att undersöka
+ vad som händer i tolken.
+ Vi behöver undersöka om det är en bra invariant att alla identifierare
+ i corespråket är unika.
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Lägg till något exempel
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+IO
+\end_layout
+
+\begin_layout Standard
+Väldigt enkel.
+ Mainfunktionen har en lista av heltal som argument, vilket är programmets
+ indata, och skriver ut vad den är lika med (med hjälp av pretty printern).
+\end_layout
+
+\begin_layout Standard
+Följande program skulle till exempel ta det första elementet i sin indatalista,
+ multiplicera det med två och skriva ut resultatet.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Box Shadowbox
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "100col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+lstparams "basicstyle={\rmfamily},language=Haskell,tabsize=4"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+main xs = 2 * head xs
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Optimise
+\end_layout
+
+\begin_layout Standard
+Vår optimisefunktion kommer att göra följande två optimeringar:
+\end_layout
+
+\begin_layout Enumerate
+Om det granskade uttrycket i en casesats är känt, kan casesatsen bytas ut
+ mot den gren som skulle ha valts vid körning:
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+\begin_inset Box Shadowbox
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "100col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+lstparams "basicstyle={\rmfamily},language=Haskell,tabsize=4"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+f x = case x of
+\end_layout
+
+\begin_layout Plain Layout
+
+	{ True  -> e
+\end_layout
+
+\begin_layout Plain Layout
+
+	; False -> f
+\end_layout
+
+\begin_layout Plain Layout
+
+    };
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+optimise (f True) => e
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Primitiva operationer på kända värden kan bytas ut mot resultatet:
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+\begin_inset Box Shadowbox
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "100col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+lstparams "basicstyle={\rmfamily},language=Haskell,tabsize=4"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+pythagoras a b c = a*a + b*b == c*c
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+optimise (pythagoras 4 3)       => 
+\backslash
+c.
+ 25 == c*c
+\end_layout
+
+\begin_layout Plain Layout
+
+optimise (
+\backslash
+x.
+ pythagoras 4 x 3) => 
+\backslash
+x.
+ 16 + x*x == 9
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+Optimisefunktionen tar ett uttryck som argument.
+ Om det finns optimeringsmöjligheter liknande dem ovan i uttrycket, inte
+ nödvändigtvis i roten av trädet, utför den optimeringen.
+\end_layout
+
+\begin_layout Subsection
+Testning
+\end_layout
+
+\begin_layout Standard
+Under tiden som vi jobbar med projektet kommer vi kontinuerligt att skriva
+ program för att testa ny funktionalitet.
+ Vi ska samla en mängd sådana program som utgör vår testsvit.
+ Vi kör tolken på testsviten för att säkerställa att den fungerar även efter
+ att vi har gjort förändringar i den.
+\end_layout
+
+\begin_layout Standard
+Program som till slut ska fungera och finnas med i testsviten är i alla
+ fall listsortering, fakultet, primtalstestning, och vanliga listmanipulationer.
+ Vi planerar också att ha några större program som till exempel matrixmultiplika
+tion, min-maxalgoritmer, lambdakalkylevaluator, raytracer, regexp.
+\end_layout
+
+\begin_layout Standard
+Vi kommer att behöva sätt att mäta snabbhet på programmen för att kunna
+ avgöra om våra optimeringar är bra.
+ Både antal steg i uträkningen och tid ska användas för detta.
+\end_layout
+
+\begin_layout Subsection
+Standardbibliotek
+\end_layout
+
+\begin_layout Standard
+Vår prelude ska innehålla funktioner som använder konventioner följande
+ datatyper: Bool, Maybe, List samt Tupler.
+ Dessa skall också ha de vanliga funktionerna man väntar sig (id, const,
+ map, filter, maybe, fst, snd et.c.)
+\end_layout
+
+\begin_layout Subsection
+Utökningar
+\end_layout
+
+\begin_layout Standard
+Dessa förslag har vi på utökningar till vår tolk.
+ De kommer inte att behövas men vi vill ha med dem.
+\end_layout
+
+\begin_layout Itemize
+Interaktiv prompt 
+\end_layout
+
+\begin_layout Itemize
+Fler optimeringar
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Styrkereducering
+\end_layout
+
+\begin_layout Itemize
+Inlining
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Kunna specificera vilka optimeringar som ska köras och inte köras, och hur
+ många steg de ska köras
+\end_layout
+
+\begin_layout Itemize
+Syntaktiskt socker
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Mönstermatchning i vänsterled
+\end_layout
+
+\begin_layout Itemize
+Listsyntax
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Interaktivt IO, antingen interact-funktion eller readLine och putChar eller
+ liknande.
+ 
+\end_layout
+
+\begin_layout Itemize
+Mönstermatchning på heltal 
+\end_layout
+
+\begin_layout Itemize
+QuickCheck 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Testa att optimerade funktioner gör samma sak som ooptimerade
+\end_layout
+
+\begin_layout Itemize
+Testa att optimerade funktioner är minst lika snabba som ooptimerade (inte
+ medräknat tid för optimering) 
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Fler primitiver.
+ Exempelvis Double och Char 
+\end_layout
+
+\begin_layout Itemize
+Garbage collector 
+\end_layout
+
+\begin_layout Itemize
+Mer visualisering än en pretty printer
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Stega igenom reduceringen av trädet.
+ Visualiseras med till exempel graphviz
+\end_layout
+
+\end_deeper
+\begin_layout Section
+Metod
+\end_layout
+
+\begin_layout Standard
+Vi tänker försöka få en minimal tolk att fungera så tidigt som möjligt,
+ så att vi har en referensimplementation som vi kan visa upp på halvtidspresenta
+tionen.
+ Detta innebär att vi kommer att arbeta övergripande på både parser, tolk
+ samt exempelsvit samtidigt.
+ Sedan kommer vi iterativt att lägga till ny funktionalitet.
+\end_layout
+
+\begin_layout Standard
+För att testa att program fungerar ska vi i den utsträckning det går använda
+ oss av automatiserad testning.
+ Vi kommer ha en testsvit som vi använder för att testa tolken på.
+ Vi tänker också använda QuickCheck för att testa vår kod.
+ 
+\end_layout
+
+\begin_layout Standard
+Vi kommer ha dessa bibliotek och verktyg nära tillshand när vi skriver vår
+ kod:
+\end_layout
+
+\begin_layout Itemize
+Criterion - mäta exekveringstid.
+\end_layout
+
+\begin_layout Itemize
+Uniplate - underlätta manipulationer av trädstruktur.
+\end_layout
+
+\begin_layout Itemize
+QuickCheck - testa egenskaper hos funktioner med slumpmässigt genererad
+ data.
+\end_layout
+
+\begin_layout Itemize
+Graphviz - generera grafer.
+\end_layout
+
+\begin_layout Itemize
+Text.PrettyPrint - pretty printer.
+\end_layout
+
+\begin_layout Itemize
+Parsec - parsergenerator.
+\end_layout
+
+\begin_layout Itemize
+Haskeline - verktyg för att göra interaktiva prompter.
+\end_layout
+
+\begin_layout Itemize
+Gobby - a collaborative text editor.
+\end_layout
+
+\begin_layout Standard
+En person i gruppen kommer att vara projektledare och ha som uppgift att
+ kolla upp hur vi följer schemat, att alla arbetar på det de ska, och ändra
+ i schemat efter hand om det visar sig att det behövs.
+ Projektledaren byts ut efter halva tiden.
+\end_layout
+
+\begin_layout Section
+Tidsplan
+\end_layout
+
+\begin_layout Standard
+Se även separat dokument för tidsplan.
+\end_layout
+
+\begin_layout Subsection
+Milstolpe 2010-02-12 
+\end_layout
+
+\begin_layout Itemize
+Ha satt upp ett versionskontrolleringssystem för projektets kod.
+\end_layout
+
+\begin_layout Itemize
+Ha definierat en Haskelldatastruktur som representerar STG.
+\end_layout
+
+\begin_layout Itemize
+Ha definierat en Haskelldatastruktur som representerar resultatet av en
+ parsning.
+\end_layout
+
+\begin_layout Itemize
+Göra klart den här rapporten.
+\end_layout
+
+\begin_layout Subsection
+Milstolpe 2010-02-19
+\end_layout
+
+\begin_layout Itemize
+Standardbibliotek
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Listfunktioner: foldr, map, filter, length, replicate, repeat, iterate,
+ take, drop, head, tail
+\end_layout
+
+\begin_layout Itemize
+Funktionella funktioner: S, K, compose, flip, id
+\end_layout
+
+\begin_layout Itemize
+Tupelfunktioner: fst, snd, first, second
+\end_layout
+
+\begin_layout Itemize
+Booleska funktioner: &&, ||
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+En testsvit som testar alla ovan nämnda funktioner i standardbiblioteket
+ (och därmed också case- och let-uttryck).
+\end_layout
+
+\begin_layout Itemize
+En parser som kan parsa alla program i testsviten.
+\end_layout
+
+\begin_layout Itemize
+Ha en pretty printer för STG-språket som kan skriva ut alla program i testsviten.
+\end_layout
+
+\begin_layout Itemize
+Parsern och pretty printern uppfyller 
+\begin_inset Formula $parse\circ pretty=id$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Itemize
+Kunna tolka (köra) funktionsapplikation i STG.
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Undersöka och bestämma hur vi ska göra 
+\shape italic
+expression instantiation
+\shape default
+
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Se exempel 
+\noun on
+let 
+\noun default
+i 
+\shape italic
+Making a fast curry
+\end_layout
+
+\end_inset
+
+.
+\end_layout
+
+\end_deeper
+\begin_layout Subsection
+Milstolpe 2010-03-05
+\end_layout
+
+\begin_layout Itemize
+Kunna avsockra funktionsapplikationer och case-satser från parsersyntaxträd
+ till STG, med scopeanalys om det behövs (beroende på hur vi ska göra 
+\shape italic
+expression instantiation
+\shape default
+):
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+\begin_inset Box Shadowbox
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "100col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+lstparams "basicstyle={\rmfamily},language=Haskell,tabsize=4"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+fac x = case x == 0 of
+\end_layout
+
+\begin_layout Plain Layout
+
+	{ True -> 1
+\end_layout
+
+\begin_layout Plain Layout
+
+	; False -> x * fac (x - 1)
+\end_layout
+
+\begin_layout Plain Layout
+
+    };
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+main x = fac (head x);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+översätts till
+\end_layout
+
+\begin_layout Standard
+\begin_inset Box Shadowbox
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "100col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+lstparams "basicstyle={\rmfamily},language=Haskell,tabsize=4"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+fac = FUN (x -> case (==) x 0 of 
+\end_layout
+
+\begin_layout Plain Layout
+
+    { True  -> 1
+\end_layout
+
+\begin_layout Plain Layout
+
+    ; False -> let { p1 = THUNK ((-) x 1)
+\end_layout
+
+\begin_layout Plain Layout
+
+	               ; p2 = THUNK (fac p1)
+\end_layout
+
+\begin_layout Plain Layout
+
+	               } in (*) x p2 
+\end_layout
+
+\begin_layout Plain Layout
+
+    });
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+main = FUN (x -> fac x);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Sammanställ tre idéer på icke-triviala exempelprogram som illustrerar optimering
+sfunktionens förträfflighet.
+\end_layout
+
+\begin_layout Itemize
+Kunna tolka (köra) let, case och de inbyggda primitiva funktionerna.
+\end_layout
+
+\begin_layout Subsection
+Milstolpe 2010-03-15
+\end_layout
+
+\begin_layout Itemize
+Köra programmens mainfunktion enligt basspecifikationen.
+\end_layout
+
+\begin_layout Itemize
+Göra optimeringarna nämnda i syfte under körningstid (caseeliminering och
+ konstantfolding).
+\end_layout
+
+\begin_layout Itemize
+Kunna mäta programmens snabbhet m.h.a.
+ stegräknare.
+\end_layout
+
+\begin_layout Itemize
+Välja ut och skriva ett av de tre exempelprogrammen.
+ Tolken ska kunna köra programmet.
+\end_layout
+
+\begin_layout Itemize
+Föreberedelser för halvtidsredovisningen som skall presenteras 16 mars.
+\end_layout
+
+\begin_layout Subsection
+Milstolpe 2010-03-22
+\end_layout
+
+\begin_layout Itemize
+Tolken klarar av alla språkkonstruktioner, inklusive letrec.
+\end_layout
+
+\begin_layout Itemize
+En sammanställning av möjliga och intressanta optimeringar som skulle kunna
+ implementeras.
+\end_layout
+
+\begin_layout Itemize
+Planera framtida milstolpar.
+\end_layout
+
+\begin_layout Subsection
+Post-påsk
+\end_layout
+
+\begin_layout Itemize
+Ett första utkast på ca 15 sidor till rapporten skall vara klar 23:e april.
+ Planeras mer i föregående milstolpe.
+\end_layout
+
+\begin_layout Itemize
+18/5 Inlämning av slutrapport 
+\end_layout
+
+\begin_layout Itemize
+26/5 Inlämning av skriftlig opposition 
+\end_layout
+
+\begin_layout Itemize
+31/5 Slutredovisning, opposition
+\end_layout
+
+\end_body
+\end_document

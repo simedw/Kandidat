@@ -1,0 +1,32 @@
+
+
+-- NoSugar 
+
+fac = FUN( n -> case a of {
+    True  -> 1;
+    False -> let t0 = THUNK (sub n 1) in
+             let t1 = THUNK (fac t0) in
+             let t2 = THUNK (mul n t2) in
+             mul n t0
+  }
+);
+
+
+s = FUN ( f g x -> let t1 = THUNK (g x) in f x t1 ) ;
+
+test = THUNK ( letrec f = FUN ( x y -> x f y ) in test ) ;
+ 
+objects = THUNK ( let {
+    a = THUNK e ;
+    b = FUN ( a -> e ) ;
+    c = PAP ( FUN ( a b -> f a b ) a b ) ;
+    d = CON ( Cons x y ) ;
+    e = BLACKHOLE 
+    } in a ) ;
+
+head = FUN ( li -> case li of { 
+    Cons x xs -> x ;
+    {x}       -> head li 
+  }
+)
+
