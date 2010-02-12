@@ -5,7 +5,7 @@ oneones = iterate (cons 1) Nil;
 
 main = let someofthem = take 6 oneones
        in  sum (map length) someofthem
-        == sum (concat someofthem)
+        == sum (concat someofthem);
 
 
 

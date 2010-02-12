@@ -1,0 +1,3 @@
+
+to run tests:
+cabal configure -ftest && cabal build && cabal test

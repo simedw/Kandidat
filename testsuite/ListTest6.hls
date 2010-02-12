@@ -1,11 +1,12 @@
 
+lessThan x y = y < x;
+moreThan x y = y >= x;
+
 qsort li = case li of
   { Nil -> Nil
   ; Cons x xs -> 
-       let { less y = y < x
-           ; more y = y >= x
-           ; listLess = filter less xs
-           ; listMore = filter more xs
+       let { listLess = filter (lessThan x) xs
+           ; listMore = filter (moreThan x) xs
            } 
        in append (qsort listLess) (Cons x (qsort listMore))
   };
