@@ -2,7 +2,10 @@ module Stg.Substitution
   ( subst
   ) where
 
+import Data.Generics
+import Data.Generics.Biplate
 import Data.Generics.Uniplate
+import Stg.AST
 
 var = EAtom . AVar
 
