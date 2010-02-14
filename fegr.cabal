@@ -13,6 +13,6 @@ Executable test
   other-modules:   Parser.Pretty.Test
   main-is:         Main.hs
   build-depends:   base, QuickCheck >= 2, pretty, parsec, filepath
-                   , directory
+                   , directory, uniplate
   if !flag(test)
     buildable:     False

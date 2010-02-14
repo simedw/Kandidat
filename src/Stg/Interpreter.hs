@@ -21,7 +21,7 @@ newtype StgState t = StgState
   }
 
 step :: StgState t -> StgState t
-step st{code, stack, heap, names} = case code of
+  step st{code, stack, heap, names} = case code of
   ELet  b defs e -> undefined
   ECase e br     -> undefined
   ECall i args   -> undefined

@@ -95,15 +95,18 @@ expr = buildExpressionParser table expr'
 expr',expr2 :: P (Expr String)
 expr' = app <|> letdef <|> casedef <|> expr2
 
-expr2 = parens tok afterparensExpr <|> (EAtom `fmap` atom)
+expr2 = parens tok afterparensExpr <|> atomExpr
 
 afterparensExpr :: P (Expr String)
 afterparensExpr = (flip ECall [] `fmap` operator tok) <|> expr
 
 -- Atoms, identifiers or integers. Extensible!
-atom :: P (Atom String)
-atom = AVar `fmap` ident
-   <|> ANum `fmap` natural tok
+atomExpr :: P (Expr String)
+atomExpr = (EAtom . ANum) `fmap` natural tok
+   <|> do i <- ident 
+          if headIs isLower i
+              then return (EAtom (AVar i))
+              else return (ECon i [])
 -- <|> ADec `fmap` float tok
 -- <|> AChr `fmap` charLiteral tok
 -- <|> AStr `fmap` stringLiteral tok
