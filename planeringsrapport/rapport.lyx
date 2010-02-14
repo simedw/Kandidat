@@ -107,7 +107,10 @@ pythagoras a b c = a*a + b*b == c*c
 
 \begin_layout Plain Layout
 
-main (a : b : xs) = filter (pythagoras a b) xs
+main (c : b : xs) = filter (
+\backslash
+a.
+ pythagoras a b c) xs
 \end_layout
 
 \end_inset
@@ -123,10 +126,10 @@ main (a : b : xs) = filter (pythagoras a b) xs
 \begin_layout Standard
 Detta program tar in en lista och skriver ut vilka element i xs (listan
  utom de två första elementen) som utgör en pythagorastrippel med de första
- två elementen a och b.
- Här kan vi inte veta statiskt vad a och b är eftersom de ges till programmet
+ två elementen c b.
+ Här kan vi inte veta statiskt vad c och b är eftersom de ges till programmet
  av användaren vid körningstid, vilket begränsar optimeringen med avseende
- på a och b.
+ på c och b.
 \end_layout
 
 \begin_layout Section
@@ -163,7 +166,15 @@ status open
 
 \begin_layout Plain Layout
 
-main (a : b : xs) = filter (optimise (pythagoras a b)) xs
+main (b : c : xs) =
+\end_layout
+
+\begin_layout Plain Layout
+
+  filter (optimise (
+\backslash
+a.
+ pythagoras a b c)) xs
 \end_layout
 
 \end_inset
@@ -177,7 +188,7 @@ main (a : b : xs) = filter (optimise (pythagoras a b)) xs
 \end_layout
 
 \begin_layout Standard
-Där optimise kommer att ta funktionen som returneras av pythagoras a b och
+Där optimise kommer att ta funktionen som returneras av pythagoras c b och
  ge tillbaka en optimerad version med samma funktionalitet.
  Målet med projektet är att den nya funktionen ska vara snabbare om vi inte
  räknar med tiden som optimeringen tar att utföra.
