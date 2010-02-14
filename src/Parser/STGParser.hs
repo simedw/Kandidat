@@ -165,7 +165,7 @@ object = choice [fun, pap, con, thunk, blackhole]
     pap = do
         reserved tok "PAP"
         parens tok $ do
-            o <- object
+            o <- ident
             args <- many1 atom
             return $ OPap o args
 

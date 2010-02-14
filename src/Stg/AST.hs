@@ -27,7 +27,7 @@ data Branch t = BCon t [t] (Expr t)
   deriving (Data, Eq, Show, Typeable)
 
 data Obj t    = OFun [t] (Expr t)
-              | OPap (Obj t) [Atom t]   
+              | OPap t [Atom t]   
               | OCon t [Atom t]        
               | OThunk (Expr t)
               | OBlackhole

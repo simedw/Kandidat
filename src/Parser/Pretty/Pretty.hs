@@ -43,7 +43,7 @@ prAtom prVar atom = case atom of
 prObj prVar obj = case obj of
     OFun args e -> text "FUN" <+> parens (hsep (map prVar args) <+> text "->" 
                                           <+> prExpr prVar e)
-    OPap obj args -> text "PAP" <+> parens (prObj prVar obj <+> text "->"
+    OPap obj args -> text "PAP" <+> parens (prVar obj <+> text "->"
                                             <+> hsep (map (prAtom prVar) args))
     OCon name args -> text "CON" <+> parens (prVar name 
                                              <+> hsep (map (prAtom prVar) args))
