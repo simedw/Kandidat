@@ -15,7 +15,7 @@ data Rule
   | RPrimOP
   | RPush
   | RFEnter
-  | RPAP1
+  | RPap1
   | RPEnter
   | RInitial
  deriving (Show, Eq)

@@ -1,0 +1,7 @@
+-- Function functions
+
+s f g x = f x (g x);
+
+const x y = x;
+
+k = const;
