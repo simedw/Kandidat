@@ -14,7 +14,7 @@ import Parser.SugarTree
 
 -- The reserved operators
 operators :: [String]
-operators = ["->", "==","_"]
+operators = ["->", "=",";"]
 
 -- The keywords
 keywords :: [String]
@@ -48,7 +48,7 @@ parseSugar = runParser program () ""
 program :: P [Function String]
 program = do 
     whiteSpace tok
-    v <- semiSep tok scdef 
+    v <- endBy scdef (reservedOp tok ";")
     eof
     return v
 
@@ -84,7 +84,7 @@ expr = buildExpressionParser table expr'
   where
     table = [ map (op AssocLeft) ["*","/","%"]
             , map (op AssocLeft) ["+","-"]
-            , map (op AssocNone) ["<","==",">"]
+            , map (op AssocNone) ["<","<=","==",">=",">"]
             ]
 
     op assoc s = flip Infix assoc $ do
@@ -95,7 +95,10 @@ expr = buildExpressionParser table expr'
 expr',expr2 :: P (Expr String)
 expr' = app <|> letdef <|> casedef <|> expr2
 
-expr2 = parens tok expr <|> (EAtom `fmap` atom)
+expr2 = parens tok afterparensExpr <|> (EAtom `fmap` atom)
+
+afterparensExpr :: P (Expr String)
+afterparensExpr = (flip ECall [] `fmap` operator tok) <|> expr
 
 -- Atoms, identifiers or integers. Extensible!
 atom :: P (Atom String)

@@ -1,10 +1,14 @@
-import Parser.STGParser
+module Main where
+
+import Parser.SugarParser
 import Parser.Pretty.Test
 
 import System.Directory
 import System.FilePath
 
 import Test.QuickCheck
+
+import Data.List
 
 type TIO = IO TestResult
 
@@ -27,7 +31,7 @@ runTests tests = do
   putStrLn $ "of " ++ show (length tests) ++ ", " ++ show suc ++ " succeded"
   where
     title = "running: "
-    pline = putStrLn $ replicate 68 '–'
+    pline = putStrLn $ replicate 68 '-'
 
     runTests' :: Int -> [Test] -> IO Int
     runTests' n [] = return n
@@ -40,24 +44,32 @@ runTests tests = do
         Ok   -> runTests' (n+1) ts
         Fail -> runTests' n ts
 
-main = runTests
-  [ Test { name = "Testing parser", action = testParser}
-  , Test { name = "QuickCheck pretty", action = qcPretty}
-  , Test { name = "QuickCheck pretty 2", action = qcPretty}
-  ]
+main = do 
+    testParser 
+    runTests [ Test { name = "QuickCheck pretty", action = qcPretty}
+             , Test { name = "QuickCheck pretty 2", action = qcPretty}
+             ]
 
-testParser :: TIO
+testParser :: IO ()
 testParser = do
-  dir <- getCurrentDirectory
-  let filename = dir </> "src" </> "Examples" </> "noSugar.stg"
-  file <- readFile filename
-  case parseStg file of
-    Right _ -> do
-      putStrLn $ "ok"
-      return Ok
-    Left r  -> do
-      putStrLn $ "fail: " ++ show r
-      return Fail
+    putStrLn "running: Parser Sugar"
+    dir <- getCurrentDirectory
+    putStrLn dir
+    let filepath = dir </> "testsuite"
+    files <- getDirectoryContents filepath
+    let files' = map (\f -> filepath ++ "/" ++ f) 
+               $ filter (".hls" `isSuffixOf`) 
+               $ sort files
+    res <- mapM testParse files'
+    putStrLn $ "Parser Sugar outcome : " ++ show (length $ filter id res) ++ "/" ++ show (length res)
+  where 
+    testParse file = do
+        str <- readFile file
+        case parseSugar str of
+            Right _ -> return True
+            Left r  -> do putStrLn $ file ++ " fail: " ++ show r 
+                          return False
+
 
 qcPretty :: TIO
 qcPretty = do 
