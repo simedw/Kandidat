@@ -1,5 +1,6 @@
 module Stg.Substitution
   ( subst
+  , substList
   ) where
 
 import Data.Generics
@@ -29,3 +30,7 @@ substExpr _ _ e = e
 
 subst :: (Data t, Eq t) => t -> t -> Expr t -> Expr t
 subst x x' = transformBi (substExpr x x') . transformBi (substAtom x x')
+
+substList :: (Data t, Eq t) => [t] -> [t] -> Expr t -> Expr t
+substList []     []     = id
+substList (x:xs) (y:ys) = substList xs ys . subst x y

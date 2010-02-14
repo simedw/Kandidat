@@ -1,4 +1,4 @@
-module STG.Rules
+module Stg.Rules
  ( Rule(..)
  , info 
  ) where
@@ -17,7 +17,8 @@ data Rule
   | RFEnter
   | RPAP1
   | RPEnter
-  
+  | RInitial
+ deriving (Show, Eq)
 
 info :: Rule -> String
 info RLet = "Let"
