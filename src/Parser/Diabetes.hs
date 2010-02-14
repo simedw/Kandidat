@@ -2,6 +2,7 @@
 module Parser.Diabetes where
 
 import Parser.Pretty.Pretty
+import Control.Applicative
 import Control.Monad
 import "mtl" Control.Monad.State
 import Data.Either
@@ -18,13 +19,13 @@ test str = case parseSugar str of
   Right funs -> map run funs
   Left err -> error (show err)
 
+-- | Create a fresh unbound variable
 newVar :: Dia a a 
 newVar = do
- v <- get
- put (tail v)
- return (head v)
+  v <- get
+  put (tail v)
+  return (head v)
 
--- NOTE: We need to add a pass to remove empty lets!
 
 run :: ST.Function String -> AST.Function String
 run fun = fst $ flip runState vars $ desugar fun
@@ -33,14 +34,12 @@ run fun = fst $ flip runState vars $ desugar fun
     vars = map ("t." ++) $ [1..] >>= flip replicateM ['a'..'z']
 
 desugar :: ST.Function a -> Dia a (AST.Function a)
-desugar (ST.Function t [] expr) = 
-    liftM (AST.Function t) (object expr)
 desugar (ST.Function t ts expr) = 
     liftM (AST.Function t) (createFun ts expr)
 
 createFun :: [t] -> ST.Expr t -> Dia t (AST.Obj t)
-createFun args expr = liftM (AST.OFun args)
-                            (desugarE expr)
+createFun args expr | null args = liftM AST.OThunk      (desugarE expr)
+                    | otherwise = liftM (AST.OFun args) (desugarE expr)
 
 desugarE :: ST.Expr t -> Dia t (AST.Expr t)
 desugarE (ST.EAtom t) = return $ AST.EAtom $ atomST2AST t
@@ -76,17 +75,11 @@ magic ((ST.EAtom x):xs) = do
   return (atomST2AST x : as, bs)
 magic (x:xs) = do
   var     <- newVar
-  obj     <- object x
+  obj     <- AST.OThunk <$> desugarE x
   (as,bs) <- magic xs
   return ((AST.AVar var) : as, (var, obj) : bs)
-
-
-object :: ST.Expr a -> Dia a (AST.Obj a)
-object x = liftM AST.OThunk (desugarE x)
 
 -- | converts atoms from ST to AST
 atomST2AST :: ST.Atom a -> AST.Atom a
 atomST2AST (ST.AVar t) = AST.AVar t
 atomST2AST (ST.ANum n) = AST.ANum n
-
-
