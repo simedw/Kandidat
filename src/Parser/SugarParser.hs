@@ -1,4 +1,4 @@
-module Parer.STGParser where
+module Parser.SugarParser where
 
 import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Token
