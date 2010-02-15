@@ -20,17 +20,18 @@ test = ECase (var "xs")
              , BDef "x" (var "nil")
              ]
 
-substAtom :: Eq t => t -> t -> Atom t -> Atom t
-substAtom x x' (AVar v) | x == v = AVar x'
+substAtom :: Eq t => t -> Atom t -> Atom t -> Atom t
+substAtom x x' (AVar v) | x == v = x'
 substAtom _ _ a = a
 
-substExpr :: Eq t => t -> t -> Expr t -> Expr t
-substExpr x x' (ECall t as) | x == t = ECall x' as
+substExpr :: Eq t => t -> Atom t -> Expr t -> Expr t
+substExpr x (AVar x') (ECall t as) | x == t = ECall x' as
+substExpr x (ANum _)  (ECall t as) | x == t = error "substExpr with ANum"
 substExpr _ _ e = e
 
-subst :: (Data t, Eq t) => t -> t -> Expr t -> Expr t
+subst :: (Data t, Eq t) => t -> (Atom t) -> Expr t -> Expr t
 subst x x' = transformBi (substExpr x x') . transformBi (substAtom x x')
 
-substList :: (Data t, Eq t) => [t] -> [t] -> Expr t -> Expr t
+substList :: (Data t, Eq t) => [t] -> [Atom t] -> Expr t -> Expr t
 substList []     []     = id
 substList (x:xs) (y:ys) = substList xs ys . subst x y

@@ -1,3 +1,4 @@
+{-# LANGUAGE GADTs #-}
 module Main where
 
 import Parser.SugarParser
@@ -10,18 +11,26 @@ import Test.QuickCheck
 
 import Data.List
 
-type TIO = IO TestResult
+data Test where
+  QCTest 
+    { name :: String
+    , qc   :: Property
+    } :: Test
+  PassFail
+    { name  :: String
+    , tests :: IO [a]
+    , run   :: a -> IO Bool
+    } :: Test
+  I'make'my'own'test
+    { name   :: String
+    , action :: IO Bool
+    } :: Test
 
-data Test = Test 
-  { name   :: String
-  , action :: TIO
-  }
 
-data TestResult
-  = Ok
-  | Fail
+main :: IO ()
+main = return ()
 
-
+{-
 runTests :: [Test] -> IO ()
 runTests tests = do
   suc <- runTests' 0 tests
@@ -77,3 +86,5 @@ qcPretty = do
   case res of
     Success l -> return Ok
     f -> print f >> return Fail
+
+-}

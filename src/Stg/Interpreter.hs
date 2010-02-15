@@ -64,9 +64,9 @@ numArgs = length . takeWhile isArg
     isArg (CtArg _) = True
     isArg _         = False
   
-unArg :: Show t => Cont t -> t
-unArg (CtArg (AVar x)) = x
-unArg o = error $ "unArg: maybe a primitive atom or not an arg: " ++ show o 
+unArg :: Show t => Cont t -> Atom t
+unArg (CtArg a) = a
+unArg o = error $ "unArg: not an arg: " ++ show o 
 
 
 instance Show t => Show (StgState t) where
