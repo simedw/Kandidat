@@ -67,4 +67,20 @@ main :: IO ()
 main = do
     args <- getArgs
     print $ show args
+--    let ( flags, nonOpts, msgs ) = getOpt RequireOrder options args
+    case getOpt RequireOrder options args of
+        (flags, [],      [])     -> do
+             opts <- foldl (>>=) (return defaultSettings) flags
+             testInterpreter opts "FunTest1.hls"
+        (_,     nonOpts, [])     -> error $ "unrecognized arguments: " ++ unwords nonOpts
+        (_,     _,       msgs)   -> error $ concat msgs ++ usageInfo header options
 
+data Flag = Version
+
+options :: [OptDescr (Settings -> IO Settings)] 
+options = [ Option ['S'] ["step"] (ReqArg setSteping "BOOL") "step through" ]
+
+setSteping :: String -> Settings -> IO Settings
+setSteping arg s = return $ s { steping = read arg}
+
+header = "Usage: main [OPTION...]"
