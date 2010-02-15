@@ -10,6 +10,7 @@ import Stg.Rules
 import Text.PrettyPrint
 
 import Parser.Pretty.Pretty
+import PrePrelude.PrePrelude
 
 import qualified Data.Map as M
 
@@ -55,7 +56,7 @@ testInterpreter settings file = do
                         >> steps (steping settings) 
                         >> putStrLn (showStgRule settings r 
                         ++ "\n" 
-                        ++ showStgState settings s)) $ eval (map run fs)
+                        ++ showStgState settings s)) $ eval (prePrelude ++ map run fs)
 
       Left  r  -> do putStr $ "fail: " ++ show r
   where

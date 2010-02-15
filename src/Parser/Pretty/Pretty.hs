@@ -21,6 +21,7 @@ prExpr prVar e = case e of
         False -> "let" )<+> braces (nest 0 (prLetBind prVar binds)) $$ text "in" <+> prExpr prVar e
     ECase scrut binds -> text "case" <+> prExpr prVar scrut <+> text "of"
         <+> braces (text "" $+$ nest 2 (seppis $ map (prBind prVar) binds))
+    EPop op as -> text (show op) <+> text "#" <+> hsep [ prAtom prVar a | a <- as ]  
 
 seppis = vcat . punctuate semi
 
