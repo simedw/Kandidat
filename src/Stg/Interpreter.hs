@@ -92,7 +92,7 @@ getMain = getFunction "main"
 getFunction :: Eq t  => t -> [Function t] -> Expr t
 getFunction s ((Function name o):xs) | s == name = let OThunk c = o in c
                                      | otherwise = getFunction s xs 
-getFunction s [] = error "No main function"
+getFunction s [] = error $ "No \"" ++ s  ++ "\" function"
 
 initialHeap :: Ord t => [Function t] -> Heap t
 initialHeap = M.fromList . map (\(Function name obj) -> (name, obj))
@@ -102,7 +102,7 @@ step st@(StgState code stack heap) = case code of
     ELet  b defs _ -> do
         vars <- replicateM (length defs) newVar
         let (ids, _objs) = unzip defs
-            code'@(ELet _ defs' e') = substList ids vars code
+            code'@(ELet _ defs' e') = substList ids (map AVar vars) code
             (_ids, objs) = unzip defs'
             heap' = foldr (\ (name, obj) h -> M.insert name obj h) 
                           heap
@@ -111,6 +111,7 @@ step st@(StgState code stack heap) = case code of
           (RLet, st { code = e'
           , heap = heap' })
     ECase e br     -> undefined
+    EPop  p args   -> undefined
     ECall i args   -> returnJust $
         (RPush
         , st { code = EAtom (AVar i)
@@ -143,7 +144,7 @@ step st@(StgState code stack heap) = case code of
                     False -> do
                         p <- newVar
                         let args' = map unArg $ take stackArgs stack
-                            pap   = OPap v (map AVar args')
+                            pap   = OPap v args' -- not here
                               in returnJust
                                  ( RPap1
                                  , st { code  = EAtom (AVar p)

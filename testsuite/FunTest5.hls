@@ -9,4 +9,7 @@ one = succ zero;
 two = succ one;
 three = succ two;
 
-main = add three (mul two three);
+s x = S x;
+z = Z;
+
+main = add three (mul two three) s z;

@@ -11,10 +11,14 @@ data Function t = Function t (Obj t)
 
 data Expr t   = EAtom (Atom t)
               | ECall t [Atom t]
+              | EPop Pop [Atom t]
               | ELet Bool [(t,Obj t)] (Expr t)  -- True if recursive
               | ECase (Expr t) [Branch t]
   deriving (Data, Eq, Show, Typeable)
 
+data Pop = PPlus
+         | PMinus
+         deriving (Data, Typeable, Eq, Show)
 isAtom (EAtom _) = True
 isAtom _         = False
 
