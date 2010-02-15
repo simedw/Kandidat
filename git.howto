@@ -1,0 +1,34 @@
+Simple howto, about git.
+
+
+master@github
+------------------*-----*---------*------
+            |             |       ^
+       pull |       pull  | push  |
+            |             |       |
+master@home v             v       |
+------------*-------------*-----*--------
+     branch \                  / merge 
+             \                /
+branch@home   *---*-----*-----
+
+
+hopefully this diagram shows the procedure :)
+
+in git:
+
+when at master (git branch master)
+
+git pull
+git checkout -b <myBranch>
+[| hack and git commit |]
+git checkout master
+git pull
+git merge <myBranch>
+git push
+
+# if you don't need the branch you created anymore
+git branch -d <myBranch>
+
+
+Please add more information if needed :)
