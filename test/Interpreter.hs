@@ -9,7 +9,7 @@ import System.FilePath
 testParser :: FilePath -> IO ()
 testParser file = do
     dir     <- getCurrentDirectory
-    prelude <- readFile (dir </> ".." </> "prelude" </> "MiniPrelude.hls")
+    prelude <- readFile (dir </> ".." </> "prelude" </> "Prelude.hls")
     res     <- readFile (dir </> ".." </> "testsuite" </> file)
     case parseSugar (prelude ++ res) of
       Right fs -> mapM_ (\x -> putStrLn "#####" >> getChar >> print x) $ eval (map run fs)

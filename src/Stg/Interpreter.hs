@@ -11,23 +11,12 @@ import Data.Map(Map)
 import qualified Data.Map as M
 import "mtl" Control.Monad.State
 
-import Text.PrettyPrint
-
-import Parser.Pretty.Pretty
 
 import Stg.AST
 import Stg.Rules
 import Stg.Substitution
+import Stg.Types
 
-
-data Cont t 
-  = CtCase [Branch t]
-  | CtUpd t
-  | CtArg (Atom t)
- deriving Show
-
-type Stack t = [Cont t]
-type Heap  t = Map t (Obj t)
 
 type StgM t = State [t]
 
@@ -37,13 +26,13 @@ newVar = do
     v <- get
     put (tail v)
     return (head v)
+-- | Create a fresh unbound variable
+newVar :: StgM t t
+newVar = do
+    v <- get
+    put (tail v)
+    return (head v)
 
-data StgState t = StgState
-  { code  :: Expr  t
-  , stack :: Stack t
-  , heap  :: Map   t (Obj t)
-  }
- -- deriving Show
  
 topCase :: Stack t -> Bool
 topCase (CtCase _ : _) = True
@@ -68,7 +57,6 @@ numArgs = length . takeWhile isArg
 unArg :: Show t => Cont t -> Atom t
 unArg (CtArg a) = a
 unArg o = error $ "unArg: not an arg: " ++ show o 
-
 instantiateBranch :: (Data t, Eq t) => t -> [Atom t] -> [Branch t] -> Maybe (Expr t)
 instantiateBranch x atoms (BCon t ts e : bs) 
     | x == t    = Just $ substList ts atoms e
@@ -78,12 +66,6 @@ instantiateBranch _ _ _ = Nothing
 findDefaultBranch :: (Data t, Eq t) => Atom t -> [Branch t] -> Maybe (Expr t)
 findDefaultBranch atom branches = listToMaybe [subst t atom e | BDef t e <- branches]
 
-instance Show t => Show (StgState t) where
-  show st@(StgState {code, stack, heap}) = 
-    "stack: " ++ show stack 
-    ++ "\ncode: " ++ show (prExpr (text . show) code)
-    ++ "\nheap: " ++ (concat [ show (id, prObj (text . show) obj) ++ "\n\t"
-                             | (id, obj) <- M.toList heap])
 
 initialState :: [Function String] -> StgState String
 initialState funs = StgState

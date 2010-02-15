@@ -5,7 +5,6 @@ module Stg.AST where
 import Data.Generics
 import Data.Generics.PlateData
 
-
 data Function t = Function t (Obj t)
   deriving (Data, Eq, Show, Typeable)
 
