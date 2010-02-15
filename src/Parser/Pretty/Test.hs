@@ -22,10 +22,12 @@ test_if_equal f =
 
 
 getId = flip suchThat (\x -> not $ x `elem` keywords) 
-    $ listOf1 (elements $ ['a' .. 'z'] ++ ['A' .. 'Z'])
-    {- case x `elem` keywords of
-        True -> getId 
-        False -> return x -}
+    $ (:) <$> elements ['a' .. 'z'] <*> vars
+
+getCon = flip suchThat (\x -> not $ x `elem` keywords)
+    $ (:) <$> elements ['A' .. 'Z'] <*> vars
+
+vars = listOf (elements $ ['a' .. 'z'] ++ ['A' .. 'Z']) 
 
 instance Arbitrary ParsedSTGAST where
     arbitrary = sized $ \s -> (\x y -> PAST $ Function x y) <$> getId <*> getObj s
@@ -41,8 +43,8 @@ getObj 0 = oneof
     ]
 getObj s = oneof
     [ OFun <$> listOf1 getId <*> getExpr s'
-    -- , OPap <$> getObj s' <*> listOf1 getAtom
-    , OCon <$> getId <*> listOf getAtom
+    , OPap <$> getId <*> listOf1 getAtom
+    , OCon <$> getCon <*> listOf getAtom
     , OThunk <$> getExpr s'
     , pure OBlackhole
     ]
