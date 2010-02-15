@@ -5,6 +5,7 @@ module Stg.Interpreter where
 -- Naive Stg interpreter
 
 import Data.Generics
+import Data.Maybe
 
 import Data.Map(Map)
 import qualified Data.Map as M
@@ -68,6 +69,14 @@ unArg :: Show t => Cont t -> Atom t
 unArg (CtArg a) = a
 unArg o = error $ "unArg: not an arg: " ++ show o 
 
+instantiateBranch :: (Data t, Eq t) => t -> [Atom t] -> [Branch t] -> Maybe (Expr t)
+instantiateBranch x atoms (BCon t ts e : bs) 
+    | x == t    = Just $ substList ts atoms e
+    | otherwise = instantiateBranch x atoms bs
+instantiateBranch _ _ _ = Nothing
+
+findDefaultBranch :: (Data t, Eq t) => Atom t -> [Branch t] -> Maybe (Expr t)
+findDefaultBranch atom branches = listToMaybe [subst t atom e | BDef t e <- branches]
 
 instance Show t => Show (StgState t) where
   show st@(StgState {code, stack, heap}) = 
@@ -89,10 +98,10 @@ initialNames = map ("i." ++) $ [1..] >>= flip replicateM ['a'..'z']
 
 getMain = getFunction "main"
 
-getFunction :: Eq t  => t -> [Function t] -> Expr t
+getFunction :: (Show t, Eq t)  => t -> [Function t] -> Expr t
 getFunction s ((Function name o):xs) | s == name = let OThunk c = o in c
                                      | otherwise = getFunction s xs 
-getFunction s [] = error $ "No \"" ++ s  ++ "\" function"
+getFunction s [] = error $ "No \"" ++ show s  ++ "\" function"
 
 initialHeap :: Ord t => [Function t] -> Heap t
 initialHeap = M.fromList . map (\(Function name obj) -> (name, obj))
@@ -110,7 +119,33 @@ step st@(StgState code stack heap) = case code of
         returnJust $ 
           (RLet, st { code = e'
           , heap = heap' })
-    ECase e br     -> undefined
+    ECase e br     -> case e of
+        EAtom (AVar v) ->
+            case M.lookup v heap of
+                Nothing -> return Nothing
+                Just (OThunk _)     -> rcase
+                Just (OCon c atoms) -> case instantiateBranch c atoms br of
+                    Nothing -> rany
+                    Just e  -> returnJust
+                        ( RCaseCon
+                        , st { code = e}
+                        )
+                _ -> rany
+        _     -> rcase
+      where
+        rcase = returnJust $
+          (RCaseCon
+          , st { code  = e
+               , stack = CtCase br : stack
+               }
+          )
+        EAtom var = e
+        rany = case findDefaultBranch var br of
+            Nothing -> return Nothing
+            Just e  -> returnJust
+                ( RCaseAny
+                , st { code = e }
+                )
     EPop  p args   -> undefined
     ECall i args   -> returnJust $
         (RPush
@@ -131,6 +166,13 @@ step st@(StgState code stack heap) = case code of
                                                     , heap  = M.insert x obj heap
                                                     }
                                                )
+            _ | topCase stack -> let CtCase bs : rest = stack
+                                 in returnJust
+                                    ( RRet
+                                    , st { code = ECase code bs
+                                         , stack = rest
+                                         }
+                                    )
             OFun args e -> let lenArgs = length args   -- v is a fun
                                stackArgs = numArgs stack 
                 in case lenArgs <= stackArgs of   
