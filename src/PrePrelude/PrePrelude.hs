@@ -6,8 +6,8 @@ import Stg.AST
 
 prePrelude :: [Function String]
 prePrelude =
-    [ binOp "+#" PPlus
-    , binOp "-#" PMinus
+    [ binOp "+" PPlus
+    , binOp "-" PMinus
     ]
 
 -- Create the function for a primitive operation

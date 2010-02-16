@@ -13,6 +13,7 @@ import "mtl" Control.Monad.State
 
 
 import Stg.AST
+import Stg.GC
 import Stg.Rules
 import Stg.Substitution
 import Stg.Types
@@ -61,11 +62,12 @@ findDefaultBranch atom branches = listToMaybe [subst t atom e | BDef t e <- bran
 
 
 initialState :: [Function String] -> StgState String
-initialState funs = StgState
+initialState funs = gc $ StgState
   { code  = getMain funs
   , stack = []
   , heap  = initialHeap funs
   }
+    -- where gc = id
 
 initialNames :: [String]
 initialNames = map ("i." ++) $ [1..] >>= flip replicateM ['a'..'z']
