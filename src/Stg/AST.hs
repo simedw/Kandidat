@@ -15,8 +15,10 @@ data Expr t   = EAtom (Atom t)
               | ECase (Expr t) [Branch t]
   deriving (Data, Eq, Show, Typeable)
 
-data Pop = PPlus
-         | PMinus
+data Pop = PAdd
+         | PSub
+         | PMul
+         | PDiv
          deriving (Data, Typeable, Eq, Show)
 isAtom (EAtom _) = True
 isAtom _         = False

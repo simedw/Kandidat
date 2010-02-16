@@ -106,6 +106,7 @@ step st@(StgState code stack heap) = case code of
                         , st { code = e}
                         )
                 _ -> rany
+        EAtom (ANum n) -> rany
         _     -> rcase
       where
         rcase = returnJust $
@@ -121,12 +122,19 @@ step st@(StgState code stack heap) = case code of
                 ( RCaseAny
                 , st { code = e }
                 )
-    EPop  p args   -> undefined
+    EPop  op args  -> returnJust $ -- Primitive operation
+        (RPrimOP
+        , st { code = applyPrimOp op args }
+        )
     ECall i args   -> returnJust $
         (RPush
         , st { code = EAtom (AVar i)
              , stack = map CtArg args ++ stack
              })
+    EAtom a@(Anum _) | topUpd stack -> 
+        let CtUpd x : rest = stack
+         in returnJust
+            
     EAtom (AVar v) -> case M.lookup v heap of  -- Is v on the heap
         Nothing  -> return Nothing
         Just obj -> case obj of
@@ -186,3 +194,12 @@ eval funs = (RInitial, st) : evalState (go st) initialNames
             Nothing    -> return []
             Just (r, st') -> ((r, st') :) `fmap` go st'
       
+
+applyPrimOp :: Pop -> [Atom t] -> Expr t
+applyPrimOp op = case op of 
+    PAdd -> binOp (+)
+    PSub -> binOp (-)
+    PMul -> binOp (*)
+    PDiv -> binOp div
+  where
+    binOp op [ANum x, ANum y] = EAtom (ANum (x `op` y))
