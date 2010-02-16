@@ -67,13 +67,14 @@ testInterpreter settings file = do
 
 main :: IO ()
 main = do
-    args <- getArgs
-    print $ show args
+    -- First argument is the filename
+    file:args <- getArgs
+    print $ args
 --    let ( flags, nonOpts, msgs ) = getOpt RequireOrder options args
     case getOpt RequireOrder options args of
         (flags, [],      [])     -> do
              opts <- foldl (>>=) (return defaultSettings) flags
-             testInterpreter opts "FunTest1.hls"
+             testInterpreter opts file
         (_,     nonOpts, [])     -> error $ "unrecognized arguments: " ++ unwords nonOpts
         (_,     _,       msgs)   -> error $ concat msgs ++ usageInfo header options
 

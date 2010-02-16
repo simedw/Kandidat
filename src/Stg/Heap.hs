@@ -1,4 +1,4 @@
-module Heap where
+module Stg.Heap where
 
 import Data.Map(Map)
 
