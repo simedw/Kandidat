@@ -26,13 +26,6 @@ newVar = do
     v <- get
     put (tail v)
     return (head v)
--- | Create a fresh unbound variable
-newVar :: StgM t t
-newVar = do
-    v <- get
-    put (tail v)
-    return (head v)
-
  
 topCase :: Stack t -> Bool
 topCase (CtCase _ : _) = True
