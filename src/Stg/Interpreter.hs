@@ -84,10 +84,44 @@ getFunction s [] = error $ "No \"" ++ show s  ++ "\" function"
 initialHeap :: Ord t => [Function t] -> Heap t
 initialHeap = M.fromList . map (\(Function name obj) -> (name, obj))
 
---step :: (Data t, Ord t, Eq t, Show t) => StgState t -> StgM t (Maybe (Rule, StgState t))
+
+
 step :: StgState String -> StgM String (Maybe (Rule, StgState String))
 step st@(StgState code stack heap) = case code of
-    ELet  b defs _ -> do
+    ELet recursive defs _  -> rlet st recursive defs 
+    ECase expr branch      -> case expr of
+        EAtom (AVar var)  ->
+            case M.lookup var heap of
+                Nothing             -> return Nothing
+                Just (OThunk _)     -> rcase expr branch
+                Just (OCon c atoms) -> rcasecon st expr branch c atoms
+                _                   -> rany expr branch
+        EAtom (ANum n)   -> rany expr branch
+        _                -> rcase expr branch
+
+    EPop  op args     -> rprimop st op args 
+    ECall ident args  -> rpush st ident args 
+    EAtom (ANum _) | topUpd stack  -> rupdate st (OThunk code)
+    EAtom (ANum _) | topCase stack -> rret st
+    EAtom (AVar var) -> case M.lookup var heap of  
+        Nothing  -> return Nothing
+        Just obj -> case obj of
+            OThunk expr       -> rthunk st expr var 
+            _ | topUpd  stack -> rupdate st obj
+            _ | topCase stack -> rret st 
+            OFun args expr    -> let lenArgs = length args
+                                     stackArgs = numArgs stack 
+                -- depending on the number of arguments the function is either
+                -- saturated or not 
+                in case lenArgs <= stackArgs of
+                    True  -> rfenter st args lenArgs expr
+                    False -> rpap st stackArgs var 
+            OPap ident atoms | topArg stack -> rpenter st ident atoms     
+            _                               -> return Nothing
+    -- if there is no rule to apply, do nothing
+    _              -> return Nothing
+  where
+    rlet st@(StgState code stack heap) recursive defs = do
         vars <- replicateM (length defs) newVar
         let (ids, _objs) = unzip defs
             code'@(ELet _ defs' e') = substList ids (map AVar vars) code
@@ -95,107 +129,76 @@ step st@(StgState code stack heap) = case code of
             heap' = foldr (\ (name, obj) h -> M.insert name obj h) 
                           heap
                           (zip vars objs)
-        returnJust $ 
-          (RLet, st { code = e'
-          , heap = heap' })
-    ECase e br     -> case e of
-        EAtom (AVar v) ->
-            case M.lookup v heap of
-                Nothing -> return Nothing
-                Just (OThunk _)     -> rcase
-                Just (OCon c atoms) -> case instantiateBranch c atoms br of
-                    Nothing -> rany
-                    Just e  -> returnJust
-                        ( RCaseCon
-                        , st { code = e}
-                        )
-                _ -> rany
-        EAtom (ANum n) -> rany
-        _     -> rcase
-      where
-        rcase = returnJust $
+        returnJust $ (RLet, st { code = e'
+                          , heap = heap' })
+                          
+    rcase expr branch = returnJust $
           (RCaseCon
-          , st { code  = e
-               , stack = CtCase br : stack
+          , st { code  = expr
+               , stack = CtCase branch : stack
                }
           )
-        EAtom var = e
-        rany = case findDefaultBranch var br of
-            Nothing -> return Nothing
-            Just e  -> returnJust
-                ( RCaseAny
-                , st { code = e }
-                )
-    EPop  op args  -> returnJust $ -- Primitive operation
-        (RPrimOP
+    rany (EAtom var) branch = case findDefaultBranch var branch of
+                Nothing     -> return Nothing
+                Just expr'  -> returnJust
+                    ( RCaseAny
+                    , st { code = expr' }
+                    )
+    rcasecon st@(StgState code stack heap) expr branch c atoms = 
+        case instantiateBranch c atoms branch of
+                    Nothing -> rany expr branch
+                    Just e  -> returnJust
+                        ( RCaseCon
+                        , st { code = expr}
+                        )
+    rprimop st op args = returnJust $
+        ( RPrimOP
         , st { code = applyPrimOp op args }
         )
-    ECall i args   -> returnJust $
+    
+    rpush st@(StgState code stack heap) ident args = returnJust $
         (RPush
-        , st { code = EAtom (AVar i)
-             , stack = map CtArg args ++ stack
-             })
-    EAtom (ANum _) | topUpd stack ->
-        let CtUpd x : rest = stack
-        in returnJust 
-            ( RUpdate
-            , st { stack = rest
-            , heap  = M.insert x (OThunk code) heap}
-            )
-    EAtom (ANum _) | topCase stack -> 
+        , st { code = EAtom (AVar ident)
+             , stack = map CtArg args ++ stack})
+
+    rret st@(StgState code stack heap) =
         let CtCase bs : rest = stack
         in returnJust
           ( RRet
           , st { code = ECase code bs
                , stack = rest})
-    EAtom (AVar v) -> case M.lookup v heap of  -- Is v on the heap
-        Nothing  -> return Nothing
-        Just obj -> case obj of
-            OThunk e -> returnJust $           -- v is a thunk, apply rule Thunk
-                ( RThunk
-                , st { code  = e
-                     , stack = CtUpd v : stack
-                     , heap  = M.insert v OBlackhole heap})
-            _ | topUpd stack -> let CtUpd x : rest = stack -- the object is a value, update memory
-                                in  returnJust ( RUpdate
-                                               , st { stack = rest
-                                                    , heap  = M.insert x obj heap
-                                                    }
-                                               )
-            _ | topCase stack -> let CtCase bs : rest = stack
-                                 in returnJust
-                                    ( RRet
-                                    , st { code = ECase code bs
-                                         , stack = rest
-                                         }
-                                    )
-            OFun args e -> let lenArgs = length args   -- v is a fun
-                               stackArgs = numArgs stack 
-                in case lenArgs <= stackArgs of   
-                    -- with enough arguments, apply FEnter
-                    True -> let args' = map unArg $ take lenArgs stack -- Cannot handle arguments that are numbers
-                             in returnJust
-                                ( RFEnter
-                                , st { code  = substList args args' e   -- since substList only replaces AVar to Avar
-                                     , stack = drop lenArgs stack })
-                    -- too few arguments, apply PAP1
-                    False -> do
-                        p <- newVar
-                        let args' = map unArg $ take stackArgs stack
-                            pap   = OPap v args' -- not here
-                              in returnJust
-                                 ( RPap1
-                                 , st { code  = EAtom (AVar p)
-                                      , stack = drop stackArgs stack
-                                      , heap  = M.insert p pap heap })
-            -- we have a new argument on the stack, apply PEnter
-            OPap i atoms | topArg stack -> do
-               returnJust
-                 ( RPEnter
-                 , st { code  = EAtom (AVar i)
-                      , stack = map CtArg atoms ++ stack
-                      , heap  = heap })
-    _              -> return Nothing
+    rthunk st@(StgState code stack heap) e v = returnJust $     
+        ( RThunk
+        , st { code  = e
+        , stack = CtUpd v : stack
+        , heap  = M.insert v OBlackhole heap})
+    rupdate st@(StgState code stack heap) obj = 
+        let CtUpd x : rest = stack -- the object is a value, update memory
+        in  returnJust ( RUpdate
+                       , st { stack = rest
+                       , heap  = M.insert x obj heap})
+    rfenter st@(StgState code stack heap) args lenArgs e = 
+        let args' = map unArg $ take lenArgs stack 
+        in returnJust
+                       ( RFEnter
+                       , st { code  = substList args args' e  
+                            , stack = drop lenArgs stack })
+
+    rpap st@(StgState code stack heap) stackArgs var = do
+        p <- newVar
+        let args' = map unArg $ take stackArgs stack
+            pap   = OPap var args'
+        returnJust $ 
+                      ( RPap1
+                      , st { code  = EAtom (AVar p)
+                      , stack = drop stackArgs stack
+                      , heap  = M.insert p pap heap })
+    rpenter st@(StgState code stack heap) var atoms = returnJust
+        ( RPEnter
+        , st { code  = EAtom (AVar var)
+        , stack = map CtArg atoms ++ stack
+        , heap  = heap })
+ 
 
 eval :: [Function String] -> [(Rule, StgState String)]
 eval funs = (RInitial, st) : evalState (go st) initialNames
