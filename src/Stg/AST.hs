@@ -19,6 +19,12 @@ data Pop = PAdd
          | PSub
          | PMul
          | PDiv
+         | PMod
+         | PLe
+         | PLt
+         | PGe
+         | PGt
+         | PEq
          deriving (Data, Typeable, Eq, Show)
 isAtom (EAtom _) = True
 isAtom _         = False

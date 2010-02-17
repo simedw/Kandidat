@@ -4,6 +4,7 @@ module Stg.Interpreter where
 
 -- Naive Stg interpreter
 
+import Data.Char
 import Data.Generics
 import Data.Maybe
 
@@ -67,7 +68,7 @@ initialState funs = gc $ StgState
   , stack = []
   , heap  = initialHeap funs
   }
-    -- where gc = id
+     where gc = id
 
 initialNames :: [String]
 initialNames = map ("i." ++) $ [1..] >>= flip replicateM ['a'..'z']
@@ -83,7 +84,8 @@ getFunction s [] = error $ "No \"" ++ show s  ++ "\" function"
 initialHeap :: Ord t => [Function t] -> Heap t
 initialHeap = M.fromList . map (\(Function name obj) -> (name, obj))
 
-step :: (Data t, Ord t, Eq t, Show t) => StgState t -> StgM t (Maybe (Rule, StgState t))
+--step :: (Data t, Ord t, Eq t, Show t) => StgState t -> StgM t (Maybe (Rule, StgState t))
+step :: StgState String -> StgM String (Maybe (Rule, StgState String))
 step st@(StgState code stack heap) = case code of
     ELet  b defs _ -> do
         vars <- replicateM (length defs) newVar
@@ -133,10 +135,19 @@ step st@(StgState code stack heap) = case code of
         , st { code = EAtom (AVar i)
              , stack = map CtArg args ++ stack
              })
-    EAtom a@(Anum _) | topUpd stack -> 
+    EAtom (ANum _) | topUpd stack ->
         let CtUpd x : rest = stack
-         in returnJust
-            
+        in returnJust 
+            ( RUpdate
+            , st { stack = rest
+            , heap  = M.insert x (OThunk code) heap}
+            )
+    EAtom (ANum _) | topCase stack -> 
+        let CtCase bs : rest = stack
+        in returnJust
+          ( RRet
+          , st { code = ECase code bs
+               , stack = rest})
     EAtom (AVar v) -> case M.lookup v heap of  -- Is v on the heap
         Nothing  -> return Nothing
         Just obj -> case obj of
@@ -197,11 +208,18 @@ eval funs = (RInitial, st) : evalState (go st) initialNames
             Just (r, st') -> ((r, st') :) `fmap` go st'
       
 
-applyPrimOp :: Pop -> [Atom t] -> Expr t
+applyPrimOp :: Pop -> [Atom String] -> Expr String
 applyPrimOp op = case op of 
-    PAdd -> binOp (+)
-    PSub -> binOp (-)
-    PMul -> binOp (*)
-    PDiv -> binOp div
+    PAdd -> num . binOp (+)
+    PSub -> num . binOp (-)
+    PMul -> num . binOp (*)
+    PDiv -> num . binOp div
+    PMod -> num . binOp mod
+    PGe  -> con . binOp (>=)
+    PGt  -> con . binOp (>)
+    PLe  -> con . binOp (<=)
+    PLt  -> con . binOp (<)
   where
-    binOp op [ANum x, ANum y] = EAtom (ANum (x `op` y))
+    binOp op [ANum x, ANum y] = x `op` y
+    con = flip ECall [] . map toLower . show 
+    num = EAtom . ANum
