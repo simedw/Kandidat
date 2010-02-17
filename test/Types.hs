@@ -8,19 +8,19 @@ import Data.Ratio
 import Test.QuickCheck
 
 data Test where
-  QCTest ::  
+  QCTest 
     { name :: String
     , qc   :: Property
-    } -> Test
-  PassFail ::
+    } :: Test
+  PassFail 
     { name  :: String
     , tests :: IO [a]
     , run   :: a -> IO Bool
-    } -> Test
-  I'make'my'own'test ::
+    } :: Test
+  I'make'my'own'test 
     { name   :: String
     , action :: IO Bool
-    } -> Test
+    } :: Test
 
 report :: Int -> Int -> IO ()
 report suc total = putStrLn $ "outcome: " 
