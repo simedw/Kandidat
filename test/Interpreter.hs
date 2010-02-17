@@ -6,8 +6,10 @@ import Parser.Diabetes
 import Stg.Interpreter
 import System.Directory
 import System.FilePath
+import Stg.AST
 import Stg.Rules
 import Stg.Types
+import Stg.Input
 import Text.PrettyPrint
 
 import Parser.Pretty.Pretty
@@ -26,6 +28,7 @@ data Settings = Settings
   , prelude :: String
   , showStgState :: (StgState String -> String)
   , showStgRule  :: (Rule -> String)
+  , input :: Input
   }
 
 stgState :: Bool -> Bool -> Bool -> StgState String -> String
@@ -46,6 +49,7 @@ defaultSettings = Settings {
   , prelude = "Prelude.hls"
   , showStgState = stgState True True True
   , showStgRule = show 
+  , input = defaultInput
   }
 
 noheapSettings = defaultSettings { showStgState = stgState True True False }
@@ -57,7 +61,7 @@ testInterpreter settings file = do
     res     <- readFile (dir </> ".." </> "testsuite" </> file)
     case parseSugar (prelude ++ res) of
       Right fs -> do
-        let trace = eval (prePrelude ++ map run fs)
+        let trace = eval (input settings) (prePrelude ++ map run fs)
         mapM_ (\(r, s) -> putStrLn "<-------------->" 
                         >> steps (steping settings) 
                         >> putStrLn (showStgRule settings r 
@@ -69,7 +73,6 @@ testInterpreter settings file = do
   where
     steps True  = getChar >> return ()
     steps False = return ()
-
 
 main :: IO ()
 main = do
@@ -87,9 +90,26 @@ main = do
 data Flag = Version
 
 options :: [OptDescr (Settings -> IO Settings)] 
-options = [ Option ['S'] ["step"] (ReqArg setSteping "BOOL") "step through" ]
+options = 
+    [ Option ['S'] ["step"] (ReqArg setSteping "BOOL") "step through"
+    , Option ['I'] ["integerinput"] 
+        (ReqArg setInputInteger "Integer") 
+        "single integer input"
+    , Option ['L'] ["listinput"] 
+        (ReqArg setInputIntegers "[Integer]") 
+        "integer list input"
+    ]
 
 setSteping :: String -> Settings -> IO Settings
-setSteping arg s = return $ s { steping = read arg}
+setSteping arg s = return $ s { steping = read arg }
+
+setInputInteger :: String -> Settings -> IO Settings
+setInputInteger arg s = 
+    return $ s { input = (input s) { inputInteger = Just (read arg) }}
+
+setInputIntegers :: String -> Settings -> IO Settings
+setInputIntegers arg s = 
+    return $ s { input = (input s) { inputIntegers = Just (read arg) }}
+
 
 header = "Usage: main [OPTION...]"

@@ -1,6 +1,6 @@
 
 zero s x = x;
-succ s x = s x;
+succ v s x = s (v s x);
 
 add m n s x = m s (n s x);
 

@@ -13,5 +13,5 @@ qsort li = case li of
   
 inc x = x + 1;
 
-main = qsort (reverse (take 10 (iterate inc 0)));
+main = qsort (reverse (take 3 (iterate inc 0)));
 
