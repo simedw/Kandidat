@@ -15,6 +15,9 @@ import PrePrelude.PrePrelude
 
 import qualified Data.Map as M
 
+import Data.List
+import Data.Function
+
 import System( getArgs )
 import System.Console.GetOpt
 
@@ -53,12 +56,15 @@ testInterpreter settings file = do
     prelude <- readFile (dir </> ".." </> "prelude" </> prelude settings)
     res     <- readFile (dir </> ".." </> "testsuite" </> file)
     case parseSugar (prelude ++ res) of
-      Right fs -> mapM_ (\(r, s) -> putStrLn "<-------------->" 
+      Right fs -> do
+        let trace = eval (prePrelude ++ map run fs)
+        mapM_ (\(r, s) -> putStrLn "<-------------->" 
                         >> steps (steping settings) 
                         >> putStrLn (showStgRule settings r 
                         ++ "\n" 
-                        ++ showStgState settings s)) $ eval (prePrelude ++ map run fs)
-
+                        ++ showStgState settings s)) trace
+        print $ map (\ list -> (head list, length list))
+              $ group $ sort $ map fst  trace
       Left  r  -> do putStr $ "fail: " ++ show r
   where
     steps True  = getChar >> return ()

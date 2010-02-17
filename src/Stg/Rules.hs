@@ -18,7 +18,7 @@ data Rule
   | RPap1
   | RPEnter
   | RInitial
- deriving (Show, Eq)
+ deriving (Show, Eq, Ord)
 
 info :: Rule -> String
 info RLet = "Let"

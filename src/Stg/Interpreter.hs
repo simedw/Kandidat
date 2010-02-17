@@ -200,12 +200,13 @@ step st@(StgState code stack heap) = case code of
 eval :: [Function String] -> [(Rule, StgState String)]
 eval funs = (RInitial, st) : evalState (go st) initialNames
   where
-    st = initialState funs
+    gc = mkGC ["true", "false"]
+    st = gc $ initialState funs
     go st = do
         res <- step st
         case res of
             Nothing    -> return []
-            Just (r, st') -> ((r, st') :) `fmap` go st'
+            Just (r, st') -> ((r, st') :) `fmap` go (gc st')
       
 
 applyPrimOp :: Pop -> [Atom String] -> Expr String
