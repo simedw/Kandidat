@@ -79,6 +79,10 @@ zipWith f as bs = case as of
 
 -- Bools
 
+-- These are used by the primitive relational operations
+true = True;
+false = False;
+
 if b x y = case b of
   { True -> x
   ; False -> y

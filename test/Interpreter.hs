@@ -7,6 +7,7 @@ import Stg.Interpreter
 import System.Directory
 import System.FilePath
 import Stg.Rules
+import Stg.Types
 import Text.PrettyPrint
 
 import Parser.Pretty.Pretty
@@ -49,11 +50,7 @@ noheapSettings = defaultSettings { showStgState = stgState True True False }
 testInterpreter :: Settings -> FilePath -> IO ()
 testInterpreter settings file = do
     dir     <- getCurrentDirectory
-<<<<<<< HEAD
-    prelude <- readFile (dir </> ".." </> "prelude" </> "Prelude.hls")
-=======
     prelude <- readFile (dir </> ".." </> "prelude" </> prelude settings)
->>>>>>> d1709c372c098346583c9644edc9142de2109007
     res     <- readFile (dir </> ".." </> "testsuite" </> file)
     case parseSugar (prelude ++ res) of
       Right fs -> mapM_ (\(r, s) -> putStrLn "<-------------->" 
@@ -70,13 +67,14 @@ testInterpreter settings file = do
 
 main :: IO ()
 main = do
-    args <- getArgs
-    print $ show args
+    -- First argument is the filename
+    file:args <- getArgs
+    print $ args
 --    let ( flags, nonOpts, msgs ) = getOpt RequireOrder options args
     case getOpt RequireOrder options args of
         (flags, [],      [])     -> do
              opts <- foldl (>>=) (return defaultSettings) flags
-             testInterpreter opts "FunTest1.hls"
+             testInterpreter opts file
         (_,     nonOpts, [])     -> error $ "unrecognized arguments: " ++ unwords nonOpts
         (_,     _,       msgs)   -> error $ concat msgs ++ usageInfo header options
 

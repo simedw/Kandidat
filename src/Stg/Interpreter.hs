@@ -4,6 +4,7 @@ module Stg.Interpreter where
 
 -- Naive Stg interpreter
 
+import Data.Char
 import Data.Generics
 import Data.Maybe
 
@@ -13,6 +14,7 @@ import "mtl" Control.Monad.State
 
 
 import Stg.AST
+import Stg.GC
 import Stg.Rules
 import Stg.Substitution
 import Stg.Types
@@ -26,13 +28,6 @@ newVar = do
     v <- get
     put (tail v)
     return (head v)
--- | Create a fresh unbound variable
-newVar :: StgM t t
-newVar = do
-    v <- get
-    put (tail v)
-    return (head v)
-
  
 topCase :: Stack t -> Bool
 topCase (CtCase _ : _) = True
@@ -68,11 +63,12 @@ findDefaultBranch atom branches = listToMaybe [subst t atom e | BDef t e <- bran
 
 
 initialState :: [Function String] -> StgState String
-initialState funs = StgState
+initialState funs = gc $ StgState
   { code  = getMain funs
   , stack = []
   , heap  = initialHeap funs
   }
+     where gc = id
 
 initialNames :: [String]
 initialNames = map ("i." ++) $ [1..] >>= flip replicateM ['a'..'z']
@@ -88,7 +84,8 @@ getFunction s [] = error $ "No \"" ++ show s  ++ "\" function"
 initialHeap :: Ord t => [Function t] -> Heap t
 initialHeap = M.fromList . map (\(Function name obj) -> (name, obj))
 
-step :: (Data t, Ord t, Eq t, Show t) => StgState t -> StgM t (Maybe (Rule, StgState t))
+--step :: (Data t, Ord t, Eq t, Show t) => StgState t -> StgM t (Maybe (Rule, StgState t))
+step :: StgState String -> StgM String (Maybe (Rule, StgState String))
 step st@(StgState code stack heap) = case code of
     ELet  b defs _ -> do
         vars <- replicateM (length defs) newVar
@@ -113,6 +110,7 @@ step st@(StgState code stack heap) = case code of
                         , st { code = e}
                         )
                 _ -> rany
+        EAtom (ANum n) -> rany
         _     -> rcase
       where
         rcase = returnJust $
@@ -128,12 +126,28 @@ step st@(StgState code stack heap) = case code of
                 ( RCaseAny
                 , st { code = e }
                 )
-    EPop  p args   -> undefined
+    EPop  op args  -> returnJust $ -- Primitive operation
+        (RPrimOP
+        , st { code = applyPrimOp op args }
+        )
     ECall i args   -> returnJust $
         (RPush
         , st { code = EAtom (AVar i)
              , stack = map CtArg args ++ stack
              })
+    EAtom (ANum _) | topUpd stack ->
+        let CtUpd x : rest = stack
+        in returnJust 
+            ( RUpdate
+            , st { stack = rest
+            , heap  = M.insert x (OThunk code) heap}
+            )
+    EAtom (ANum _) | topCase stack -> 
+        let CtCase bs : rest = stack
+        in returnJust
+          ( RRet
+          , st { code = ECase code bs
+               , stack = rest})
     EAtom (AVar v) -> case M.lookup v heap of  -- Is v on the heap
         Nothing  -> return Nothing
         Just obj -> case obj of
@@ -193,3 +207,19 @@ eval funs = (RInitial, st) : evalState (go st) initialNames
             Nothing    -> return []
             Just (r, st') -> ((r, st') :) `fmap` go st'
       
+
+applyPrimOp :: Pop -> [Atom String] -> Expr String
+applyPrimOp op = case op of 
+    PAdd -> num . binOp (+)
+    PSub -> num . binOp (-)
+    PMul -> num . binOp (*)
+    PDiv -> num . binOp div
+    PMod -> num . binOp mod
+    PGe  -> con . binOp (>=)
+    PGt  -> con . binOp (>)
+    PLe  -> con . binOp (<=)
+    PLt  -> con . binOp (<)
+  where
+    binOp op [ANum x, ANum y] = x `op` y
+    con = flip ECall [] . map toLower . show 
+    num = EAtom . ANum

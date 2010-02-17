@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 module Stg.GC where
 
 -- Bindings
@@ -10,7 +11,9 @@ module Stg.GC where
 -- Set difference of these is the free variables
 
 import Stg.AST
-import Stg.Heap
+import Stg.Types
+
+import Data.Maybe
 
 import Data.Set (Set)
 import qualified Data.Set as S
@@ -30,6 +33,23 @@ test = ECase (var "xs")
                             ] (var "r"))
              , BDef "x" (var "nil")
              ]
+
+gc :: forall t . Ord t => StgState t -> StgState t
+gc (StgState code stack heap) = 
+    let initial = freeVars code `S.union` freeVarsList stack
+    in  StgState code stack $ heapify $ gcStep initial initial
+  where
+    gcStep :: Set t -> Set t -> Set t
+    gcStep acc s | S.null s  = acc
+                 | otherwise = 
+                    let acc' = ( S.unions 
+                              $ map (freeVars . fromJust . flip M.lookup heap) 
+                              $ S.toList s
+                              ) 
+                    in  gcStep (acc' `S.union` acc) (acc' `S.difference` acc)
+
+    heapify :: Set t -> Heap t
+    heapify s = M.filterWithKey (\k a -> S.member k s) heap
 
 class FV e where
     freeVars :: Ord t => e t -> Set t 
@@ -60,3 +80,8 @@ instance FV Obj where
     freeVars (OCon c as)     = freeVarsList as
     freeVars (OThunk e)      = freeVars e
     freeVars (OBlackhole)    = S.empty
+
+instance FV Cont where
+    freeVars (CtCase brs)    = freeVarsList brs
+    freeVars (CtUpd i)       = S.singleton i
+    freeVars (CtArg a)       = freeVars a
