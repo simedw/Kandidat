@@ -12,9 +12,9 @@ import Data.Map(Map)
 import qualified Data.Map as M
 import "mtl" Control.Monad.State
 
-
 import Stg.AST
 import Stg.GC
+import Stg.Input
 import Stg.Rules
 import Stg.Substitution
 import Stg.Types
@@ -197,11 +197,11 @@ step st@(StgState code stack heap) = case code of
                       , heap  = heap })
     _              -> return Nothing
 
-eval :: [Function String] -> [(Rule, StgState String)]
-eval funs = (RInitial, st) : evalState (go st) initialNames
+eval :: Input -> [Function String] -> [(Rule, StgState String)]
+eval inp funs = (RInitial, st) : evalState (go st) initialNames
   where
     gc = mkGC ["true", "false"]
-    st = gc $ initialState funs
+    st = gc $ initialState (createGetFuns inp ++ funs)
     go st = do
         res <- step st
         case res of

@@ -11,10 +11,17 @@ merge li1 li2 = case li1 of
 
 mergesort li = case li of
   { Nil -> Nil
-  ; Cons x xs ->
-    let { hlen  = length li / 2
-        ; begin = take hlen li 
-        ; end   = drop hlen li
-        }
-      in merge (mergesort begin) (mergesort end)
+  ; Cons x xs -> case xs of
+      { Nil -> li
+      ; Cons y ys ->
+        let { hlen  = (length li + 1) / 2
+            ; begin = take hlen li 
+            ; end   = drop hlen li
+            }
+        in merge (mergesort begin) (mergesort end)
+      }
   };
+
+inc x = x + 1;
+
+main = mergesort (reverse (take 1 (iterate inc 0)));
