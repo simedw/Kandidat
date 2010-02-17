@@ -94,7 +94,9 @@ step st@(StgState code stack heap) = case code of
             case M.lookup var heap of
                 Nothing             -> return Nothing
                 Just (OThunk _)     -> rcase expr branch
-                Just (OCon c atoms) -> rcasecon st expr branch c atoms
+                Just (OCon c atoms) -> case instantiateBranch c atoms branch of
+                    Nothing   -> rany expr branch
+                    Just expr -> rcasecon st expr 
                 _                   -> rany expr branch
         EAtom (ANum n)   -> rany expr branch
         _                -> rcase expr branch
@@ -144,13 +146,11 @@ step st@(StgState code stack heap) = case code of
                     ( RCaseAny
                     , st { code = expr' }
                     )
-    rcasecon st@(StgState code stack heap) expr branch c atoms = 
-        case instantiateBranch c atoms branch of
-                    Nothing -> rany expr branch
-                    Just e  -> returnJust
-                        ( RCaseCon
-                        , st { code = expr}
-                        )
+    rcasecon st@(StgState code stack heap) expr = returnJust
+        ( RCaseCon
+        , st { code = expr}
+        )
+
     rprimop st op args = returnJust $
         ( RPrimOP
         , st { code = applyPrimOp op args }
