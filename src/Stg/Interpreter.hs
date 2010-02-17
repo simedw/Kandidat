@@ -219,6 +219,7 @@ applyPrimOp op = case op of
     PGt  -> con . binOp (>)
     PLe  -> con . binOp (<=)
     PLt  -> con . binOp (<)
+    PEq  -> con . binOp (==)
   where
     binOp op [ANum x, ANum y] = x `op` y
     con = flip ECall [] . map toLower . show 

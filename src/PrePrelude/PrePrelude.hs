@@ -17,6 +17,7 @@ prePrelude =
     , binOp "<"  PLt
     , binOp ">=" PGe
     , binOp ">"  PGt
+    , binOp "==" PEq
     ]
 
 -- Create the function for a primitive operation
