@@ -210,16 +210,18 @@ eval funs = (RInitial, st) : evalState (go st) initialNames
 
 applyPrimOp :: Pop -> [Atom String] -> Expr String
 applyPrimOp op = case op of 
-    PAdd -> num . binOp (+)
-    PSub -> num . binOp (-)
-    PMul -> num . binOp (*)
-    PDiv -> num . binOp div
-    PMod -> num . binOp mod
-    PGe  -> con . binOp (>=)
-    PGt  -> con . binOp (>)
-    PLe  -> con . binOp (<=)
-    PLt  -> con . binOp (<)
+    PAdd -> binOp (+) (+)
+    PSub -> binOp (-) (-)
+    PMul -> binOp (*) (*)
+    PDiv -> binOp div (/)
+    PMod -> binOp mod (%.)
+    PGe  -> binOpCon (>=) (>=)
+    PGt  -> binOpCon (>)  (>)
+    PLe  -> binOpCon (<=) (<=)
+    PLt  -> binOpCon (<)  (<)
   where
-    binOp op [ANum x, ANum y] = x `op` y
-    con = flip ECall [] . map toLower . show 
-    num = EAtom . ANum
+    binOp nop _ [ANum x,    ANum y]    = EAtom . ANum    $ x `nop` y
+    binOp _ dop [ADouble x, ADouble y] = EAtom . ADouble $ x `dop` y
+    binOpCon nop _ [ANum x, ANum y] = EAtom . AVar . map toLower . show $ x `nop` y
+    binOpCon _ dop [ADouble x, ADouble y] = EAtom . AVar . map toLower . show $ x `dop` y
+    x %. y = fromIntegral $ truncate x `mod` truncate y
