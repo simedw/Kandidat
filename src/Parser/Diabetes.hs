@@ -103,6 +103,10 @@ magic [] = return ([], [])
 magic ((ST.EAtom x):xs) = do
   (as,bs) <- magic xs
   return (atomST2AST x : as, bs)
+magic (ST.ECon t [] : xs ) = do
+    (as, bs) <- magic xs
+    mkCon <- gets mkEmptyCon
+    return (AST.AVar (mkCon t) : as, bs) 
 magic (x:xs) = do
   var     <- newVar
   obj     <- AST.OThunk <$> desugarE x
