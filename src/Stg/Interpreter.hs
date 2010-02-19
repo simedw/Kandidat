@@ -19,7 +19,6 @@ import Stg.Rules
 import Stg.Substitution
 import Stg.Types
 
-
 type StgM t = State [t]
 
 -- | Create a fresh unbound variable
@@ -92,7 +91,7 @@ step st@(StgState code stack heap) = case code of
     ECase expr branch      -> case expr of
         EAtom (AVar var)  ->
             case M.lookup var heap of
-                Nothing             -> return Nothing
+                Nothing             -> error "var not in heap" -- return Nothing
                 Just (OThunk _)     -> rcase expr branch
                 Just (OCon c atoms) -> case instantiateBranch c atoms branch of
                     Nothing   -> rany expr branch
@@ -198,6 +197,42 @@ step st@(StgState code stack heap) = case code of
         , st { code  = EAtom (AVar var)
         , stack = map CtArg atoms ++ stack
         , heap  = heap })
+
+
+
+-- if we find anything that is point to a OThunk
+-- we try to evalutate it
+force st@(StgState code stack heap) = do 
+  res <- step st 
+  case res of
+    Nothing -> case code of
+        (EAtom (AVar v)) -> case M.lookup v heap of
+            Nothing -> return $ show v
+            Just (OThunk expr) -> force (st {code = expr}) 
+            Just (OCon t []) -> return t 
+            Just (OCon t atoms) 
+                -> do list <- mapM (\x -> force (st {code = EAtom x})) atoms 
+                      return $ "(" ++ t ++ " " ++ concat (space list) ++ ")"
+        (EAtom (ANum n)) -> return $ show n
+        other    -> return $ show other
+    Just (r, st') -> force st'
+  where
+    space xs = let len = length xs - 1
+      in (map (++" ") (take len xs)) ++ (drop len xs)
+
+-- start the force evaluation
+-- actually quite ugly
+runForce :: Input -> [Function String] -> String
+runForce inp funs = evalState (go st) initialNames
+  where
+    gc = mkGC ["true", "false"]
+    st = gc $ initialState (createGetFuns inp ++ funs)
+    go st = do
+        res <- step st
+        case res of
+            Nothing       -> do r <- force st
+                                return r
+            Just (r, st') -> go (gc st')
  
 
 eval :: Input -> [Function String] -> [(Rule, StgState String)]
