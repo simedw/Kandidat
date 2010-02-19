@@ -1,9 +1,9 @@
 zero s x = x;
-succ s x = s x;
+succ s x y = x (s x y);
 
 add m n s x = m s (n s x);
 
-mul m n s = m (n s);
+mul m n = m (add n) zero;
 
 one = succ zero;
 two = succ one;
