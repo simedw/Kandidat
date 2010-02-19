@@ -66,7 +66,7 @@ forceInterpreter settings file = do
     prelude <- readFile (dir </> "prelude" </> prelude settings)
     res     <- readFile (dir </> "testsuite" </> file)
     case parseSugar (prelude ++ res) of
-      Right fs -> let res = runForce (input settings) (prePrelude ++ map run fs)
+      Right fs -> let res = runForce (input settings) (prePrelude ++ run fs)
                    in return res
       Left  r  -> do return $ "fail: " ++ show r
 
