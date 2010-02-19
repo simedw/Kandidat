@@ -1,5 +1,5 @@
 {-# LANGUAGE NamedFieldPuns #-}
-module Test.Interpreter where
+module Interpreter where
 
 import Parser.SugarParser
 import Parser.Diabetes
@@ -29,6 +29,7 @@ data Settings = Settings
   , showStgState :: (StgState String -> String)
   , showStgRule  :: (Rule -> String)
   , input :: Input
+  , quiet :: Bool
   }
 
 stgState :: Bool -> Bool -> Bool -> StgState String -> String
@@ -50,9 +51,26 @@ defaultSettings = Settings {
   , showStgState = stgState True True True
   , showStgRule = show 
   , input = defaultInput
+  , quiet = False
   }
 
 noheapSettings = defaultSettings { showStgState = stgState True True False }
+
+
+-- forceInterpreter forces the return value to be evaluted
+-- so we can display it in a nice fashion
+-- current directory is the base directory to run `cabal test'
+forceInterpreter :: Settings -> FilePath -> IO String
+forceInterpreter settings file = do
+    dir     <- getCurrentDirectory
+    prelude <- readFile (dir </> "prelude" </> prelude settings)
+    res     <- readFile (dir </> "testsuite" </> file)
+    case parseSugar (prelude ++ res) of
+      Right fs -> let res = runForce (input settings) (prePrelude ++ map run fs)
+                   in return res
+      Left  r  -> do return $ "fail: " ++ show r
+
+
 
 testInterpreter :: Settings -> FilePath -> IO ()
 testInterpreter settings file = do
@@ -92,6 +110,7 @@ data Flag = Version
 options :: [OptDescr (Settings -> IO Settings)] 
 options = 
     [ Option ['S'] ["step"] (ReqArg setSteping "BOOL") "step through"
+    , Option ['V'] ["visible"] (ReqArg setVisible "BOOL BOOL BOOL") "show code stack heap"
     , Option ['I'] ["integerinput"] 
         (ReqArg setInputInteger "Integer") 
         "single integer input"
@@ -100,8 +119,18 @@ options =
         "integer list input"
     ]
 
+
 setSteping :: String -> Settings -> IO Settings
 setSteping arg s = return $ s { steping = read arg }
+
+setVisible :: String-> Settings -> IO Settings
+setVisible ind set = let (arg: arg2: arg3:_) = lines ind
+                         h = read arg3
+                         s = read arg2
+                         c = read arg
+                     in return $ set {  showStgState =  stgState c s h }
+
+
 
 setInputInteger :: String -> Settings -> IO Settings
 setInputInteger arg s = 
