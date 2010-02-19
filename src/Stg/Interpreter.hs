@@ -238,7 +238,7 @@ runForce inp funs = evalState (go st) initialNames
 eval :: Input -> [Function String] -> [(Rule, StgState String)]
 eval inp funs = (RInitial, st) : evalState (go st) initialNames
   where
-    gc = mkGC ["true", "false"]
+    gc = mkGC ["$True", "$False"]
     st = gc $ initialState (createGetFuns inp ++ funs)
     go st = do
         res <- step st
@@ -261,5 +261,5 @@ applyPrimOp op = case op of
     PEq  -> con . binOp (==)
   where
     binOp op [ANum x, ANum y] = x `op` y
-    con = flip ECall [] . map toLower . show 
+    con = EAtom . AVar . ('$' :) . show 
     num = EAtom . ANum

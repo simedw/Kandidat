@@ -79,7 +79,7 @@ testInterpreter settings file = do
     res     <- readFile (dir </> ".." </> "testsuite" </> file)
     case parseSugar (prelude ++ res) of
       Right fs -> do
-        let trace = eval (input settings) (prePrelude ++ map run fs)
+        let trace = eval (input settings) (prePrelude ++ run fs)
         mapM_ (\(r, s) -> putStrLn "<-------------->" 
                         >> steps (steping settings) 
                         >> putStrLn (showStgRule settings r 
