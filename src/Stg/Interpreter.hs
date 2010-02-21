@@ -39,7 +39,7 @@ topOpt :: Stack t -> Bool
 topOpt (CtOpt _ : _) = True
 topOpt _             = False
 
-returnJust x = (return (Just (x)))
+returnJust x = return (Just x)
 
 numArgs :: Stack t -> Int
 numArgs = length . takeWhile isArg
@@ -62,7 +62,7 @@ findDefaultBranch atom branches = listToMaybe [subst t atom e | BDef t e <- bran
 
 
 initialState :: [Function String] -> StgState String
-initialState funs = gc $ StgState
+initialState funs = gc StgState
   { code  = getMain funs
   , stack = []
   , heap  = initialHeap funs
@@ -130,13 +130,11 @@ step st@(StgState code stack heap) = case code of
         let (ids, _objs) = unzip defs
             code'@(ELet _ defs' e') = substList ids (map AVar vars) code
             (_ids, objs) = unzip defs'
-            heap' = foldr (\ (name, obj) h -> M.insert name obj h) 
-                          heap
-                          (zip vars objs)
-        returnJust $ (RLet, st { code = e'
-                          , heap = heap' })
+            heap' = foldr (uncurry M.insert) heap (zip vars objs)
+        returnJust (RLet, st { code = e'
+                             , heap = heap' })
                           
-    rcase expr branch = returnJust $
+    rcase expr branch = returnJust 
           (RCaseCon
           , st { code  = expr
                , stack = CtCase branch : stack
@@ -153,12 +151,12 @@ step st@(StgState code stack heap) = case code of
         , st { code = expr}
         )
 
-    rprimop st op args = returnJust $
+    rprimop st op args = returnJust 
         ( RPrimOP
         , st { code = applyPrimOp op args }
         )
     
-    rpush st@(StgState code stack heap) ident args = returnJust $
+    rpush st@(StgState code stack heap) ident args = returnJust 
         (RPush
         , st { code = EAtom (AVar ident)
              , stack = map CtArg args ++ stack})
@@ -169,7 +167,7 @@ step st@(StgState code stack heap) = case code of
           ( RRet
           , st { code = ECase code bs
                , stack = rest})
-    rthunk st@(StgState code stack heap) e v = returnJust $     
+    rthunk st@(StgState code stack heap) e v = returnJust      
         ( RThunk
         , st { code  = e
         , stack = CtUpd v : stack
@@ -190,11 +188,11 @@ step st@(StgState code stack heap) = case code of
         p <- newVar
         let args' = map unArg $ take stackArgs stack
             pap   = OPap var args'
-        returnJust $ 
-                      ( RPap1
-                      , st { code  = EAtom (AVar p)
-                      , stack = drop stackArgs stack
-                      , heap  = M.insert p pap heap })
+        returnJust ( RPap1
+                   , st { code  = EAtom (AVar p)
+                        , stack = drop stackArgs stack
+                        , heap  = M.insert p pap heap }
+                   )
     rpenter st@(StgState code stack heap) var atoms = returnJust
         ( RPEnter
         , st { code  = EAtom (AVar var)
@@ -223,7 +221,7 @@ step st@(StgState code stack heap) = case code of
                         , heap  = M.insert alpha fun heap'
                         }
                     )
-            _ -> error $ "OPTPAP: pap doesn't point to FUN"
+            _ -> error "OPTPAP: pap doesn't point to FUN"
     rupdateopt st@(StgState code stack heap) obj var = do
         let CtOpt alpha : stack' = stack
         returnJust
@@ -255,7 +253,7 @@ force st@(StgState code stack heap) = do
     Just (r, st') -> force st'
   where
     space xs = let len = length xs - 1
-      in (map (++" ") (take len xs)) ++ (drop len xs)
+      in map (++" ") (take len xs) ++ drop len xs
 
 -- start the force evaluation
 -- actually quite ugly
@@ -267,8 +265,7 @@ runForce inp funs = evalState (go st) initialNames
     go st = do
         res <- step st
         case res of
-            Nothing       -> do r <- force st
-                                return r
+            Nothing       -> force st
             Just (r, st') -> go (gc st')
  
 

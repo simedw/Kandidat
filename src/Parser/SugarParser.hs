@@ -102,7 +102,7 @@ afterparensExpr = (flip ECall [] `fmap` operator tok) <|> expr
 
 -- Atoms, identifiers or integers. Extensible!
 atomExpr :: P (Expr String)
-atomExpr = (EAtom . ANum) `fmap` (try $ signedInt)
+atomExpr = (EAtom . ANum) `fmap` (try signedInt)
 -- <|> ADec `fmap` float tok
 -- <|> AChr `fmap` charLiteral tok
 -- <|> AStr `fmap` stringLiteral tok

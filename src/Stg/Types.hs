@@ -44,5 +44,5 @@ instance Show t => Show (StgState t) where
   show st@(StgState code stack heap) = 
     "stack: " ++ show stack 
     ++ "\ncode: " ++ show (prExpr (text . show) code)
-    ++ "\nheap: " ++ (concat [ show (id, prObj (text . show) obj) ++ "\n\t"
-                             | (id, obj) <- M.toList heap])
+    ++ "\nheap: " ++ concat [ show (id, prObj (text . show) obj) ++ "\n\t"
+                             | (id, obj) <- M.toList heap]

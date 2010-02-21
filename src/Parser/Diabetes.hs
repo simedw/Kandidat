@@ -15,7 +15,7 @@ import qualified Stg.AST          as AST
 
 import Parser.SugarParser
 
-type Dia a b = State (DiaState a) b 
+type Dia a = State (DiaState a) 
 
 data DiaState t = DiaState
     { nameSupply :: [t]
@@ -86,7 +86,7 @@ desugarE (ST.ECon t exprs) | null exprs = do
 
 desugarE (ST.ELet rec vars expr) = do
   binds <- mapM (\(name, args, exp) 
-                    -> createFun args exp >>= return . (,) name) vars
+                   -> (,) name `liftM` createFun args exp) vars
   AST.ELet rec binds `liftM` desugarE expr
 
 desugarE (ST.ECase expr branches) = 

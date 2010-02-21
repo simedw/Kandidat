@@ -27,7 +27,7 @@ substAtom _ _ a = a
 
 substExpr :: Eq t => t -> Atom t -> Expr t -> Expr t
 substExpr x (AVar x') (ECall t as) | x == t = ECall x' as
-substExpr x (ANum _)  (ECall t as) | x == t = error $ "substExpr with ANum" 
+substExpr x (ANum _)  (ECall t as) | x == t = error "substExpr with ANum" 
 substExpr _ _ e = e
 
 subst :: (Data t, Eq t) => t -> (Atom t) -> Expr t -> Expr t

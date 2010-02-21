@@ -182,8 +182,7 @@ object = choice [fun, pap, con, thunk, opt, blackhole]
 
     opt = do
         reserved tok "OPT"
-        parens tok $ do
-            OOpt `fmap` atom
+        parens tok $ OOpt `fmap` atom
 
     blackhole = do 
         reserved tok "BLACKHOLE" 
