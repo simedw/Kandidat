@@ -50,6 +50,7 @@ numArgs = length . takeWhile isArg
 unArg :: Show t => Cont t -> Atom t
 unArg (CtArg a) = a
 unArg o = error $ "unArg: not an arg: " ++ show o 
+
 instantiateBranch :: (Data t, Eq t) => t -> [Atom t] -> [Branch t] -> Maybe (Expr t)
 instantiateBranch x atoms (BCon t ts e : bs) 
     | x == t    = Just $ substList ts atoms e

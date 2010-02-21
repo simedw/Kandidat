@@ -19,12 +19,10 @@ test_if_equal f =
         Right [f'] -> show f == show f'
         _ -> False
 
-
-
-getId = flip suchThat (\x -> not $ x `elem` keywords) 
+getId = flip suchThat (`notElem` keywords) 
     $ (:) <$> elements ['a' .. 'z'] <*> vars
 
-getCon = flip suchThat (\x -> not $ x `elem` keywords)
+getCon = flip suchThat (`notElem` keywords)
     $ (:) <$> elements ['A' .. 'Z'] <*> vars
 
 vars = listOf (elements $ ['a' .. 'z'] ++ ['A' .. 'Z']) 

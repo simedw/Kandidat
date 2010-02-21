@@ -77,7 +77,8 @@ testInterpreter settings file = do
     dir     <- getCurrentDirectory
     prelude <- readFile (dir </> ".." </> "prelude" </> prelude settings)
     res     <- readFile (dir </> ".." </> "testsuite" </> file)
-    case parseSugar (prelude ++ res) of
+    -- prelude must be last, otherwise parse error messages get wrong line numbers!
+    case parseSugar (res ++ prelude) of  
       Right fs -> do
         let trace = eval (input settings) (prePrelude ++ run fs)
         mapM_ (\(r, s) -> putStrLn "<-------------->" 
@@ -87,7 +88,7 @@ testInterpreter settings file = do
                         ++ showStgState settings s)) trace
         print $ map (\ list -> (head list, length list))
               $ group $ sort $ map fst  trace
-      Left  r  -> do putStr $ "fail: " ++ show r
+      Left  r  -> do putStrLn $ "fail: " ++ show r
   where
     steps True  = getChar >> return ()
     steps False = return ()

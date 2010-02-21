@@ -1,17 +1,25 @@
 
+{-
 lessThan x y = y < x;
 moreThan x y = y >= x;
 
 qsort li = case li of
   { Nil -> Nil
   ; Cons x xs -> 
-       let { listLess = filter (lessThan x) xs
+       let { lesser y = y < x
+           -- ; listLess = filter lesser xs
+           -- ; listMore = filter (\y . y >= x) xs
+           ; listLess = filter (lessThan x) xs
            ; listMore = filter (moreThan x) xs
            } 
        in append (qsort listLess) (Cons x (qsort listMore))
   };
   
+  -}
+
 inc x = x + 1;
+
+qsort = id;
 
 main = qsort (reverse (take 3 (iterate inc 0)));
 

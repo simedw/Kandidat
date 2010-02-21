@@ -57,6 +57,10 @@ createFun args expr | null args = liftM AST.OThunk      (desugarE expr)
 
 desugarE :: Ord t => ST.Expr t -> Dia t (AST.Expr t)
 desugarE (ST.EAtom t) = return $ AST.EAtom $ atomST2AST t
+desugarE (ST.ELam args expr) = do
+    n <- newVar
+    e <- desugarE expr
+    return $ AST.ELet False [(n,AST.OFun args e)] (AST.EAtom (AST.AVar n))
 desugarE (ST.ECall t exprs) = do
   (atoms, binds) <- magic exprs
   case binds of

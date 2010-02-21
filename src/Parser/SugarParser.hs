@@ -14,11 +14,11 @@ import Parser.SugarTree
 
 -- The reserved operators
 operators :: [String]
-operators = ["->", "=",";"]
+operators = ["->", "=",";","\\","."]
 
 -- The keywords
 keywords :: [String]
-keywords = ["let","letrec","in","case","of", "optimise"]
+keywords = ["let","letrec","in","case","of","optimise"]
 
 -- Creating the lexer
 tok :: TokenParser st
@@ -93,7 +93,7 @@ expr = buildExpressionParser table expr'
 
 -- The two levels of expressions
 expr',expr2 :: P (Expr String)
-expr' = opt <|> app <|> letdef <|> casedef <|> expr2
+expr' = opt <|> app <|> letdef <|> casedef <|> lambda <|> expr2
 
 expr2 = parens tok afterparensExpr <|> atomExpr
 
@@ -102,14 +102,29 @@ afterparensExpr = (flip ECall [] `fmap` operator tok) <|> expr
 
 -- Atoms, identifiers or integers. Extensible!
 atomExpr :: P (Expr String)
-atomExpr = (EAtom . ANum) `fmap` natural tok
+atomExpr = (EAtom . ANum) `fmap` (try $ signedInt)
+-- <|> ADec `fmap` float tok
+-- <|> AChr `fmap` charLiteral tok
+-- <|> AStr `fmap` stringLiteral tok
    <|> do i <- ident 
           if headIs isLower i
               then return (EAtom (AVar i))
               else return (ECon i [])
--- <|> ADec `fmap` float tok
--- <|> AChr `fmap` charLiteral tok
--- <|> AStr `fmap` stringLiteral tok
+ 
+-- Parsec allows whitespace between - and the number, as in "- 1".
+-- We cannot tolerate this! "-1" is negative one, and "x - 1" is x minus 1.
+-- Therefore all this low-level parser stuff
+signedInt :: P Integer
+signedInt = do
+    sign <- (char '-' >> return negate) <|> return id
+    n <- many1 (oneOf ['0'..'9']) -- nat
+    whiteSpace tok
+    return $ sign $ read n
+
+-- for debugging :)
+fromRight :: Either a b -> b
+fromRight (Right x) = x
+fromRight _ = error "fromRight: isLeft"
 
 -- optimisation expression
 opt :: P (Expr String)
@@ -129,6 +144,15 @@ app = do
     mkApp s@(x:xs) [] | isLower x = EAtom (AVar s) 
     mkApp s@(x:xs) es | isLower x = ECall s es
     mkApp s        es = ECon s es
+
+lambda :: P (Expr String)
+lambda = do
+    reservedOp tok "\\"
+    args <- many lident
+    reservedOp tok "."
+    body <- expr
+    return $ ELam args body
+    
 
 letdef :: P (Expr String)
 letdef = rest =<< (let' <|> letrec')
