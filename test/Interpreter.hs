@@ -63,8 +63,8 @@ noheapSettings = defaultSettings { showStgState = stgState True True False }
 forceInterpreter :: Settings -> FilePath -> IO String
 forceInterpreter settings file = do
     dir     <- getCurrentDirectory
-    prelude <- readFile (dir </> "prelude" </> prelude settings)
-    res     <- readFile (dir </> "testsuite" </> file)
+    prelude <- readFile (dir </>  "prelude" </> prelude settings)
+    res     <- readFile (dir </>  "testsuite" </> file)
     case parseSugar (prelude ++ res) of
       Right fs -> let res = runForce (input settings) (prePrelude ++ run fs)
                    in return res

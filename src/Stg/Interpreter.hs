@@ -260,7 +260,7 @@ force st@(StgState code stack heap) = do
 runForce :: Input -> [Function String] -> String
 runForce inp funs = evalState (go st) initialNames
   where
-    gc = mkGC ["true", "false"]
+    gc = mkGC ["$True", "$False"]
     st = gc $ initialState (createGetFuns inp ++ funs)
     go st = do
         res <- step st
