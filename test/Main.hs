@@ -41,41 +41,50 @@ testParser = PassFail
     }
 
 
+(--->) :: Show a => String -> a -> 
+        (String, String)
+file ---> fun = (file, show fun)
+
+-- |-> for working with lists
+(-->), (|->) :: Show a => String -> (Integer -> [Integer] -> a) -> 
+                (String, Integer -> [Integer] -> String, Bool)
+file --> fun = (file, \x y -> show $ fun x y, False)
+file |-> fun = (file, \x y -> show $ fun x y, True)
 
 -- a map between testfunctions and our semantic excepted functions
 -- lets make these test only run once! 
 testsuiteStatic = [
-    ( "ArithmTest4.hls", show $ 3 + (2 * 3) )
-  , ( "FunTest1.hls"   , show $ 1)
-  , ( "FunTest2.hls"   , show $ 2) 
-  , ( "FunTest3.hls"   , show $ 2)
-  , ( "FunTest4.hls"   , show $ 2)
-  , ( "FunTest6.hls"   , "(S (S Z))") -- depend on how we render results
-  , ( "ListTest3.hls"  , let list = [5,3,1,8,2]
-                           in show $ (reverse (take 2 list) 
-                              == drop 3 (reverse list)))
-  , ( "PrimeTest1.hls"   , show $ True)
-  , ( "OptTest1.hls"   , show $ length (take 3 (repeat 4)))
+    "ArithmTest4.hls" ---> (3 + (2 * 3))
+  , "FunTest1.hls"    ---> 1
+  , "FunTest2.hls"    ---> 2 
+  , "FunTest3.hls"    ---> 2
+  , "FunTest4.hls"    ---> 2
+--  , "FunTest6.hls"    ---> "(S (S Z))" -- depend on how we render results
+  , "ListTest3.hls"   ---> let list = [5,3,1,8,2]
+                            in (reverse (take 2 list) 
+                                == drop 3 (reverse list))
+  , "PrimeTest1.hls"  ---> True
+  , "OptTest1.hls"    ---> length (take 3 (repeat 4))
     ]
 -- note that we are working on a :: Integer -> [Integer] -> String
 -- (Filename, function, absolute value?)
 testsuiteDyn = [
-    ( "ArithmTest1.hls", \x _ -> show $ 1 + x , False)
-  , ( "ArithmTest2.hls", \x _ -> show $ 1 + 2 * x + 4 * 5, False)
-  , ( "ArithmTest3.hls", \x _ -> let twice f = f . f
-                           in show $ twice twice (+1) x, False)
-  , ( "ArithmTest5.hls", \x _ -> show $ x * (x + 1) `div` 2, False)
-  , ( "ListTest1.hls"  , \x _ -> show $ length (replicate (fromInteger x) 4) , True)
-  , ( "ListTest2.hls"  , \x _ -> show $ length (take (fromInteger x) (repeat 4)), True)
-  , ( "PrimeTest2.hls", \_ xs -> 
-                let isprime t n = case t * t >= n of
-                        True  -> True
-                        False -> if (n `mod` t == 0) 
-                                  then False
-                                  else isprime (t+1) n
-                 in show $ all (isprime 2) xs
-              , False)
-            ]
+    "ArithmTest1.hls" --> \x _ -> 1 + x
+  , "ArithmTest2.hls" --> \x _ -> 1 + 2 * x + 4 * 5
+  , "ArithmTest3.hls" --> \x _ -> let twice f = f . f
+                                   in twice twice (+1) x
+  , "ArithmTest5.hls" --> \x _ -> x * (x + 1) `div` 2
+  , "ListTest1.hls"   |-> \x _ -> length (replicate (fromInteger x) 4)
+  , "ListTest2.hls"   |-> \x _ -> length (take (fromInteger x) (repeat 4))
+  , "PrimeTest2.hls"  --> \_ xs -> 
+              let isprime t n = case t * t >= n of
+                      True  -> True
+                      False -> if (n `mod` t == 0) 
+                                then False
+                                else isprime (t+1) n
+               in all (isprime 2) xs
+          
+  ]
 
 -- create our test cases
 -- This is slow, so we have to think of ways to make it faster.
