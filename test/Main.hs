@@ -56,12 +56,12 @@ testsuiteStatic = [
   , ( "FunTest3.hls"   , show $ 2)
   , ( "FunTest4.hls"   , show $ 2)
   , ( "FunTest6.hls"   , "(S (S Z))") -- depend on how we render results
---  , ( "ListTest1.hls"  , show $ length (replicate 3 4))
---  , ( "ListTest2.hls"  , show $ length (take 3 (repeat 4)))
+  , ( "ListTest1.hls"  , show $ length (replicate 3 4))
+  , ( "ListTest2.hls"  , show $ length (take 3 (repeat 4)))
   , ( "ListTest3.hls"  , let list = [5,3,1,8,2]
                            in show $ (reverse (take 2 list) 
                               == drop 3 (reverse list)))
---  , ( "OptTest1.hls"   , show $ length (take 3 (repeat 4)))
+  , ( "OptTest1.hls"   , show $ length (take 3 (repeat 4)))
     ]
 -- note that we are working on a :: Integer -> [Integer] -> String
 testsuiteDyn = [
