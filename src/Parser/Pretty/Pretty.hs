@@ -49,5 +49,6 @@ prObj prVar obj = case obj of
     OCon name args -> text "CON" <+> parens (prVar name 
                                              <+> hsep (map (prAtom prVar) args))
     OThunk e -> text "THUNK" <+> parens (prExpr prVar e)
+    OOpt   a -> text "OPT" <+> parens (prAtom prVar a)
     OBlackhole -> text "BLACKHOLE"
 

@@ -18,7 +18,7 @@ operators = ["->", "=",";"]
 
 -- The keywords
 keywords :: [String]
-keywords = ["let","letrec","in","case","of"]
+keywords = ["let","letrec","in","case","of", "optimise"]
 
 -- Creating the lexer
 tok :: TokenParser st
@@ -93,7 +93,7 @@ expr = buildExpressionParser table expr'
 
 -- The two levels of expressions
 expr',expr2 :: P (Expr String)
-expr' = app <|> letdef <|> casedef <|> expr2
+expr' = opt <|> app <|> letdef <|> casedef <|> expr2
 
 expr2 = parens tok afterparensExpr <|> atomExpr
 
@@ -110,6 +110,13 @@ atomExpr = (EAtom . ANum) `fmap` natural tok
 -- <|> ADec `fmap` float tok
 -- <|> AChr `fmap` charLiteral tok
 -- <|> AStr `fmap` stringLiteral tok
+
+-- optimisation expression
+opt :: P (Expr String)
+opt = do
+    reserved tok "optimise"
+    e <- expr
+    return $ EOpt e 
 
 -- Singlevariable, application or constructor!
 -- with sugar: f e1 .. en

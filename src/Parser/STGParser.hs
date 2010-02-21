@@ -18,7 +18,7 @@ operators = ["->", "==","_"]
 -- The keywords
 keywords :: [String]
 keywords = ["let","letrec","in","case","of"
-           ,"FUN","PAP","CON","THUNK","BLACKHOLE"]
+           ,"FUN","PAP","CON","THUNK","BLACKHOLE", "OPT"]
 
 -- Creating the lexer
 tok :: TokenParser st
@@ -152,7 +152,7 @@ casedef = do
 
 -- Object
 object :: P (Obj String)
-object = choice [fun, pap, con, thunk, blackhole]
+object = choice [fun, pap, con, thunk, opt, blackhole]
   where
     fun = do
         reserved tok "FUN"
@@ -179,6 +179,11 @@ object = choice [fun, pap, con, thunk, blackhole]
     thunk = do
         reserved tok "THUNK"
         OThunk `fmap` expr
+
+    opt = do
+        reserved tok "OPT"
+        parens tok $ do
+            OOpt `fmap` atom
 
     blackhole = do 
         reserved tok "BLACKHOLE" 

@@ -42,5 +42,6 @@ data Obj t    = OFun [t] (Expr t)
               | OCon t [Atom t]        
               | OThunk (Expr t)
               | OBlackhole
+              | OOpt (Atom t)
   deriving (Data, Eq, Show, Typeable)
 

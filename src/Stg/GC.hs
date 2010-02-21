@@ -80,8 +80,10 @@ instance FV Obj where
     freeVars (OCon c as)     = freeVarsList as
     freeVars (OThunk e)      = freeVars e
     freeVars (OBlackhole)    = S.empty
+    freeVars (OOpt a)        = freeVars a
 
 instance FV Cont where
     freeVars (CtCase brs)    = freeVarsList brs
     freeVars (CtUpd i)       = S.singleton i
     freeVars (CtArg a)       = freeVars a
+    freeVars (CtOpt i)       = S.singleton i

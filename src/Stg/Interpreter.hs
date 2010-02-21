@@ -4,29 +4,24 @@ module Stg.Interpreter where
 
 -- Naive Stg interpreter
 
+import Control.Monad
+import "mtl" Control.Monad.State
+
 import Data.Char
 import Data.Generics
 import Data.Maybe
 
 import Data.Map(Map)
 import qualified Data.Map as M
-import "mtl" Control.Monad.State
 
 import Stg.AST
 import Stg.GC
 import Stg.Input
+import Stg.Optimise
 import Stg.Rules
 import Stg.Substitution
 import Stg.Types
 
-type StgM t = State [t]
-
--- | Create a fresh unbound variable
-newVar :: StgM t t
-newVar = do
-    v <- get
-    put (tail v)
-    return (head v)
  
 topCase :: Stack t -> Bool
 topCase (CtCase _ : _) = True
@@ -39,6 +34,10 @@ topArg _             = False
 topUpd :: Stack t -> Bool
 topUpd (CtUpd _ : _) = True
 topUpd _             = False
+
+topOpt :: Stack t -> Bool
+topOpt (CtOpt _ : _) = True
+topOpt _             = False
 
 returnJust x = (return (Just (x)))
 
@@ -108,8 +107,12 @@ step st@(StgState code stack heap) = case code of
         Nothing  -> return Nothing
         Just obj -> case obj of
             OThunk expr       -> rthunk st expr var 
+            OOpt   alpha      -> roptimise st alpha var
             _ | topUpd  stack -> rupdate st obj
             _ | topCase stack -> rret st 
+            OPap ident atoms | topArg stack -> rpenter st ident atoms
+                             | topOpt stack -> roptpap st ident atoms
+            _ | topOpt stack  -> rupdateopt st obj var
             OFun args expr    -> let lenArgs = length args
                                      stackArgs = numArgs stack 
                 -- depending on the number of arguments the function is either
@@ -117,7 +120,6 @@ step st@(StgState code stack heap) = case code of
                 in case lenArgs <= stackArgs of
                     True  -> rfenter st args lenArgs expr
                     False -> rpap st stackArgs var 
-            OPap ident atoms | topArg stack -> rpenter st ident atoms     
             _                               -> return Nothing
     -- if there is no rule to apply, do nothing
     _              -> return Nothing
@@ -197,6 +199,40 @@ step st@(StgState code stack heap) = case code of
         , st { code  = EAtom (AVar var)
         , stack = map CtArg atoms ++ stack
         , heap  = heap })
+    roptimise st@(StgState code stack heap) alpha var = returnJust
+        ( ROptimise
+        , st 
+            { code = EAtom alpha
+            , stack = CtOpt var : stack
+            }
+        )
+    roptpap st@(StgState code stack heap) var atoms =
+        case M.lookup var heap of
+            Nothing -> error $ "OPTPAP: var not in heap: " ++ var
+            Just (OFun args e) -> do 
+                let (argsA, argsL) = splitAt (length atoms) args
+                    CtOpt alpha : stack' = stack
+                (e', heap') <- optimise (substList argsA atoms e) heap
+                let fun = OFun argsL e'
+                returnJust
+                    ( ROptPap
+                    , st 
+                        { code  = EAtom (AVar alpha)
+                        , stack = stack'
+                        , heap  = M.insert alpha fun heap'
+                        }
+                    )
+            _ -> error $ "OPTPAP: pap doesn't point to FUN"
+    rupdateopt st@(StgState code stack heap) obj var = do
+        let CtOpt alpha : stack' = stack
+        returnJust
+            ( RUpdateOpt
+            , st
+                { code  = EAtom (AVar var)
+                , stack = stack'
+                , heap  = M.insert alpha obj heap
+                }
+            ) 
 
 
 

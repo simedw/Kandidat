@@ -45,6 +45,7 @@ getObj s = oneof
     [ OFun <$> listOf1 getId <*> getExpr s'
     , OPap <$> getId <*> listOf1 getAtom
     , OCon <$> getCon <*> listOf getAtom
+    , OOpt <$> getAtom
     , OThunk <$> getExpr s'
     , pure OBlackhole
     ]
@@ -86,6 +87,7 @@ shrinkObj obj = case obj of
     OPap id as -> []
     OCon _ _ -> []
     OThunk e -> [OThunk e' | e' <- shrinkExpr e]
+    OOpt _ -> []
     OBlackhole -> []
 
 shrinkExpr expr = case expr of

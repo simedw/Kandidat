@@ -1,0 +1,3 @@
+take3 = optimise (take 3);
+
+main = length (take3 (repeat 4)); 

@@ -7,6 +7,7 @@ data Function t = Function t [t] (Expr t)
 
 data Expr t   = EAtom (Atom t)
               | ECall t [Expr t]
+              | EOpt (Expr t)
               | ECon  t [Expr t]
               | ELet Bool [(t,[t],Expr t)] (Expr t)  -- True if recursive
               | ECase (Expr t) [Branch t]

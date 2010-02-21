@@ -18,6 +18,9 @@ data Rule
   | RPap1
   | RPEnter
   | RInitial
+  | ROptimise
+  | ROptPap
+  | RUpdateOpt
  deriving (Show, Eq, Ord)
 
 info :: Rule -> String
