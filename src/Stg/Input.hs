@@ -18,6 +18,10 @@ createGetFuns inp =
         _ -> []
     ++
     case inputIntegers inp of
+        Just [] ->
+            [ Function "getIntList"
+              $ OCon "Nil" []
+            ]
         Just ns -> 
             [ Function "getIntList" 
                 $ OThunk 
