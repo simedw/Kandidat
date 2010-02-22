@@ -15,23 +15,20 @@ data Expr t   = EAtom (Atom t)
               | ECase (Expr t) [Branch t]
   deriving (Data, Eq, Show, Typeable)
 
-data Pop = PAdd
-         | PSub
-         | PMul
-         | PDiv
-         | PMod
-         | PLe
-         | PLt
-         | PGe
-         | PGt
-         | PEq
+data Pop      = PAdd | PSub | PMul | PDiv | PMod
+              | PLe  | PLt  | PGe  | PGt  | PEq
          deriving (Data, Typeable, Eq, Show)
+
 isAtom (EAtom _) = True
 isAtom _         = False
 
 data Atom t   = AVar t
               | ANum Integer
+              | ADec Double
   deriving (Data, Eq, Show, Typeable)
+
+isVar (AVar _) = True
+isVar _        = False
 
 data Branch t = BCon t [t] (Expr t)
               | BDef t (Expr t)

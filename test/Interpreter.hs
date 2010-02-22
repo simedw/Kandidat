@@ -1,28 +1,31 @@
 {-# LANGUAGE NamedFieldPuns #-}
 module Test.Interpreter where
 
-import Parser.SugarParser
-import Parser.Diabetes
-import Stg.Interpreter
-import System.Directory
-import System.FilePath
-import Stg.Rules
-import Stg.Types
-import Text.PrettyPrint
-
-import Parser.Pretty.Pretty
-import PrePrelude.PrePrelude
-
+import Data.Function
+import Data.List
 import qualified Data.Map as M
-
 import System( getArgs )
 import System.Console.GetOpt
+import System.Directory
+import System.FilePath
+import Text.PrettyPrint
+
+import Parser.Diabetes
+import Parser.Pretty.Pretty
+import Parser.SugarParser
+import Stg.AST
+import Stg.Input
+import Stg.Interpreter
+import Stg.PrePrelude
+import Stg.Rules
+import Stg.Types
 
 data Settings = Settings
   { steping :: Bool
   , prelude :: String
   , showStgState :: (StgState String -> String)
   , showStgRule  :: (Rule -> String)
+  , input :: Input
   }
 
 stgState :: Bool -> Bool -> Bool -> StgState String -> String
@@ -43,6 +46,7 @@ defaultSettings = Settings {
   , prelude = "Prelude.hls"
   , showStgState = stgState True True True
   , showStgRule = show 
+  , input = defaultInput
   }
 
 noheapSettings = defaultSettings { showStgState = stgState True True False }
@@ -53,17 +57,19 @@ testInterpreter settings file = do
     prelude <- readFile (dir </> ".." </> "prelude" </> prelude settings)
     res     <- readFile (dir </> ".." </> "testsuite" </> file)
     case parseSugar (prelude ++ res) of
-      Right fs -> mapM_ (\(r, s) -> putStrLn "<-------------->" 
+      Right fs -> do
+        let trace = eval (input settings) (prePrelude ++ run fs)
+        mapM_ (\(r, s) -> putStrLn "<-------------->" 
                         >> steps (steping settings) 
                         >> putStrLn (showStgRule settings r 
                         ++ "\n" 
-                        ++ showStgState settings s)) $ eval (prePrelude ++ map run fs)
-
+                        ++ showStgState settings s)) trace
+        print $ map (\ list -> (head list, length list))
+              $ group $ sort $ map fst  trace
       Left  r  -> do putStr $ "fail: " ++ show r
   where
     steps True  = getChar >> return ()
     steps False = return ()
-
 
 main :: IO ()
 main = do
@@ -81,9 +87,26 @@ main = do
 data Flag = Version
 
 options :: [OptDescr (Settings -> IO Settings)] 
-options = [ Option ['S'] ["step"] (ReqArg setSteping "BOOL") "step through" ]
+options = 
+    [ Option ['S'] ["step"] (ReqArg setSteping "BOOL") "step through"
+    , Option ['I'] ["integerinput"] 
+        (ReqArg setInputInteger "Integer") 
+        "single integer input"
+    , Option ['L'] ["listinput"] 
+        (ReqArg setInputIntegers "[Integer]") 
+        "integer list input"
+    ]
 
 setSteping :: String -> Settings -> IO Settings
-setSteping arg s = return $ s { steping = read arg}
+setSteping arg s = return $ s { steping = read arg }
+
+setInputInteger :: String -> Settings -> IO Settings
+setInputInteger arg s = 
+    return $ s { input = (input s) { inputInteger = Just (read arg) }}
+
+setInputIntegers :: String -> Settings -> IO Settings
+setInputIntegers arg s = 
+    return $ s { input = (input s) { inputIntegers = Just (read arg) }}
+
 
 header = "Usage: main [OPTION...]"

@@ -34,10 +34,10 @@ test = ECase (var "xs")
              , BDef "x" (var "nil")
              ]
 
-gc :: forall t . Ord t => StgState t -> StgState t
-gc (StgState code stack heap) = 
+mkGC :: forall t . Ord t => [t] -> StgState t -> StgState t
+mkGC untouchable (StgState code stack heap) = 
     let initial = freeVars code `S.union` freeVarsList stack
-    in  StgState code stack $ heapify $ gcStep initial initial
+    in  StgState code stack $ heapify $ gcStep (initial`S.union` S.fromList untouchable) initial
   where
     gcStep :: Set t -> Set t -> Set t
     gcStep acc s | S.null s  = acc
@@ -65,7 +65,7 @@ instance FV Expr where
 
 instance FV Atom where
     freeVars (AVar v)        = S.singleton v
-    freeVars (ANum _)        = S.empty
+    freeVars _               = S.empty
 
 freeVarsList :: (FV a, Ord t) => [a t] -> Set t
 freeVarsList = S.unions . map freeVars

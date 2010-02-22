@@ -1,4 +1,4 @@
-module PrePrelude.PrePrelude
+module Stg.PrePrelude
   ( prePrelude
   ) where
 

@@ -102,14 +102,21 @@ afterparensExpr = (flip ECall [] `fmap` operator tok) <|> expr
 
 -- Atoms, identifiers or integers. Extensible!
 atomExpr :: P (Expr String)
-atomExpr = (EAtom . ANum) `fmap` natural tok
-   <|> do i <- ident 
+atomExpr = EAtom `fmap` numOrDec
+   <|> do i <- ident
           if headIs isLower i
               then return (EAtom (AVar i))
               else return (ECon i [])
--- <|> ADec `fmap` float tok
 -- <|> AChr `fmap` charLiteral tok
 -- <|> AStr `fmap` stringLiteral tok
+
+-- An integer or a floating point value
+numOrDec :: P (Atom String)
+numOrDec = do
+    x <- naturalOrFloat tok
+    return $ case x of
+        Left  n -> ANum n
+        Right f -> ADec f
 
 -- Singlevariable, application or constructor!
 -- with sugar: f e1 .. en
