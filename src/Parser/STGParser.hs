@@ -93,11 +93,19 @@ expr2 = parens tok expr <|> EAtom `fmap` atom
 
 -- Atoms, identifiers or integers. Extensible!
 atom :: P (Atom String)
-atom = AVar `fmap` ident
-   <|> ANum `fmap` natural tok
--- <|> ADec `fmap` float tok
+atom = AVar `fmap` ident 
+   <|> numOrDec
+   <|> ADec `fmap` float tok
 -- <|> AChr `fmap` charLiteral tok
 -- <|> AStr `fmap` stringLiteral tok
+
+-- An integer or a floating point value
+numOrDec :: P (Atom String)
+numOrDec = do
+    x <- naturalOrFloat tok
+    return $ case x of
+        Left  n -> ANum n
+        Right f -> ADec f
 
 -- Application
 -- without:    f a1 .. an

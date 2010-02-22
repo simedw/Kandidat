@@ -115,3 +115,4 @@ magic (x:xs) = do
 atomST2AST :: ST.Atom a -> AST.Atom a
 atomST2AST (ST.AVar t) = AST.AVar t
 atomST2AST (ST.ANum n) = AST.ANum n
+atomST2AST (ST.ADec n) = AST.ADec n

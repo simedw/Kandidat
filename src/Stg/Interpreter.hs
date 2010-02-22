@@ -97,13 +97,13 @@ step st@(StgState code stack heap) = case code of
                     Nothing   -> rany expr branch
                     Just expr -> rcasecon st expr 
                 _                   -> rany expr branch
-        EAtom (ANum n)   -> rany expr branch
+        EAtom a          -> rany  expr branch
         _                -> rcase expr branch
 
     EPop  op args     -> rprimop st op args 
     ECall ident args  -> rpush st ident args 
-    EAtom (ANum _) | topUpd stack  -> rupdate st (OThunk code)
-    EAtom (ANum _) | topCase stack -> rret st
+    EAtom a | not (isVar a) && topUpd stack  -> rupdate st (OThunk code)
+            | not (isVar a) && topCase stack -> rret st
     EAtom (AVar var) -> case M.lookup var heap of  
         Nothing  -> return Nothing
         Just obj -> case obj of
@@ -283,17 +283,27 @@ eval inp funs = (RInitial, st) : evalState (go st) initialNames
 
 applyPrimOp :: Pop -> [Atom String] -> Expr String
 applyPrimOp op = case op of 
-    PAdd -> num . binOp (+)
-    PSub -> num . binOp (-)
-    PMul -> num . binOp (*)
-    PDiv -> num . binOp div
-    PMod -> num . binOp mod
-    PGe  -> con . binOp (>=)
-    PGt  -> con . binOp (>)
-    PLe  -> con . binOp (<=)
-    PLt  -> con . binOp (<)
-    PEq  -> con . binOp (==)
+    PAdd -> binOp (+) (+)
+    PSub -> binOp (-) (-)
+    PMul -> binOp (*) (*)
+    PDiv -> binOp div (/)
+    PMod -> binOp mod modError --(%.)
+    PGe  -> binOpCon (>=) (>=)
+    PGt  -> binOpCon (>)  (>)
+    PLe  -> binOpCon (<=) (<=)
+    PLt  -> binOpCon (<)  (<)
+    PEq  -> binOpCon (==) (==)
   where
-    binOp op [ANum x, ANum y] = x `op` y
-    con = EAtom . AVar . ('$' :) . show 
-    num = EAtom . ANum
+    applyBinOp nf _  nop _   [ANum x, ANum y] = EAtom . nf $ x `nop` y
+    applyBinOp _  df _   dop [ADec x, ADec y] = EAtom . df $ x `dop` y
+    applyBinOp _  _  _   _   args = 
+        error $ "applyPrimOp: Primitive operation (" 
+             ++ show op 
+             ++ ") applied to arguments of the wrong type (" 
+             ++ show args ++ "), or not the correct number of arguments."
+
+    binOpCon = applyBinOp mkConFun mkConFun
+    binOp nop dop = applyBinOp ANum ADec nop dop
+    modError = error "applyPrimOp: mod (%) operation not supported on Doubles."
+    mkConFun = AVar . ('$':) . show
+    --x %. y = fromIntegral $ truncate x `mod` truncate y

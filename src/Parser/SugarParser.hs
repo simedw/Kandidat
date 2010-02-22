@@ -102,7 +102,7 @@ afterparensExpr = (flip ECall [] `fmap` operator tok) <|> expr
 
 -- Atoms, identifiers or integers. Extensible!
 atomExpr :: P (Expr String)
-atomExpr = (EAtom . ANum) `fmap` (try signedInt)
+atomExpr = EAtom  `fmap` (try signedInt)
 -- <|> ADec `fmap` float tok
 -- <|> AChr `fmap` charLiteral tok
 -- <|> AStr `fmap` stringLiteral tok
@@ -114,12 +114,16 @@ atomExpr = (EAtom . ANum) `fmap` (try signedInt)
 -- Parsec allows whitespace between - and the number, as in "- 1".
 -- We cannot tolerate this! "-1" is negative one, and "x - 1" is x minus 1.
 -- Therefore all this low-level parser stuff
-signedInt :: P Integer
+signedInt :: P (Atom String)
 signedInt = do
-    sign <- (char '-' >> return negate) <|> return id
-    n <- many1 (oneOf ['0'..'9']) -- nat
-    whiteSpace tok
-    return $ sign $ read n
+    sign  <- (char '-' >> return (negate, negate)) <|> return (id, id)
+    --n <- many1 (oneOf ['0'..'9']) -- nat
+    x <- naturalOrFloat tok
+    --whiteSpace tok
+    return $ case x of
+        Left  n -> ANum $ (fst sign) n
+        Right f -> ADec $ (snd sign) f
+    --return $ sign $ read n
 
 -- for debugging :)
 fromRight :: Either a b -> b

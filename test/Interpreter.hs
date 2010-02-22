@@ -1,27 +1,24 @@
 {-# LANGUAGE NamedFieldPuns #-}
 module Interpreter where
 
-import Parser.SugarParser
-import Parser.Diabetes
-import Stg.Interpreter
-import System.Directory
-import System.FilePath
-import Stg.AST
-import Stg.Rules
-import Stg.Types
-import Stg.Input
-import Text.PrettyPrint
-
-import Parser.Pretty.Pretty
-import PrePrelude.PrePrelude
-
-import qualified Data.Map as M
-
-import Data.List
 import Data.Function
-
+import Data.List
+import qualified Data.Map as M
 import System( getArgs )
 import System.Console.GetOpt
+import System.Directory
+import System.FilePath
+import Text.PrettyPrint
+
+import Parser.Diabetes
+import Parser.Pretty.Pretty
+import Parser.SugarParser
+import Stg.AST
+import Stg.Input
+import Stg.Interpreter
+import Stg.PrePrelude
+import Stg.Rules
+import Stg.Types
 
 data Settings = Settings
   { steping :: Bool

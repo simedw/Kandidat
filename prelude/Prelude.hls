@@ -65,6 +65,16 @@ drop n li = if (n == 0)
                  }
                );
 
+takeWhile p li = case li of
+    { Nil -> Nil
+    ; Cons x xs -> if (p x) (Cons x (takeWhile p xs)) Nil
+    };
+
+dropWhile p li = case li of
+    { Nil -> Nil
+    ; Cons x xs -> if (p x) (dropWhile p xs) Nil
+    };
+
 head li = case li of { Cons x xs -> x };
 
 tail li = case li of { Cons x xs -> xs };
@@ -90,6 +100,7 @@ if b x y = case b of
 
 and x y = if x y False;
 or  x y = if x True y;
+not x = if p False True;
 
 andList xs = foldr and True  xs;
 orList  xs = foldr or  False xs;
@@ -142,3 +153,9 @@ fromMaybe d m = case m of
 
 isJust m = maybe False (const True) m;
 isNothing m = maybe True (const False) m;
+
+-- Double functions
+pi = 3.141519265;
+
+
+

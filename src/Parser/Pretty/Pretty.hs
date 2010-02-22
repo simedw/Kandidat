@@ -39,6 +39,7 @@ prLetBind prVar binds = seppis
 prAtom prVar atom = case atom of
     AVar x -> prVar x
     ANum n -> integer n
+    ADec f -> double f
 
 -- prObj :: (t -> Doc) -> Obj t -> Doc
 prObj prVar obj = case obj of

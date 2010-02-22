@@ -65,7 +65,7 @@ instance FV Expr where
 
 instance FV Atom where
     freeVars (AVar v)        = S.singleton v
-    freeVars (ANum _)        = S.empty
+    freeVars _               = S.empty
 
 freeVarsList :: (FV a, Ord t) => [a t] -> Set t
 freeVarsList = S.unions . map freeVars
