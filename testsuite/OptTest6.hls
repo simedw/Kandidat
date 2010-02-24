@@ -1,0 +1,10 @@
+main = case getIntList of
+    { Cons x ys -> case ys of
+        { Cons y r -> map (foo x y) r
+        }
+    };
+
+foo x y z = case x > y of
+    { True  -> z
+    ; False -> z + 1
+    };
