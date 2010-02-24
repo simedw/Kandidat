@@ -1,14 +1,13 @@
 -- Lists
-
 foldr f v li = case li of
-  { Nil       -> v
-  ; Cons x xs -> f x (foldr f v xs)
-  };
+    { Nil       -> v
+    ; Cons x xs -> f x (foldr f v xs)
+    };
 
 foldl f v li = case li of
-  { Nil       -> v
-  ; Cons x xs -> foldl f (f v x) xs
-  };
+    { Nil       -> v
+    ; Cons x xs -> foldl f (f v x) xs
+    };
 
 reverse xs = foldl snoc Nil xs;
 
@@ -19,27 +18,27 @@ sum xs = let add x y = x + y
           in foldr add 0 xs;
 
 append li ys = case li of
-  { Cons x xs -> Cons x (append xs ys)
-  ; Nil       -> ys
-  };
+    { Cons x xs -> Cons x (append xs ys)
+    ; Nil       -> ys
+    };
 
 concat xs = foldr append Nil xs;
 
 map f li = case li of
-  { Nil       -> Nil
-  ; Cons x xs -> Cons (f x) (map f xs)
-  };
+    { Nil       -> Nil
+    ; Cons x xs -> Cons (f x) (map f xs)
+    };
 
 filter p li = case li of
-  { Nil -> Nil
-  ; Cons x xs -> let rest = filter p xs 
-                  in if (p x) (Cons x rest) rest
-  };
+    { Nil -> Nil
+    ; Cons x xs -> let rest = filter p xs 
+                    in if (p x) (Cons x rest) rest
+    };
 
 length li = case li of
-  { Nil -> 0
-  ; Cons x xs -> 1 + length xs
-  };
+    { Nil -> 0
+    ; Cons x xs -> 1 + length xs
+    };
 
 replicate n x = if (n == 0) 
                    Nil 
@@ -80,12 +79,12 @@ head li = case li of { Cons x xs -> x };
 tail li = case li of { Cons x xs -> xs };
 
 zipWith f as bs = case as of
-  { Cons x xs -> case bs of
-                   { Cons y ys -> Cons (f x y) (zipWith f xs ys)
-                   ; Nil -> Nil
-                   }
-  ; Nil -> Nil
-  };
+    { Cons x xs -> case bs of
+                     { Cons y ys -> Cons (f x y) (zipWith f xs ys)
+                     ; Nil -> Nil
+                     }
+    ; Nil -> Nil
+    };
 
 -- Bools
 
@@ -94,9 +93,9 @@ true = True;
 false = False;
 
 if b x y = case b of
-  { True -> x
-  ; False -> y
-  };
+    { True -> x
+    ; False -> y
+    };
 
 and x y = if x y False;
 or  x y = if x True y;
@@ -132,24 +131,24 @@ first  f t = case t of { Tuple x y -> Tuple (f x) y };
 second f t = case t of { Tuple x y -> Tuple x (f y) };
 
 zip as bs = case as of
-  { Cons x xs -> case bs of
-                   { Cons y ys -> Cons (Tuple x y) (zip xs ys)
-                   ; Nil -> Nil
-                   }
-  ; Nil -> Nil
-  };
+    { Cons x xs -> case bs of
+                     { Cons y ys -> Cons (Tuple x y) (zip xs ys)
+                     ; Nil -> Nil
+                     }
+    ; Nil -> Nil
+    };
 
 -- Maybe functions
 
 maybe d f m = case m of 
-  { Just x  -> f x
-  ; Nothing -> d
-  };
+    { Just x  -> f x
+    ; Nothing -> d
+    };
 
 fromMaybe d m = case m of
-  { Just x  -> x
-  ; Nothing -> d
-  };
+    { Just x  -> x
+    ; Nothing -> d
+    };
 
 isJust m = maybe False (const True) m;
 isNothing m = maybe True (const False) m;
@@ -157,5 +156,12 @@ isNothing m = maybe True (const False) m;
 -- Double functions
 pi = 3.141519265;
 
+-- Evaluate with the FORCE
+seq x y = case x of
+    { m -> y
+    };
 
-
+listSeq li = case li of
+    { Cons x xs -> seq x (seq (listSeq xs) li)
+    ; Nil       -> Nil
+    };

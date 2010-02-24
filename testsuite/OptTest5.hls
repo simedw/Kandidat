@@ -1,0 +1,55 @@
+
+{-
+  data Regexp a = Symbol a 
+                | Range a a 
+                | Choice (Regexp a) (Regexp a)
+                | Seq (Regexp a) (Regexp a)
+                | Star (Regexp a)
+
+  (ab)*  = Star (Seq (Symbol a) (Symbol b))
+  (a+b)* = Star (Choice (Symbol a) (Symbol b))
+
+
+  (a+aa)b = ab + aab
+ 
+
+  (a+b)c = ac + ab
+
+  (a+aa)*
+
+  aab
+-}
+
+distrib regexp = case regexp of 
+    { Choice p q -> Choice (distrib p) (distrib q)
+    ; Seq    p q -> case p of 
+       { Choice x y -> distrib (Choice (Seq x q) (Seq y q))
+       ; u -> case q of 
+          { Choice x y -> distrib (Choice (Seq p x) (Seq q y))
+          ; u -> Seq (distrib p) (distrib q) 
+          }
+       }
+    ; Star p -> Star (distrib p)
+    };
+
+-- match :: Regexp a -> [a] -> Either Bool [a]
+match regexp li = case regexp of {
+    Symbol a -> case li of {
+        Cons x xs -> if (x == a) (ParseOk xs) ParseFail;
+        Nil       -> ParseFail };
+    Range l u -> case li of {
+        Cons x xs -> if (and (x >= l) (x <= u)) (ParseOk xs) ParseFail;
+        Nil       -> ParseFail };
+    Choice p q -> case match p li of {
+        ParseOk xs -> ParseOk xs;
+        ParseFail  -> match q li };
+    Seq p q -> case match p li of {
+        ParseOk xs -> match q xs;
+        ParseFail  -> ParseFail };
+    Star p -> case match p li of {  -- det har fungerar inte!!
+        ParseOk xs -> case xs of {
+            Nil -> ParseOk Nil;
+            u   -> match p xs};
+        ParseFail -> ParseFail }
+    };
+
