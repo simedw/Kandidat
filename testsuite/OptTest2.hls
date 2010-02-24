@@ -1,7 +1,7 @@
 
 getBool = getInt == 0;
 
-main = map (optimise (if getBool inc dec)) getList;
+main = map (optimise (\x. if getBool (inc x) (dec x))) getList;
 
 inc x = x + 1;
 
