@@ -1,5 +1,6 @@
 module Stg.Rules
  ( Rule(..)
+ , OptRule(..)
  , info 
  ) where
 
@@ -21,6 +22,14 @@ data Rule
   | ROptimise
   | ROptPap
   | RUpdateOpt
+  | ROpt OptRule
+  | RContOpt
+ deriving (Show, Eq, Ord)
+
+data OptRule
+  = ORKnownCall
+  | ORKnownCase
+  | ORDone
  deriving (Show, Eq, Ord)
 
 info :: Rule -> String

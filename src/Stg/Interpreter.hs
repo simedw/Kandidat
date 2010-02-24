@@ -39,7 +39,10 @@ topOpt :: Stack t -> Bool
 topOpt (CtOpt _ : _) = True
 topOpt _             = False
 
-returnJust x = return (Just x)
+topContOpt :: Stack t -> Bool
+topContOpt (CtContOpt _ : _) = True
+topContOpt _                 = False
+
 
 numArgs :: Stack t -> Int
 numArgs = length . takeWhile isArg
@@ -72,6 +75,11 @@ initialState funs = gc StgState
 initialNames :: [String]
 initialNames = map ("i." ++) $ [1..] >>= flip replicateM ['a'..'z']
 
+initialStgMState :: StgMState String
+initialStgMState = StgMState
+    { nameSupply = initialNames
+    , mkCons     = ('$' :)
+    }
 
 getMain = getFunction "main"
 
@@ -84,8 +92,7 @@ initialHeap :: Ord t => [Function t] -> Heap t
 initialHeap = M.fromList . map (\(Function name obj) -> (name, obj))
 
 
-
-step :: StgState String -> StgM String (Maybe (Rule, StgState String))
+step :: (Ord t, Data t, Show t) => StgState t -> StgM t (Maybe (Rule, StgState t))
 step st@(StgState code stack heap) = case code of
     ELet recursive defs _  -> rlet st recursive defs 
     ECase expr branch      -> case expr of
@@ -110,7 +117,8 @@ step st@(StgState code stack heap) = case code of
             OThunk expr       -> rthunk st expr var 
             OOpt   alpha      -> roptimise st alpha var
             _ | topUpd  stack -> rupdate st obj
-            _ | topCase stack -> rret st 
+            _ | topCase stack -> rret st
+            _ | topContOpt stack -> rcontopt st
             OPap ident atoms | topArg stack -> rpenter st ident atoms
                              | topOpt stack -> roptpap st ident atoms
             _ | topOpt stack  -> rupdateopt st obj var
@@ -151,10 +159,12 @@ step st@(StgState code stack heap) = case code of
         , st { code = expr}
         )
 
-    rprimop st op args = returnJust 
-        ( RPrimOP
-        , st { code = applyPrimOp op args }
-        )
+    rprimop st op args = do
+        mkConFun <- gets mkCons
+        returnJust 
+            ( RPrimOP
+            , st { code = applyPrimOp mkConFun op args }
+            )
     
     rpush st@(StgState code stack heap) ident args = returnJust 
         (RPush
@@ -198,30 +208,29 @@ step st@(StgState code stack heap) = case code of
         , st { code  = EAtom (AVar var)
         , stack = map CtArg atoms ++ stack
         , heap  = heap })
-    roptimise st@(StgState code stack heap) alpha var = returnJust
+    roptimise st@(StgState code stack heap) omeg alpha = returnJust
         ( ROptimise
         , st 
-            { code = EAtom alpha
-            , stack = CtOpt var : stack
+            { code = EAtom omeg
+            , stack = CtOpt alpha : stack
+            , heap  = M.insert alpha OBlackhole heap
             }
         )
     roptpap st@(StgState code stack heap) var atoms =
         case M.lookup var heap of
-            Nothing -> error $ "OPTPAP: var not in heap: " ++ var
-            Just (OFun args e) -> do 
+            Nothing -> error $ "OPTPAP: var not in heap: " -- ++ var
+            Just (OFun args e) ->
                 let (argsA, argsL) = splitAt (length atoms) args
                     CtOpt alpha : stack' = stack
-                (e', heap') <- optimise (substList argsA atoms e) heap
-                let fun = OFun argsL e'
-                returnJust
-                    ( ROptPap
-                    , st 
-                        { code  = EAtom (AVar alpha)
-                        , stack = stack'
-                        , heap  = M.insert alpha fun heap'
-                        }
-                    )
+                    e'  = substList argsA atoms e
+                    fun = OFun argsL e'
+                in omega alpha stack' heap fun
             _ -> error "OPTPAP: pap doesn't point to FUN"
+    rcontopt st@(StgState code stack heap) = do
+        let CtContOpt alpha : stack' = stack
+        case M.lookup alpha heap of
+            Nothing -> error $ "ContOpt rule: alpha not in heap buh huh: " ++ show alpha
+            Just obj -> omega alpha stack' heap obj 
     rupdateopt st@(StgState code stack heap) obj var = do
         let CtOpt alpha : stack' = stack
         returnJust
@@ -258,7 +267,7 @@ force st@(StgState code stack heap) = do
 -- start the force evaluation
 -- actually quite ugly
 runForce :: Input -> [Function String] -> String
-runForce inp funs = evalState (go st) initialNames
+runForce inp funs = evalState (go st) initialStgMState
   where
     gc = mkGC ["$True", "$False"]
     st = gc $ initialState (createGetFuns inp ++ funs)
@@ -270,7 +279,7 @@ runForce inp funs = evalState (go st) initialNames
  
 
 eval :: Input -> [Function String] -> [(Rule, StgState String)]
-eval inp funs = (RInitial, st) : evalState (go st) initialNames
+eval inp funs = (RInitial, st) : evalState (go st) initialStgMState
   where
     gc = mkGC ["$True", "$False"]
     st = gc $ initialState (createGetFuns inp ++ funs)
@@ -281,8 +290,8 @@ eval inp funs = (RInitial, st) : evalState (go st) initialNames
             Just (r, st') -> ((r, st') :) `fmap` go (gc st')
       
 
-applyPrimOp :: Pop -> [Atom String] -> Expr String
-applyPrimOp op = case op of 
+applyPrimOp :: Show t => (String -> t) -> Pop -> [Atom t] -> Expr t
+applyPrimOp mkCons op = case op of 
     PAdd -> binOp (+) (+)
     PSub -> binOp (-) (-)
     PMul -> binOp (*) (*)
@@ -299,11 +308,11 @@ applyPrimOp op = case op of
     applyBinOp _  _  _   _   args = 
         error $ "applyPrimOp: Primitive operation (" 
              ++ show op 
-             ++ ") applied to arguments of the wrong type (" 
-             ++ show args ++ "), or not the correct number of arguments."
+             ++ ") applied to arguments of the wrong type" 
+             ++ "( " ++ show args ++ "), or not the correct number of arguments."
 
     binOpCon = applyBinOp mkConFun mkConFun
     binOp nop dop = applyBinOp ANum ADec nop dop
     modError = error "applyPrimOp: mod (%) operation not supported on Doubles."
-    mkConFun = AVar . ('$':) . show
+    mkConFun = AVar . mkCons . show
     --x %. y = fromIntegral $ truncate x `mod` truncate y

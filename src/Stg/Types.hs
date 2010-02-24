@@ -19,6 +19,7 @@ data Cont t
   | CtUpd t
   | CtArg (Atom t)
   | CtOpt t
+  | CtContOpt t
  deriving Show
 
 type Stack t = [Cont t]
@@ -31,14 +32,19 @@ data StgState t = StgState
   }
  -- deriving Show
 
-type StgM t = State [t]
+data StgMState t = StgMState
+    { nameSupply :: [t]
+    , mkCons     :: String -> t
+    }
+
+type StgM t = State (StgMState t)
 
 -- | Create a fresh unbound variable
 newVar :: StgM t t
 newVar = do
-    v <- get
-    put (tail v)
-    return (head v)
+    st@(StgMState { nameSupply = (n:ns) }) <- get
+    put $ st { nameSupply = ns }
+    return n
 
 instance Show t => Show (StgState t) where
   show st@(StgState code stack heap) = 
@@ -46,3 +52,5 @@ instance Show t => Show (StgState t) where
     ++ "\ncode: " ++ show (prExpr (text . show) code)
     ++ "\nheap: " ++ concat [ show (id, prObj (text . show) obj) ++ "\n\t"
                              | (id, obj) <- M.toList heap]
+
+returnJust x = return (Just x)
