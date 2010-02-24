@@ -2,12 +2,16 @@ module Stg.Optimise where
 
 import Control.Monad
 
+import Data.Generics
+import Data.Generics.PlateData
+
 import Data.Map(Map)
 import qualified Data.Map as M
 
 import Stg.AST
 import Stg.Types
 import Stg.Rules
+import Stg.Branch
 
 
 isKnown :: Ord t => Heap t -> Atom t -> Bool
@@ -15,9 +19,16 @@ isKnown h (AVar t) = maybe False (const True) (M.lookup t h)
 isKnown _ _        = True
 
 
-omega :: Ord t => t -> Stack t -> Heap t -> Obj t-> StgM t (Maybe (Rule, StgState t))
+omega :: (Ord t, Data t) => t -> Stack t -> Heap t -> Obj t-> StgM t (Maybe (Rule, StgState t))
 omega alpha stack heap obj@(OFun args code) = case code of
     ECase e brs -> case e of
+        EAtom v@(AVar x) | isKnown heap v -> do
+            case M.lookup x heap of
+                Just (OCon c as) -> case instantiateBranch c as brs of
+                    Nothing -> case findDefaultBranch v brs of
+                        Nothing -> error "defect :("
+                        Just e' -> rknowncase e'
+                    Just e' -> rknowncase e'
         ECall f as | all (isKnown heap) as -> do
             t <- newVar
             let heap'  = M.insert t (OThunk e) heap
@@ -26,14 +37,28 @@ omega alpha stack heap obj@(OFun args code) = case code of
                 ( ROpt ORKnownCall
                 , StgState 
                     { code  = EAtom (AVar t)
-                    , stack = CtContOpt f : stack
+                    , stack = CtContOpt alpha : stack
                     , heap  = heap'' }
                 )
-    _ -> returnJust
-        ( ROpt ORDone
+        _ -> done
+    _ -> done
+  where
+    rknowncase expr = 
+        let fun = OFun args expr
+        in returnJust
+        ( ROpt ORKnownCase
         , StgState
             { code  = EAtom (AVar alpha)
             , stack = stack
-            , heap  = M.insert alpha obj heap
+            , heap  = M.insert alpha fun heap
             }
         )
+    done = 
+        returnJust
+            ( ROpt ORDone
+            , StgState
+                { code  = EAtom (AVar alpha)
+                , stack = stack
+                , heap  = M.insert alpha obj heap
+                }
+            )

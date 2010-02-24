@@ -87,3 +87,5 @@ instance FV Cont where
     freeVars (CtUpd i)       = S.singleton i
     freeVars (CtArg a)       = freeVars a
     freeVars (CtOpt i)       = S.singleton i
+    freeVars (CtContOpt i)   = S.singleton i
+    

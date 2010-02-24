@@ -83,6 +83,7 @@ testInterpreter settings file = do
                         >> putStrLn (showStgRule settings r 
                         ++ "\n" 
                         ++ showStgState settings s)) trace
+        print $ length trace
         print $ map (\ list -> (head list, length list))
               $ group $ sort $ map fst  trace
       Left  r  -> do putStrLn $ "fail: " ++ show r
@@ -122,7 +123,7 @@ setSteping :: String -> Settings -> IO Settings
 setSteping arg s = return $ s { steping = read arg }
 
 setVisible :: String-> Settings -> IO Settings
-setVisible ind set = let (arg: arg2: arg3:_) = lines ind
+setVisible ind set = let (arg: arg2: arg3:_) = words ind
                          h = read arg3
                          s = read arg2
                          c = read arg

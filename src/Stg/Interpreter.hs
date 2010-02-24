@@ -21,7 +21,7 @@ import Stg.Optimise
 import Stg.Rules
 import Stg.Substitution
 import Stg.Types
-
+import Stg.Branch
  
 topCase :: Stack t -> Bool
 topCase (CtCase _ : _) = True
@@ -53,15 +53,6 @@ numArgs = length . takeWhile isArg
 unArg :: Show t => Cont t -> Atom t
 unArg (CtArg a) = a
 unArg o = error $ "unArg: not an arg: " ++ show o 
-
-instantiateBranch :: (Data t, Eq t) => t -> [Atom t] -> [Branch t] -> Maybe (Expr t)
-instantiateBranch x atoms (BCon t ts e : bs) 
-    | x == t    = Just $ substList ts atoms e
-    | otherwise = instantiateBranch x atoms bs
-instantiateBranch _ _ _ = Nothing
-
-findDefaultBranch :: (Data t, Eq t) => Atom t -> [Branch t] -> Maybe (Expr t)
-findDefaultBranch atom branches = listToMaybe [subst t atom e | BDef t e <- branches]
 
 
 initialState :: [Function String] -> StgState String
