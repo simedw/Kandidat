@@ -1,0 +1,9 @@
+
+getBool = getInt == 0;
+
+main = map (optimise (if getBool inc dec)) getList;
+
+inc x = x + 1;
+
+dec x = x - 1;
+

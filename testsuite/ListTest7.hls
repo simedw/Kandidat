@@ -24,4 +24,4 @@ mergesort li = case li of
 
 inc x = x + 1;
 
-main = mergesort (reverse (take 1 (iterate inc 0)));
+main = mergesort (reverse (take 7 (iterate inc 0)));

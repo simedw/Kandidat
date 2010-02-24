@@ -1,0 +1,35 @@
+
+-- Bete dig som folk, Dan!
+listToMatrix li = case li of {
+  Cons x xs -> case xs of {
+  Cons y ys -> case ys of {
+  Cons z zs -> case zs of {
+  Cons u us -> Tuple (Mat2 x y z u) us;
+  Nil       -> NotTuple };
+  Nil       -> NotTuple };
+  Nil       -> NotTuple };
+  Nil       -> NotTuple };
+
+listToMatrices li = case listToMatrix li of {
+  Tuple m xs -> Cons m (listToMatrices xs);
+  NotTuple   -> Nil };
+
+m1 = Mat2 1 2 3 4;
+m2 = Mat2 5 6 7 8;
+
+mult x y = case x of
+    { Mat2 a b c d -> case y of
+        { Mat2 a' b' c' d' -> 
+            Mat2 (a * a' + b * c') (a * b' + b * d')
+                 (c * a' + d * c') (c * b' + d * d')
+        }
+    };
+
+det m = case m of
+    { Mat2 a b c d -> a * d - b * c 
+    };
+
+main = case listToMatrices getList of 
+    { Cons m ms -> map (optimise (mult m)) ms
+    };
+

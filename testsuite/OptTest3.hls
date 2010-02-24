@@ -1,0 +1,5 @@
+
+getBool = getInt == 0;
+
+main = map (optimise (and getBool)) (map (\x . x == 0) getList);
+
