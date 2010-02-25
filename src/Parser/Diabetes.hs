@@ -21,6 +21,8 @@ data DiaState t = DiaState
     { nameSupply :: [t]
     , emptyCons  :: Set t
     , mkEmptyCon :: t -> t
+    , numCon     :: t
+    , decCon     :: t
     }
 
 test :: String -> [AST.Function String]
@@ -45,7 +47,11 @@ run fs = conses ++ funs
         { nameSupply = map ("t." ++) $ [1..] >>= flip replicateM ['a'..'z']
         , emptyCons  = S.empty
         , mkEmptyCon = toCons
+        , numCon     = "I#"
+        , decCon     = "D#"
         }
+
+atomToCon :: ST.Atom -> 
 
 desugar :: Ord a => ST.Function a -> Dia a (AST.Function a)
 desugar (ST.Function t ts expr) = 
@@ -56,7 +62,7 @@ createFun args expr | null args = liftM AST.OThunk      (desugarE expr)
                     | otherwise = liftM (AST.OFun args) (desugarE expr)
 
 desugarE :: Ord t => ST.Expr t -> Dia t (AST.Expr t)
-desugarE (ST.EAtom t) = return $ AST.EAtom $ atomST2AST t
+desugarE (ST.EAtom t) = desugarA t
 desugarE (ST.ELam args expr) = do
     n <- newVar
     e <- desugarE expr
@@ -98,9 +104,11 @@ desugarB (ST.BDef t exp) = liftM (AST.BDef t) (desugarE exp)
 
 magic :: Ord a => [ST.Expr a] -> Dia a ([AST.Atom a], [(a, AST.Obj a)])
 magic [] = return ([], [])
-magic ((ST.EAtom x):xs) = do
-  (as,bs) <- magic xs
-  return (atomST2AST x : as, bs)
+magic (ST.EAtom x@(AVar _):xs) = do
+    (as,bs) <- magic xs
+    return (atomST2AST x : as, bs)
+magic (ST.EAtom x:xs) = do
+      
 magic (ST.ECon t [] : xs ) = do
     (as, bs) <- magic xs
     mkCon <- gets mkEmptyCon
@@ -110,6 +118,17 @@ magic (x:xs) = do
   obj     <- AST.OThunk <$> desugarE x
   (as,bs) <- magic xs
   return ((AST.AVar var) : as, (var, obj) : bs)
+
+desugarA :: ST.Atom a -> Dia a (AST.Expr a)
+desugarA (ST.AVar t) = return $ AST.EAtom $ AST.AVar t
+desugarA x           = box (case x of
+    ST.ANum n -> numCon
+    ST.ADec d -> decCon) atomST2AST x
+  where
+    box con x = do
+        c <- gets con
+        v <- newVar
+        return $ ELet False [v, AST.OCon con [x]] $ EAtom $ AVar v
 
 -- | converts atoms from ST to AST
 atomST2AST :: ST.Atom a -> AST.Atom a

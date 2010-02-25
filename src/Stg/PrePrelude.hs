@@ -26,8 +26,3 @@ binOp name op = Function name $ OFun ["x", "y"] $
     ECase (EAtom (AVar "x")) 
         [BDef "x'" (ECase (EAtom (AVar "y")) 
             [BDef "y'" (EPop op [AVar "x'", AVar "y'"])])]
-
----- Create constructor functions (ex: true = True;)
---con :: String -> Function String
---jcon name = Function (map toLower name) 
-         -- $ OCon name [] 
