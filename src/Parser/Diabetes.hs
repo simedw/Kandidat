@@ -21,6 +21,8 @@ data DiaState t = DiaState
     { nameSupply :: [t]
     , emptyCons  :: Set t
     , mkEmptyCon :: t -> t
+    , numCon     :: t
+    , decCon     :: t
     }
 
 test :: String -> [AST.Function String]
@@ -45,6 +47,8 @@ run fs = conses ++ funs
         { nameSupply = map ("t." ++) $ [1..] >>= flip replicateM ['a'..'z']
         , emptyCons  = S.empty
         , mkEmptyCon = toCons
+        , numCon     = "#I"
+        , decCon     = "#D"
         }
 
 desugar :: Ord a => ST.Function a -> Dia a (AST.Function a)
@@ -56,7 +60,7 @@ createFun args expr | null args = liftM AST.OThunk      (desugarE expr)
                     | otherwise = liftM (AST.OFun args) (desugarE expr)
 
 desugarE :: Ord t => ST.Expr t -> Dia t (AST.Expr t)
-desugarE (ST.EAtom t) = return $ AST.EAtom $ atomST2AST t
+desugarE (ST.EAtom t) = desugarA t
 desugarE (ST.ELam args expr) = do
     n <- newVar
     e <- desugarE expr
@@ -116,3 +120,14 @@ atomST2AST :: ST.Atom a -> AST.Atom a
 atomST2AST (ST.AVar t) = AST.AVar t
 atomST2AST (ST.ANum n) = AST.ANum n
 atomST2AST (ST.ADec n) = AST.ADec n
+
+desugarA :: ST.Atom a -> Dia a (AST.Expr a)
+desugarA (ST.AVar t) = return $ AST.EAtom $ AST.AVar t
+desugarA x           = box (case x of
+    ST.ANum n -> numCon
+    ST.ADec d -> decCon) atomST2AST x
+  where
+    box con x = do
+        c <- gets con
+        v <- newVar
+        return $ ELet False [v, AST.OCon con [x]] $ EAtom $ AVar v

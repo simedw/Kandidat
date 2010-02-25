@@ -29,8 +29,8 @@ tok = makeTokenParser LanguageDef
   , nestedComments  = True
   , identStart      = letter   
   , identLetter     = alphaNum <|> oneOf "_'"
-  , opStart         = oneOf "+-*/%<>=_"
-  , opLetter        = oneOf "+-*/%<>=_"
+  , opStart         = oneOf "+-*/%<>=_$.:&|"
+  , opLetter        = oneOf "+-*/%<>=_$.:&|"
   , reservedNames   = keywords
   , reservedOpNames = operators
   , caseSensitive   = True
@@ -82,9 +82,14 @@ scdef = do
 expr :: P (Expr String)
 expr = buildExpressionParser table expr'
   where
-    table = [ map (op AssocLeft) ["*","/","%"]
+    table = [ map (op AssocRight) ["."]
+            , map (op AssocLeft) ["*","/","%"]
             , map (op AssocLeft) ["+","-"]
+            , map (op AssocRight) ["++", ":"]
             , map (op AssocNone) ["<","<=","==",">=",">"]
+            , map (op AssocRight) ["&&"]
+            , map (op AssocRight) ["||"]
+            , map (op AssocRight) ["$"]
             ]
 
     op assoc s = flip Infix assoc $ do
@@ -102,7 +107,7 @@ afterparensExpr = (flip ECall [] `fmap` operator tok) <|> expr
 
 -- Atoms, identifiers or integers. Extensible!
 atomExpr :: P (Expr String)
-atomExpr = EAtom  `fmap` (try signedInt)
+atomExpr = EAtom  `fmap` (try signedIntOrFloat)
 -- <|> ADec `fmap` float tok
 -- <|> AChr `fmap` charLiteral tok
 -- <|> AStr `fmap` stringLiteral tok
@@ -114,16 +119,13 @@ atomExpr = EAtom  `fmap` (try signedInt)
 -- Parsec allows whitespace between - and the number, as in "- 1".
 -- We cannot tolerate this! "-1" is negative one, and "x - 1" is x minus 1.
 -- Therefore all this low-level parser stuff
-signedInt :: P (Atom String)
-signedInt = do
+signedIntOrFloat :: P (Atom String)
+signedIntOrFloat = do
     sign  <- (char '-' >> return (negate, negate)) <|> return (id, id)
-    --n <- many1 (oneOf ['0'..'9']) -- nat
     x <- naturalOrFloat tok
-    --whiteSpace tok
     return $ case x of
         Left  n -> ANum $ (fst sign) n
         Right f -> ADec $ (snd sign) f
-    --return $ sign $ read n
 
 -- for debugging :)
 fromRight :: Either a b -> b
