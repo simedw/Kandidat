@@ -1,0 +1,104 @@
+{-
+Note I have assumed that Strings are represented as [Integer]
+
+-}
+
+-- encrypt : Integer -> Integer -> [Integer] -> [Integer]
+encrypt n e xs = map (optimise (power e n)) xs; --(collect (size n) xs);
+
+-- decrypt : Integer -> Integer -> [Integer] -> [Integer]
+decrypt n d xs = map (optimise (power d n)) xs;
+
+-- size : Integer -> Int
+size n = let
+    { logg b m = case m == 0 of
+        { True  -> 0
+        ; False -> 1 + (logg b (m / b))
+        }
+    } in (logg 10 n * 47) / 100; -- log_128 10 = 0.475
+
+-- code : [Integer] -> Integer
+code = let accum x y = (128 * x) + y
+        in foldl accum 0;
+
+-- decode : Integer -> [Integer]
+decode n = let 
+    { expand x = case x == 0 of
+        { True -> Nil
+        ; False -> Cons (x % 128) (expand (x / 128))
+        }
+    } in reverse (expand n);
+
+-- may be done smarter I know
+-- collect : forall a. Int -> [a] -> [a]
+collect n xs = case n == 0 of
+    { True  -> Nil
+    ; False -> case xs of
+        { Nil -> Nil
+        ; ys  -> Cons (take n xs) (collect n (drop n xs))
+        }
+    };
+
+-- makeKeys : Integer -> Integer -> (Integer, Integer, Integer)
+makeKeys p' q' = let
+    { p   = nextPrime p'
+    ; q   = nextPrime q'
+    ; n   = p * q
+    ; phi = (p - 1) * (q - 1)
+    ; d   = nextPrime (p + q + 1)
+    } in Tup3 d (invert phi d) d;
+
+-- nextPrime : Integer -> Integer 
+nextPrime a = let
+    { odd = case even a of
+        { True  -> a + 1
+        ; False -> a
+        }
+    ; prime p = andList (map (\x . power (p - 1) p x == 1) 
+                             (Cons 3
+                               (Cons 5
+                                 (Cons 7 Nil))))
+    } in head (filter prime (iterate (\x . x + 2) odd));
+
+-- invert : Integer -> Integer -> Integer
+invert n a = let
+    { e = iter n 0 a 1
+    } in case e < 0 of
+        { True  -> e + n
+        ; False -> e
+        };
+
+-- iter : Integer -> Intger -> Integer -> Integer -> Integer
+iter g v h w = case h == 0 of
+    { True  -> v
+    ; False -> let
+        { fact = g / h
+        } in iter h w (g - fact * h) (v - fact * w)
+    };
+
+-- power : Integer -> Integer -> Integer -> Integer
+power n m x = case n == 0 of
+    { True  -> 1
+    ; False -> case even n of 
+        { True  -> (sqr (power (n / 2) m x)) % m
+        ; False -> (x * power (n - 1) m x) % m
+        }
+    };
+
+-- sqr : Integer -> Integer
+sqr x = x * x;
+
+-- even : Integer -> Bool
+even x = x % 2 == 0;
+
+main = listSeq (decrypt 3233 2753 (encrypt 3233 17 getIntList));
+
+{-
+main = listSeq (case getIntList of 
+    { Cons x xs -> case xs of
+        { Cons y ys -> case makeKeys x y of
+            { Tup3 n e d -> decrypt n d (encrypt n e ys)
+            }
+        }
+    });
+-}
