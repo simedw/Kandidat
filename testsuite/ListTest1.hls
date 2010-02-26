@@ -1,1 +1,1 @@
-main = length (replicate getInt 4);
+main = length $ replicate getInt 4;

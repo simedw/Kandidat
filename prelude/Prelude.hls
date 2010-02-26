@@ -118,6 +118,8 @@ id x = x;
 
 compose f g x = f (g x);
 
+appl f x = f x;
+
 dot f g x y = f (g x y);
 
 fix f = letrec x = f x in x;

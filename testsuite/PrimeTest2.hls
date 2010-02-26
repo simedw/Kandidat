@@ -5,4 +5,4 @@ isPrimer n t = case t * t >= n of
   ; False -> if (n % t == 0) False (isPrimer n (t + 1))
   };
                   
-main = andList (map isPrime getIntList);
+main = andList $ map isPrime getIntList;

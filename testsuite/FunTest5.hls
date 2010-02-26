@@ -1,7 +1,7 @@
 zero s x = x;
-succ s x y = x (s x y);
+succ s x = x . s x;
 
-add m n s x = m s (n s x);
+add m n s = m s . n s;
 
 mul m n = m (add n) zero;
 

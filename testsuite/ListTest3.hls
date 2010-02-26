@@ -1,4 +1,4 @@
-list = Cons 5 (Cons 3 (Cons 1 (Cons 8 (Cons 2 Nil))));
+list = 5 : 3 : 1 : 8 : 2 : Nil;
 
 listEq = dot andList (zipWith (==));
 

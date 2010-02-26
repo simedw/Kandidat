@@ -12,8 +12,10 @@ import qualified Data.Set as S
 
 import qualified Parser.SugarTree as ST
 import qualified Stg.AST          as AST
+import qualified Stg.PrePrelude   as PP
 
 import Parser.SugarParser
+
 
 type Dia a = State (DiaState a) 
 
@@ -21,6 +23,8 @@ data DiaState t = DiaState
     { nameSupply :: [t]
     , emptyCons  :: Set t
     , mkEmptyCon :: t -> t
+    , numCon :: t
+    , decCon :: t
     }
 
 test :: String -> [AST.Function String]
@@ -45,6 +49,8 @@ run fs = conses ++ funs
         { nameSupply = map ("t." ++) $ [1..] >>= flip replicateM ['a'..'z']
         , emptyCons  = S.empty
         , mkEmptyCon = toCons
+        , numCon     = PP.numCon
+        , decCon     = PP.decCon
         }
 
 desugar :: Ord a => ST.Function a -> Dia a (AST.Function a)
@@ -56,7 +62,11 @@ createFun args expr | null args = liftM AST.OThunk      (desugarE expr)
                     | otherwise = liftM (AST.OFun args) (desugarE expr)
 
 desugarE :: Ord t => ST.Expr t -> Dia t (AST.Expr t)
-desugarE (ST.EAtom t) = return $ AST.EAtom $ atomST2AST t
+desugarE x@(ST.EAtom _) = do
+    ([atom], binds) <- magic [x] -- hackity hackity hack!
+    case binds of
+        [] -> return $ AST.EAtom atom
+        _  -> return $ AST.ELet False binds (AST.EAtom atom)
 desugarE (ST.ELam args expr) = do
     n <- newVar
     e <- desugarE expr
@@ -98,21 +108,28 @@ desugarB (ST.BDef t exp) = liftM (AST.BDef t) (desugarE exp)
 
 magic :: Ord a => [ST.Expr a] -> Dia a ([AST.Atom a], [(a, AST.Obj a)])
 magic [] = return ([], [])
-magic ((ST.EAtom x):xs) = do
-  (as,bs) <- magic xs
-  return (atomST2AST x : as, bs)
+magic (ST.EAtom (ST.AVar var):xs) = do
+    (as,bs) <- magic xs
+    return (AST.AVar var : as, bs)
+magic (ST.EAtom x:xs) = do -- x is either ANum or ADec
+    (as,bs) <- magic xs
+    var <- newVar
+    let cons = case x of
+            ST.ANum n -> numCon
+            ST.ADec d -> decCon
+    c <- gets cons
+    return (AST.AVar var : as, (var, AST.OCon c [atomST2AST x]) : bs)
 magic (ST.ECon t [] : xs ) = do
     (as, bs) <- magic xs
     mkCon <- gets mkEmptyCon
     return (AST.AVar (mkCon t) : as, bs) 
 magic (x:xs) = do
-  var     <- newVar
-  obj     <- AST.OThunk <$> desugarE x
-  (as,bs) <- magic xs
-  return ((AST.AVar var) : as, (var, obj) : bs)
+    var     <- newVar
+    obj     <- AST.OThunk <$> desugarE x
+    (as,bs) <- magic xs
+    return ((AST.AVar var) : as, (var, obj) : bs)
 
--- | converts atoms from ST to AST
+-- | converts non-var atoms from ST to AST
 atomST2AST :: ST.Atom a -> AST.Atom a
-atomST2AST (ST.AVar t) = AST.AVar t
 atomST2AST (ST.ANum n) = AST.ANum n
 atomST2AST (ST.ADec n) = AST.ADec n
