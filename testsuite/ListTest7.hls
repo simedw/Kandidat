@@ -4,8 +4,8 @@ merge li1 li2 = case li1 of
   ; Cons x xs -> case li2 of
     { Nil -> li1
     ; Cons y ys -> if (x < y) 
-                      (Cons x (merge xs li2))
-                      (Cons y (merge li1 ys))
+                      (x : merge xs li2)
+                      (y : merge li1 ys)
     }
   };
 
@@ -22,6 +22,6 @@ mergesort li = case li of
       }
   };
 
-inc x = x + 1;
+dec x = x - 1;
 
-main = mergesort (reverse (take 7 (iterate inc 0)));
+main = mergesort . take getInt $ iterate dec 0;

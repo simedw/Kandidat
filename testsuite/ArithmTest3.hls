@@ -1,5 +1,5 @@
 inc x = x + 1;
 
-twice f = compose f f;
+twice f = f . f;
 
 main = twice twice inc getInt;

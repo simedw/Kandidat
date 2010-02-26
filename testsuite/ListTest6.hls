@@ -7,12 +7,12 @@ qsort li = case li of
            ; listLess = filter lesser xs
            ; listMore = filter (\y . y >= x) xs
            } 
-       in append (qsort listLess) (Cons x (qsort listMore))
+       in qsort listLess ++ x : qsort listMore
   };
   
 
 inc x = x + 1;
 
 
-main = qsort (reverse (take 3 (iterate inc 0)));
+main = qsort $ reverse $ take 3 $ iterate inc 0;
 

@@ -15,6 +15,7 @@ import Test.QuickCheck
 import Types 
 import Interpreter hiding (main)
 import Stg.Input
+import qualified Stg.PrePrelude as PP
 
 main :: IO ()
 main = runTests $ 
@@ -41,24 +42,44 @@ testParser = PassFail
     }
 
 
-(--->) :: Show a => String -> a -> 
+-- Show the results from the test results like the results from the programs
+class Show a => ShowResult a where
+  showResult :: a -> String
+  showResult = show
+
+instance ShowResult Integer where
+  showResult n = "(" ++ PP.numCon ++ " " ++ show n ++ ")"
+instance ShowResult Int where
+  showResult n = "(" ++ PP.numCon ++ " " ++ show n ++ ")"
+instance ShowResult Double where
+  showResult d = "(" ++ PP.decCon ++ " " ++ show d ++ ")"
+instance ShowResult Bool where
+instance ShowResult a => ShowResult [a] where
+  showResult []     = "Nil"
+  showResult (x:xs) = "(" ++ "Cons " ++ showResult x ++ " " ++ showResult xs ++ ")"
+
+(--->) :: ShowResult a => String -> a -> 
         (String, String)
-file ---> fun = (file, show fun)
+file ---> fun = (file, showResult fun)
+
+infix 0 --->
+infix 0 -->
+infix 0 |->
 
 -- |-> for working with lists
-(-->), (|->) :: Show a => String -> (Integer -> [Integer] -> a) -> 
+(-->), (|->) :: ShowResult a => String -> (Integer -> [Integer] -> a) -> 
                 (String, Integer -> [Integer] -> String, Bool)
-file --> fun = (file, \x y -> show $ fun x y, False)
-file |-> fun = (file, \x y -> show $ fun x y, True)
+file --> fun = (file, \x y -> showResult $ fun x y, False)
+file |-> fun = (file, \x y -> showResult $ fun x y, True)
 
 -- a map between testfunctions and our semantic excepted functions
 -- lets make these test only run once! 
 testsuiteStatic = [
-    "ArithmTest4.hls" ---> (3 + (2 * 3))
-  , "FunTest1.hls"    ---> 1
-  , "FunTest2.hls"    ---> 2 
-  , "FunTest3.hls"    ---> 2
-  , "FunTest4.hls"    ---> 2
+    "ArithmTest4.hls" ---> 3 + (2 * 3 :: Integer)
+  , "FunTest1.hls"    ---> (1 :: Integer)
+  , "FunTest2.hls"    ---> (2 :: Integer)
+  , "FunTest3.hls"    ---> (2 :: Integer)
+  , "FunTest4.hls"    ---> (2 :: Integer)
 --  , "FunTest6.hls"    ---> "(S (S Z))" -- depend on how we render results
   , "ListTest3.hls"   ---> let list = [5,3,1,8,2]
                             in (reverse (take 2 list) 
@@ -68,8 +89,8 @@ testsuiteStatic = [
     ]
 -- note that we are working on a :: Integer -> [Integer] -> String
 -- (Filename, function, absolute value?)
-testsuiteDyn = [
-    "ArithmTest1.hls" --> \x _ -> 1 + x
+testsuiteDyn =
+  [ "ArithmTest1.hls" --> \x _ -> 1 + x
   , "ArithmTest2.hls" --> \x _ -> 1 + 2 * x + 4 * 5
   , "ArithmTest3.hls" --> \x _ -> let twice f = f . f
                                    in twice twice (+1) x
@@ -83,8 +104,11 @@ testsuiteDyn = [
                                 then False
                                 else isprime (t+1) n
                in all (isprime 2) xs
+  , "ListTest7.hls"   |-> \x _ -> sort [0,-1.. -x+1] -- A little slow :)
           
   ]
+
+
 
 -- create our test cases
 -- This is slow, so we have to think of ways to make it faster.
@@ -100,7 +124,7 @@ interpreter = map toTestStatic testsuiteStatic ++ map toTestDyn testsuiteDyn
                   setting = defaultSettings {input = input}
                   -- can we lift IO in some better way?
                   v = unsafePerformIO $ forceInterpreter setting file 
-                                 in v == (fun x' y)
+                                 in v == fun x' y
                }
     abs' True  x | x < 0     = -x
     abs' True  x | otherwise = x
@@ -113,9 +137,11 @@ interpreter = map toTestStatic testsuiteStatic ++ map toTestDyn testsuiteDyn
              , action   = do 
                let setting = defaultSettings
                v <- forceInterpreter setting file 
-               let res = (v == value)
+               let res = v == value
                case res of
                     True  -> putStrLn "Pass"
-                    False -> putStrLn "Failed"
+                    False -> putStrLn $ "Failed "
+                                     ++ "\nExpected: " ++ show value
+                                     ++ "\nGot: "      ++ show v 
                return res
                }

@@ -1,10 +1,10 @@
 
 zero s x = x;
-succ v s x = s (v s x);
+succ v s = s . v s;
 
-add m n s x = m s (n s x);
+add m n s = m s . n s;
 
-mul m n s = m (n s);
+mul m n = m . n;
 
 one = succ zero;
 two = succ one;

@@ -1,1 +1,1 @@
-main = k 2 (s k k 3);
+main = k 2 $ s k k 3;
