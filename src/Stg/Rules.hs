@@ -24,13 +24,13 @@ data Rule
   | RUpdateOpt
   | ROpt OptRule
   | RContOpt
- deriving (Show, Eq, Ord)
+ deriving (Show, Eq, Ord, Read)
 
 data OptRule
   = ORKnownCall
   | ORKnownCase
   | ORDone
- deriving (Show, Eq, Ord)
+ deriving (Show, Eq, Ord, Read)
 
 info :: Rule -> String
 info RLet = "Let"

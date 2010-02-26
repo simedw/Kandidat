@@ -12,7 +12,8 @@ Executable test
   hs-source-dirs:  src, test
   other-modules:   Parser.Pretty.Test
   main-is:         Main.hs
-  build-depends:   base, QuickCheck >= 2, pretty, parsec, filepath
+  build-depends:   base, QuickCheck >= 2, ansi-wl-pprint, parsec, filepath
                    , directory, uniplate, haskell98, containers, mtl
+                   , haskeline
   if !flag(test)
     buildable:     False

@@ -6,7 +6,7 @@ import "mtl" Control.Monad.State
 import Data.Map(Map)
 import qualified Data.Map as M
 
-import Text.PrettyPrint
+import Text.PrettyPrint.ANSI.Leijen
 
 
 import Parser.Pretty.Pretty
