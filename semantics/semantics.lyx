@@ -1,0 +1,72 @@
+#LyX 1.6.5 created this file. For more info see http://www.lyx.org/
+\lyxformat 345
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\language english
+\inputencoding auto
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\paperfontsize default
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\author "" 
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+\begin_inset Formula $\omega;\: s;\: H[\omega\mapsto OPT(\alpha)]\quad\Rightarrow\quad\alpha;\: OPT\:\alpha:s;\: H[\omega\mapsto BLACKHOLE]$
+\end_inset
+
+ (OPTIMISE)
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\chi;\; OPT\;\alpha:s;\ H[\chi\mapsto PAP(f\; a_{1}\cdots a_{n}),\; f\mapsto FUN(x_{1}\cdots x_{m}\rightarrow e)]\quad\Rightarrow\Omega_{\alpha,s,H}(FUN(x_{n+1}\cdots x_{m}\rightarrow e[a_{1}/x_{1}\cdots a_{n}/x_{n}])$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\chi;\; ContinueOPT\;\alpha:s;\ H[\chi\nrightarrow THUNK(e'),\ \alpha\mapsto FUN(\bar{x}\rightarrow e)\quad\Rightarrow\quad\Omega_{\alpha,s,H}(FUN(\bar{x}\rightarrow e)))$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\Omega_{\alpha;s;H}(FUN(\bar{x}\rightarrow\mathtt{case}\ f\ \bar{k}\ \mathtt{of}\ brs)\quad\Rightarrow\quad f\ \bar{k};\ ContinueOPT\ \alpha:s\;;\ H[\alpha\mapsto FUN(\bar{x}\rightarrow\mathtt{case}\ t\ \mathtt{of}\ brs),\ t\mapsto THUNK(f\ \bar{k})]$
+\end_inset
+
+ (OPTKNOWNCALL)
+\end_layout
+
+\end_body
+\end_document
