@@ -1,4 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module Parser.Pretty.Pretty where
 
 import Stg.AST
@@ -72,11 +73,13 @@ prAtom  = ppAtom . mkC
 
 seppis syn = vcat . punctuate (text "" <$> symbol syn semi <+> text "")
 
-mkPretty :: Syntax t -> PPrinters t
+mkPretty :: forall t. Syntax t -> PPrinters t
 mkPretty (Syntax {..})  = PPrinters {..}
   where
+    ppFun :: Function t -> Doc
     ppFun (Function id obj) = var id <+> equal <+> ppObj obj
-    -- prExpr :: (t -> Doc) -> Expr t -> Doc
+    
+    ppExpr :: Expr t -> Doc
     ppExpr e = case e of
         EAtom atom -> ppAtom atom
         ECall id as -> var id <+> hsep [ ppAtom a | a <- as ]
@@ -85,38 +88,41 @@ mkPretty (Syntax {..})  = PPrinters {..}
             False -> "let" ) <$>  indent 4 (ppLetBind binds) 
                                <+> key "in" <+> ppExpr e
         ECase scrut binds -> key "case" <+> ppExpr scrut <+> key "of"
-            <$> indent 4 (mkBrace $ map (ppBind ) binds)
+            <$> indent 4 (mkBrace $ map ppBranch binds)
         EPop op as -> operator (show op) <> operator "#" 
                         <+> hsep [ ppAtom a | a <- as ]  
     
+    mparens, mbraces :: Doc -> Doc
     mparens = enclose (symbol lparen) (symbol rparen)
     mbraces = enclose (symbol lbrace) (symbol rbrace)
     
     
+    mkBrace :: [Doc] -> Doc
     mkBrace [] = symbol $ braces empty
     mkBrace (x : xs) = symbol lbrace <+> x <$> mkBrace' xs
       where
         mkBrace' []     = symbol rbrace
         mkBrace' (x:xs) = symbol semi <+> x <$> mkBrace' xs
-    
-    ppBind bind = case bind of
+   
+    ppBranch :: Branch t -> Doc 
+    ppBranch branch = case branch of
         BCon name args e -> conVar name <+> hsep (map bindVar args) <+> operator "->" 
              <+> ppExpr e
         BDef name e -> mbraces (bindVar name) <+> operator "->" <+> ppExpr e
     
-    -- prBind :: (t -> Doc) -> [(t, Obj t)] -> Doc
+    ppLetBind :: [(t, Obj t)] -> Doc
     ppLetBind binds = mkBrace
         [ bindVar x <+> equal <+> ppObj obj
         | (x, obj) <- binds ]
     
     
-    -- prAtom :: (t -> Doc) -> Atom t -> Doc
+    ppAtom :: Atom t -> Doc
     ppAtom atom = case atom of
         AVar x -> var x
         ANum n -> num $ integer n
         ADec f -> num $ double f
     
-    -- prObj :: (t -> Doc) -> Obj t -> Doc
+    ppObj :: Obj t -> Doc
     ppObj obj = case obj of
         OFun args e -> object "FUN" <+> mparens (hsep (map bindVar args) 
                         <+> operator "->" <+> ppExpr e)
