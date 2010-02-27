@@ -1,74 +1,129 @@
+{-# LANGUAGE RecordWildCards #-}
 module Parser.Pretty.Pretty where
 
 import Stg.AST
 
 import Text.PrettyPrint.ANSI.Leijen
 
+data Syntax t = Syntax 
+    { equal    :: Doc
+    , operator :: String -> Doc
+    , key      :: String -> Doc
+    , conVar   :: t -> Doc
+    , bindVar  :: t -> Doc
+    , symbol   :: Doc -> Doc
+    , object   :: String -> Doc
+    , var      :: t -> Doc
+    , num      :: Doc -> Doc
+    }
+
+syntaxNormal :: (t -> Doc) -> Syntax t
+syntaxNormal prVar = Syntax
+    { equal    = equals
+    , operator = text
+    , key      = text
+    , conVar   = prVar
+    , bindVar  = prVar
+    , symbol   = id
+    , object   = text
+    , var      = prVar
+    , num      = id
+    }
+
+syntaxColour :: (t -> Doc ) -> Syntax t
+syntaxColour prVar = Syntax 
+    { equal    = magenta equals
+    , operator = magenta . text
+    , key      = yellow . text
+    , conVar   = bold . green . prVar
+    , bindVar  = cyan . prVar
+    , symbol   = red
+    , object   = bold . blue . text
+    , var      = green . prVar
+    , num      = green
+    }
+
+data PPrinters t = PPrinters
+    { ppFun  :: Function t -> Doc
+    , ppExpr :: Expr t     -> Doc
+    , ppObj  :: Obj t      -> Doc
+    , ppAtom :: Atom t     -> Doc
+    }
+
+mkC = mkPretty . syntaxColour
+mkN = mkPretty . syntaxNormal
+
 prFun :: Function String -> Doc
-prFun = prFunction text
+prFun =  ppFun $ mkN text
 
-prFuns = seppis . map prFun
+prFuns = seppis (syntaxNormal text) . map prFun
 
--- prFunction :: (t -> Doc) -> Function t -> Doc
-prFunction prVar (Function id obj) = var prVar id <+> equal <+> prObj prVar obj
+ppFunctionN = ppFun . mkN
+ppFunction  = ppFun . mkC
 
--- prExpr :: (t -> Doc) -> Expr t -> Doc
-prExpr prVar e = case e of
-    EAtom atom -> prAtom prVar atom
-    ECall id as -> var prVar id <+> hsep [ prAtom prVar a | a <- as ]
-    ELet b binds e -> (key $ case b of
-        True  -> "letrec"
-        False -> "let" ) <$>  indent 4 (prLetBind prVar binds) 
-                           <+> key "in" <+> prExpr prVar e
-    ECase scrut binds -> key "case" <+> prExpr prVar scrut <+> key "of"
-        <$> indent 4 (mkBrace $ map (prBind prVar) binds)
-    EPop op as -> operator (show op) <> operator "#" <+> hsep [ prAtom prVar a | a <- as ]  
+prExprN = ppExpr . mkN
+prExpr  = ppExpr . mkC
 
-equal   = magenta equals
-operator = magenta . text
-key = yellow . text
-conVar prVar  = bold . green . prVar
-bindVar prVar = cyan . prVar
-symbol        = red
-otext = bold . blue . text
-var   = (green .)
-num   = green
-mparens = enclose (symbol lparen) (symbol rparen)
-mbraces = enclose (symbol lbrace) (symbol rbrace)
+prObjN = ppObj . mkN
+prObj  = ppObj . mkC
 
-seppis = vcat . punctuate (text "" <$> symbol semi <+> text "")
+prAtomN = ppAtom . mkN
+prAtom  = ppAtom . mkC
 
-mkBrace [] = symbol $ braces empty
-mkBrace (x : xs) = symbol lbrace <+> x <$> mkBrace' xs
+seppis syn = vcat . punctuate (text "" <$> symbol syn semi <+> text "")
+
+mkPretty :: Syntax t -> PPrinters t
+mkPretty (Syntax {..})  = PPrinters {..}
   where
-    mkBrace' []     = symbol rbrace
-    mkBrace' (x:xs) = symbol semi <+> x <$> mkBrace' xs
-
-prBind prVar bind = case bind of
-    BCon name args e -> conVar prVar name <+> hsep (map (bindVar prVar) args) <+> operator "->" 
-         <+> prExpr prVar e
-    BDef name e -> mbraces (bindVar prVar name) <+> operator "->" <+> prExpr prVar e
-
--- prBind :: (t -> Doc) -> [(t, Obj t)] -> Doc
-prLetBind prVar binds = mkBrace
-    [ bindVar prVar x <+> equal <+> prObj prVar obj
-    | (x, obj) <- binds ]
-
-
--- prAtom :: (t -> Doc) -> Atom t -> Doc
-prAtom prVar atom = case atom of
-    AVar x -> var prVar x
-    ANum n -> num $ integer n
-    ADec f -> num $ double f
-
--- prObj :: (t -> Doc) -> Obj t -> Doc
-prObj prVar obj = case obj of
-    OFun args e -> otext "FUN" <+> mparens (hsep (map (bindVar prVar) args) <+> operator "->" 
-                                          <+> prExpr prVar e)
-    OPap obj args -> otext "PAP" <+> mparens (var prVar obj 
-                                            <+> hsep (map (prAtom prVar) args))
-    OCon name args -> otext "CON" <+> mparens (conVar prVar name 
-                                             <+> hsep (map (prAtom prVar) args))
-    OThunk e -> otext "THUNK" <+> mparens (prExpr prVar e)
-    OOpt   a -> otext "OPT" <+> mparens (prAtom prVar a)
-    OBlackhole -> otext "BLACKHOLE"
+    ppFun (Function id obj) = var id <+> equal <+> ppObj obj
+    -- prExpr :: (t -> Doc) -> Expr t -> Doc
+    ppExpr e = case e of
+        EAtom atom -> ppAtom atom
+        ECall id as -> var id <+> hsep [ ppAtom a | a <- as ]
+        ELet b binds e -> (key $ case b of
+            True  -> "letrec"
+            False -> "let" ) <$>  indent 4 (ppLetBind binds) 
+                               <+> key "in" <+> ppExpr e
+        ECase scrut binds -> key "case" <+> ppExpr scrut <+> key "of"
+            <$> indent 4 (mkBrace $ map (ppBind ) binds)
+        EPop op as -> operator (show op) <> operator "#" 
+                        <+> hsep [ ppAtom a | a <- as ]  
+    
+    mparens = enclose (symbol lparen) (symbol rparen)
+    mbraces = enclose (symbol lbrace) (symbol rbrace)
+    
+    
+    mkBrace [] = symbol $ braces empty
+    mkBrace (x : xs) = symbol lbrace <+> x <$> mkBrace' xs
+      where
+        mkBrace' []     = symbol rbrace
+        mkBrace' (x:xs) = symbol semi <+> x <$> mkBrace' xs
+    
+    ppBind bind = case bind of
+        BCon name args e -> conVar name <+> hsep (map bindVar args) <+> operator "->" 
+             <+> ppExpr e
+        BDef name e -> mbraces (bindVar name) <+> operator "->" <+> ppExpr e
+    
+    -- prBind :: (t -> Doc) -> [(t, Obj t)] -> Doc
+    ppLetBind binds = mkBrace
+        [ bindVar x <+> equal <+> ppObj obj
+        | (x, obj) <- binds ]
+    
+    
+    -- prAtom :: (t -> Doc) -> Atom t -> Doc
+    ppAtom atom = case atom of
+        AVar x -> var x
+        ANum n -> num $ integer n
+        ADec f -> num $ double f
+    
+    -- prObj :: (t -> Doc) -> Obj t -> Doc
+    ppObj obj = case obj of
+        OFun args e -> object "FUN" <+> mparens (hsep (map bindVar args) 
+                        <+> operator "->" <+> ppExpr e)
+        OPap obj args -> object "PAP" <+> mparens (var obj 
+                                                <+> hsep (map ppAtom args))
+        OCon name args -> object "CON" <+> mparens (conVar name 
+                                                 <+> hsep (map ppAtom args))
+        OThunk e -> object "THUNK" <+> mparens (ppExpr e)
+        OOpt   a -> object "OPT" <+> mparens (ppAtom a)
+        OBlackhole -> object "BLACKHOLE"
