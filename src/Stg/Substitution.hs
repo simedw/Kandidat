@@ -1,6 +1,7 @@
 module Stg.Substitution
   ( subst
   , substList
+  , removeOPT
   ) where
 
 import Data.Generics
@@ -16,6 +17,7 @@ test = ECase (var "xs")
              [BCon "Cons" ["y","ys"]
                 (ELet False [("h",OThunk (ECall "f" [AVar "y"]))
                             ,("t",OThunk (ECall "map" [AVar "f", AVar "ys"]))
+                            ,("x",OOpt (AVar "function"))
                             ,("r",OCon "Cons" [AVar "h", AVar "t"])
                             ] (var "r"))
              , BDef "x" (var "nil")
@@ -24,6 +26,7 @@ test = ECase (var "xs")
 substAtom :: Eq t => t -> Atom t -> Atom t -> Atom t
 substAtom x x' (AVar v) | x == v = x'
 substAtom _ _ a = a
+
 
 substExpr :: Eq t => t -> Atom t -> Expr t -> Expr t
 substExpr x (AVar x') (ECall t as) | x == t = ECall x' as
@@ -36,3 +39,16 @@ subst x x' = transformBi (substExpr x x') . transformBi (substAtom x x')
 substList :: (Data t, Eq t) => [t] -> [Atom t] -> Expr t -> Expr t
 substList []     []     = id
 substList (x:xs) (y:ys) = substList xs ys . subst x y
+
+
+
+-- I can't get this to work with just t
+
+removeOPT :: Function String -> Function String 
+removeOPT = transformBi f
+  where
+    f :: Obj String -> Obj String
+    f (OOpt x)   = OThunk (EAtom x)
+    f x          = x
+
+
