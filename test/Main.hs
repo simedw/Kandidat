@@ -86,6 +86,8 @@ testsuiteStatic = [
                                 == drop 3 (reverse list))
   , "PrimeTest1.hls"  ---> True
   , "OptTest1.hls"    ---> length (take 3 (repeat 4))
+  , "ListTest6.hls"   ---> sort (reverse (take 3 [(0 :: Integer)..]))
+  , "NegTest1.hls"   ---> (-1) - (-1 :: Integer)
     ]
 -- note that we are working on a :: Integer -> [Integer] -> String
 -- (Filename, function, absolute value?)
