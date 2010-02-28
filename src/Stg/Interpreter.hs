@@ -281,29 +281,21 @@ eval inp funs = (RInitial, st) : evalState (go st) initialStgMState
             Just (r, st') -> ((r, st') :) `fmap` go (gc st')
       
 
-applyPrimOp :: Show t => (String -> t) -> Pop -> [Atom t] -> Expr t
+applyPrimOp :: Show t => (String -> t) -> Pop t -> [Atom t] -> Expr t
 applyPrimOp mkCons op = case op of 
-    PAdd -> binOp (+) (+)
-    PSub -> binOp (-) (-)
-    PMul -> binOp (*) (*)
-    PDiv -> binOp div (/)
-    PMod -> binOp mod modError --(%.)
-    PGe  -> binOpCon (>=) (>=)
-    PGt  -> binOpCon (>)  (>)
-    PLe  -> binOpCon (<=) (<=)
-    PLt  -> binOpCon (<)  (<)
-    PEq  -> binOpCon (==) (==)
+    PBinOp   _ nop dop -> applyBinOp ANum ADec nop dop
+    PUnOp    _ nop dop -> applyUnOp  ANum ADec nop dop
+    PBinBool _ nop dop -> applyBinOp mkConFun mkConFun nop dop
   where
     applyBinOp nf _  nop _   [ANum x, ANum y] = EAtom . nf $ x `nop` y
     applyBinOp _  df _   dop [ADec x, ADec y] = EAtom . df $ x `dop` y
-    applyBinOp _  _  _   _   args = 
+    applyBinOp _ _ _ _ args = err args
+    applyUnOp nf _  nop _   [ANum x] = EAtom . nf $ nop x
+    applyUnOp _  df _   dop [ADec x] = EAtom . df $ dop x
+    mkConFun = AVar . mkCons . show
+    err args = 
         error $ "applyPrimOp: Primitive operation (" 
              ++ show op 
-             ++ ") applied to arguments of the wrong type" 
-             ++ "( " ++ show args ++ "), or not the correct number of arguments."
-
-    binOpCon = applyBinOp mkConFun mkConFun
-    binOp nop dop = applyBinOp ANum ADec nop dop
-    modError = error "applyPrimOp: mod (%) operation not supported on Doubles."
-    mkConFun = AVar . mkCons . show
-    --x %. y = fromIntegral $ truncate x `mod` truncate y
+             ++ ") applied to arguments of the wrong type " 
+             ++ "( " ++ show args ++ ")"
+             ++ ", or not the correct number of arguments."

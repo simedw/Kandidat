@@ -10,14 +10,32 @@ data Function t = Function t (Obj t)
 
 data Expr t   = EAtom (Atom t)
               | ECall t [Atom t]
-              | EPop Pop [Atom t]
+              | EPop (Pop t) [Atom t]
               | ELet Bool [(t,Obj t)] (Expr t)  -- True if recursive
               | ECase (Expr t) [Branch t]
   deriving (Data, Eq, Show, Typeable)
 
-data Pop      = PAdd | PSub | PMul | PDiv | PMod
-              | PLe  | PLt  | PGe  | PGt  | PEq
-         deriving (Data, Typeable, Eq, Show)
+data Pop t    = PBinOp t
+                  (Integer -> Integer -> Integer)
+                  (Double  -> Double  -> Double)
+              | PUnOp t
+                  (Integer -> Integer)
+                  (Double  -> Double)
+              | PBinBool t
+                  (Integer -> Integer -> Bool)
+                  (Double  -> Double  -> Bool)
+  deriving (Data, Typeable)
+
+instance Show t => Show (Pop t) where
+  show (PBinOp   op _ _) = show op ++ "#"
+  show (PUnOp    op _ _) = show op ++ "#"
+  show (PBinBool op _ _) = show op ++ "#"
+
+instance Eq t => Eq (Pop t) where
+  PBinOp   op1 _ _ == PBinOp   op2 _ _ = op1 == op2
+  PUnOp    op1 _ _ == PUnOp    op2 _ _ = op1 == op2
+  PBinBool op1 _ _ == PBinBool op2 _ _ = op1 == op2
+  _ == _ = False
 
 isAtom (EAtom _) = True
 isAtom _         = False
