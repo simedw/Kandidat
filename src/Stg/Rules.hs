@@ -30,6 +30,7 @@ data OptRule
   = ORKnownCall
   | ORKnownCase
   | ORDone
+  | ORCaseThunk
  deriving (Show, Eq, Ord, Read)
 
 info :: Rule -> String
