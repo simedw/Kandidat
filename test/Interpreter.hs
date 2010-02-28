@@ -99,6 +99,7 @@ forceInterpreter settings file = do
       Left  r  -> do return $ "fail: " ++ show r
 
 
+
 testInterpreter :: Settings -> FilePath -> IO ()
 testInterpreter set file = do
     dir     <- getCurrentDirectory
@@ -137,6 +138,7 @@ loop originalState  = do
             [":step", num] -> case reads num of
                 ((x, "") : _) -> evalStep x st
                 _ -> loop st
+            [":force"] -> forcing st >> loop st
             [":h"] -> printHelp >> loop st
             [":help"] -> printHelp >> loop st
             input -> do
@@ -149,6 +151,10 @@ loop originalState  = do
     bp [] _ = Nothing
     bp (b : bs) r | evalBP b r = Just b
                   | otherwise  = bp bs r
+    
+    forcing st = do
+        stg <- lift $ gets stgm
+        outputStrLn . fst $ runState (force st) stg
 
     evalStep n s | n == 0 = printSummary s
                  | n < 0  = do
