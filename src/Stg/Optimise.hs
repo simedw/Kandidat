@@ -18,6 +18,9 @@ isKnown :: Ord t => Heap t -> Atom t -> Bool
 isKnown h (AVar t) = maybe False (const True) (M.lookup t h)
 isKnown _ _        = True
 
+--isBlue :: Ord t => Heap t -> Expr t -> Bool
+--isBlue h ex = case ex of
+    
 
 omega :: (Ord t, Data t) => t -> Stack t -> Heap t -> Obj t-> StgM t (Maybe (Rule, StgState t))
 omega alpha stack heap obj@(OFun args code) = case code of
@@ -29,6 +32,20 @@ omega alpha stack heap obj@(OFun args code) = case code of
                         Nothing -> error "defect :("
                         Just e' -> rknowncase e'
                     Just e' -> rknowncase e'
+                Just (OThunk _) -> do
+                    returnJust
+                        ( ROpt ORCaseThunk
+                        , StgState
+                            { code = e
+                            , stack = CtContOpt alpha : stack
+                            , heap = M.insert alpha obj heap
+                            }
+                        )
+                Just fun -> do
+                    case findDefaultBranch v brs of
+                        Nothing -> error "omega.ecase.eatom.nocon.nodefaultbranch"
+                        Just e' -> rknowncase e'
+                _               -> done
         ECall f as | all (isKnown heap) as -> do
             t <- newVar
             let heap'  = M.insert t (OThunk e) heap
@@ -40,6 +57,7 @@ omega alpha stack heap obj@(OFun args code) = case code of
                     , stack = CtContOpt alpha : stack
                     , heap  = heap'' }
                 )
+        ELet b binds expr -> do
         _ -> done
     _ -> done
   where

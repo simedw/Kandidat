@@ -1,0 +1,8 @@
+main = listSeq $ map (optimise (foo getInt)) getIntList;
+
+foo x y = case x == 0 of
+    { True -> y + 1
+    ; False -> y - 1
+    };
+    
+    
