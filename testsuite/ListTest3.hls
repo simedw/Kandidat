@@ -1,6 +1,6 @@
 list = 5 : 3 : 1 : 8 : 2 : Nil;
 
-listEq = dot andList (zipWith (==));
+listEq = andList .. zipWith (==);
 
 main = listEq (reverse (take 2 list))
                       (drop 3 (reverse list));

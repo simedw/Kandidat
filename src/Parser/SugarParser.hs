@@ -14,7 +14,7 @@ import Parser.SugarTree
 
 -- The reserved operators
 operators :: [String]
-operators = ["->", "=",";","\\","."]
+operators = ["->", "=",";","\\",".",".."]
 
 -- The keywords
 keywords :: [String]
@@ -82,19 +82,34 @@ scdef = do
 expr :: P (Expr String)
 expr = buildExpressionParser table expr'
   where
-    table = [ map (op AssocRight) ["."]
+    table = [ map (op AssocRight) [".",".."]
             , map (op AssocLeft) ["*","/","%"]
             , map (op AssocLeft) ["+","-"]
             , map (op AssocRight) ["++", ":"]
             , map (op AssocNone) ["<","<=","==",">=",">"]
             , map (op AssocRight) ["&&"]
             , map (op AssocRight) ["||"]
-            , map (op AssocRight) ["$"]
+            , map (dollar AssocRight) ["$"]
             ]
+
+    aliases = [("&&","and")
+              ,("||","or")
+              ,("++","append")
+              ,(":" ,"cons")
+              ,("." ,"compose")
+              ,("..","dot")
+              ]
 
     op assoc s = flip Infix assoc $ do
         reservedOp tok s 
-        return $ \e1 e2 -> ECall s [e1,e2]
+        return $ \e1 e2 -> ECall (fromMaybe s (lookup s aliases)) [e1,e2]
+        
+    dollar assoc s = flip Infix assoc $ do
+        reservedOp tok s
+        return $ \e1 e2 -> case e1 of
+            EAtom (AVar i) -> ECall i [e2]
+            ECall i args   -> ECall i $ args ++ [e2]
+            _              -> error "Weird $" -- alternatively ECall s [e1,e2]
 
 -- The two levels of expressions
 expr',expr2 :: P (Expr String)

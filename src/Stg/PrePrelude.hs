@@ -24,12 +24,13 @@ prePrelude =
     , binOp ">=" PGe  False
     , binOp ">"  PGt  False
     , binOp "==" PEq  False
-    , alias "$"  "appl"
+ {-   , alias "$"  "appl"
     , alias "."  "compose"
     , alias "++" "append"
     , alias ":"  "cons"
     , alias "&&" "and"
     , alias "||" "or"
+    -}
     ]
 
 -- Create a function alias

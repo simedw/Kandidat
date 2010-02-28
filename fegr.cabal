@@ -8,10 +8,6 @@ flag test
   description: Build test program.
   default:     False
 
-flag benchmark
-  description: Build benchmark.
-  default:     False
-
 Executable benchmark
  hs-source-dirs:  src, test
  other-modules:   Parser.Pretty.Test
