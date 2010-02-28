@@ -1,3 +1,4 @@
+{-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 module Parser.Pretty.Pretty where
@@ -73,7 +74,7 @@ prAtom  = ppAtom . mkC
 
 seppis syn = vcat . punctuate (text "" <$> symbol syn semi <+> text "")
 
-mkPretty :: forall t. Syntax t -> PPrinters t
+mkPretty :: forall t. Show t => Syntax t -> PPrinters t
 mkPretty (Syntax {..})  = PPrinters {..}
   where
     ppFun :: Function t -> Doc

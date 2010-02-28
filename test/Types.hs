@@ -35,7 +35,7 @@ runTest test = do
          ] 
    res <- case test of
        QCTest name qc -> do
-            res <- quickCheckResult qc
+            res <- quickCheckWithResult stdArgs {maxSuccess = 10} qc
             case res of
                 Success l -> return True
                 f -> print f >> return False

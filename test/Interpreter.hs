@@ -93,7 +93,7 @@ forceInterpreter settings file = do
     dir     <- getCurrentDirectory
     prelude <- readFile (dir </>  "prelude" </> prelude settings)
     res     <- readFile (dir </>  "testsuite" </> file)
-    case parseSugar (prelude ++ res) of
+    case parseSugar (res ++ "\n" ++ prelude) of
       Right fs -> let res = runForce (input settings) (prePrelude ++ run fs)
                    in return res
       Left  r  -> do return $ "fail: " ++ show r
@@ -106,7 +106,7 @@ testInterpreter set file = do
     prelude <- readFile (dir </> "prelude" </> prelude set)
     res     <- readFile (dir </> "testsuite" </> file)
     -- prelude must be last, otherwise parse error messages get wrong line numbers!
-    case parseSugar (res ++ prelude) of  
+    case parseSugar (res ++ "\n" ++ prelude) of  
       Right fs -> do
         let st = initialState ( createGetFuns (input set)
                               ++ prePrelude
