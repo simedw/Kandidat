@@ -67,7 +67,7 @@ omega alpha stack heap obj@(OFun args code) = case code of
         ( ROpt ORKnownCase
         , StgState
             { code  = EAtom (AVar alpha)
-            , stack = stack
+            , stack = CtContOpt alpha : stack
             , heap  = M.insert alpha fun heap
             }
         )

@@ -10,6 +10,8 @@ module Stg.GC where
 -- Extract all variables
 -- Set difference of these is the free variables
 
+import Unsafe.Coerce
+
 import Stg.AST
 import Stg.Types
 
@@ -43,13 +45,18 @@ mkGC untouchable (StgState code stack heap) =
     gcStep acc s | S.null s  = acc
                  | otherwise = 
                     let acc' = ( S.unions 
-                              $ map (freeVars . fromJust . flip M.lookup heap) 
+                              $ map (\x -> freeVars 
+                                    $ fel x 
+                                    $ M.lookup x heap) 
                               $ S.toList s
                               ) 
                     in  gcStep (acc' `S.union` acc) (acc' `S.difference` acc)
 
     heapify :: Set t -> Heap t
     heapify s = M.filterWithKey (\k a -> S.member k s) heap
+
+    fel :: t -> Maybe (Obj t) -> Obj t
+    fel x t = maybe (error $ "GC: couldn't find: " ++ unsafeCoerce x) id t
 
 class FV e where
     freeVars :: Ord t => e t -> Set t 
