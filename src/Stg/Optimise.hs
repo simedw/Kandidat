@@ -57,7 +57,7 @@ omega alpha stack heap obj@(OFun args code) = case code of
                     , stack = CtContOpt alpha : stack
                     , heap  = heap'' }
                 )
-        ELet b binds expr -> do
+        ELet b binds expr -> done
         _ -> done
     _ -> done
   where
