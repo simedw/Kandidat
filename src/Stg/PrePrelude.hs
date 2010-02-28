@@ -34,7 +34,7 @@ prePrelude =
 
 -- Create a function alias
 alias :: String -> String -> Function String
-alias name = Function name . OThunk . flip ECall []
+alias name = Function name . OThunk . EAtom . AVar
 
 -- Create the function for a primitive operation
 binOp :: String -> Pop -> Bool -> Function String
