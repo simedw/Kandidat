@@ -28,7 +28,7 @@ tok = makeTokenParser LanguageDef
   , commentLine     = "--"
   , nestedComments  = True
   , identStart      = letter   
-  , identLetter     = alphaNum <|> oneOf "_'"
+  , identLetter     = alphaNum <|> oneOf "_'."
   , opStart         = oneOf "+-*/%<>=_"
   , opLetter        = oneOf "+-*/%<>=_"
   , reservedNames   = keywords

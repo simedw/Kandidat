@@ -25,7 +25,8 @@ import qualified Parser.Diabetes as D
 
 benchmarklist :: [(String, [(Integer,[Integer])])]
 benchmarklist = 
-    [  "OptTest1.hls" --> [(0,[])]
+    [ "OptTest9.hls" --> [(0,list)] 
+    , "OptTest1.hls" --> [(0,[])]
     , "OptTest2.hls" -->  [(0,list)]
     , "OptTest3.hls" -->  [(0,list)]
   --  , "OptTest4.hls" --> [(0,list)]   -- matrix 4 x 4
@@ -59,7 +60,7 @@ main = do
     readData _ _ [] = return []
     readData dir prelude ((name,indata):xs) = do
         res  <- readFile (dir </>  "testsuite" </> name)
-        case parseSugar (prelude ++ res) of
+        case parseSugar (res ++ "\n" ++ prelude) of
            Right fs -> do rest   <- readData dir prelude xs
                           return $ (name, indata, D.run fs) : rest
            Left r   -> do putStrLn $ "Failed to parse: " ++ name 

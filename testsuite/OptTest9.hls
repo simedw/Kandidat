@@ -1,0 +1,15 @@
+main = listSeq $ case getIntList of
+    { Cons x xs -> case xs of
+        { Cons y ys -> map (optimise (foo x y)) ys }
+    };
+    
+foo x y z = case z > 0 of
+    { True  -> case x > y of
+                  { True  -> z + 1
+                  ; False -> z - 1
+                  }
+    ; False -> case x > y of
+                  { True  -> z * z
+                  ; False -> z - 1
+                  }
+    };

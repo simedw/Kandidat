@@ -16,9 +16,11 @@ import qualified Text.PrettyPrint.ANSI.Leijen as PP
 import System.Console.Haskeline (InputT, outputStrLn, getInputLine) 
 import qualified System.Console.Haskeline as Hl
 
+import Text.ParserCombinators.Parsec
 import Parser.Diabetes
 import Parser.Pretty.Pretty
 import Parser.SugarParser
+import Parser.STGParser
 import Stg.AST
 import Stg.GC
 import Stg.Input
@@ -138,7 +140,8 @@ loop originalState  = do
             [":step", num] -> case reads num of
                 ((x, "") : _) -> evalStep x st
                 _ -> loop st
-            [":force"] -> forcing st >> loop st
+            [":force!"] -> forcing st >> loop st
+            [":force", var] -> forceit st var >> loop st
             [":h"] -> printHelp >> loop st
             [":help"] -> printHelp >> loop st
             input -> do
@@ -155,7 +158,21 @@ loop originalState  = do
     forcing st = do
         stg <- lift $ gets stgm
         outputStrLn . fst $ runState (force st) stg
-
+    
+    forceit st var = do
+        stg <- lift $ gets stgm
+        case runParser Parser.STGParser.atom () "" var of
+            Left r  -> return ()
+            Right x -> do
+                s <- liftIO $ catch (return $ Just . fst $ runState (force $ st {code = (EAtom x)} ) stg) (\_ -> return $ Nothing)
+                case s of
+                    Nothing -> outputStrLn "Something bad has happend"
+                    Just x  -> outputStrLn x
+            {- do (s,state') <- liftIO $ catch 
+ (return $ runState (force $ st {code = (EAtom x)} ) stg)) 
+ (\e -> putStrLn "Bla... ") (undefined)
+                outputStrLn s
+            -}
     evalStep n s | n == 0 = printSummary s
                  | n < 0  = do
         hist <- lift . gets $ history
@@ -278,8 +295,9 @@ loop originalState  = do
             , ":bp - to add a new breakpoint"
             , "   rule <rule> - for that <rule>"
             , "   call <id>   - when calling <id>"
-            , "step <n> - step <n> steps :)"
-            , "back <n> - step <-n> steps (history)"
+            , ":step <n> - step <n> steps :)"
+            , ":back <n> - step <-n> steps (history)"
+            , ":force! - forced evaulation"
             , ""
             , "Happy Hacking !!"
             ]
