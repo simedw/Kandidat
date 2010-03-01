@@ -96,9 +96,8 @@ forceInterpreter settings file = do
     prelude <- readFile (dir </>  "prelude" </> prelude settings)
     res     <- readFile (dir </>  "testsuite" </> file)
     case parseSugar (res ++ "\n" ++ prelude) of
-      Right fs -> let res = runForce (input settings) (prePrelude ++ run fs)
-                   in return res
-      Left  r  -> do return $ "fail: " ++ show r
+      Right fs -> return $ runForce (input settings) (prePrelude ++ run fs)
+      Left  r  -> putStrLn ("fail: " ++ show r) >> return "Fail"
 
 
 
@@ -310,7 +309,9 @@ main = do
     case getOpt RequireOrder options args of
         (flags, [],      [])     -> do
              opts <- foldl (>>=) (return defaultSettings) flags
-             testInterpreter opts file
+             if forceStg opts 
+                then forceInterpreter opts file >> return ()
+                else testInterpreter opts file
         (_,     nonOpts, [])     -> error $ "unrecognized arguments: " ++ unwords nonOpts
         (_,     _,       msgs)   -> error $ concat msgs ++ usageInfo header options
 

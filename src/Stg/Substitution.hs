@@ -24,17 +24,17 @@ test = ECase (var "xs")
              ]
 
 substAtom :: Eq t => t -> Atom t -> Atom t -> Atom t
-substAtom x x' (AVar v) | x == v = x'
+substAtom x x' (AVar v) | {-# SCC "substAtomEq" #-} x == v = x'
 substAtom _ _ a = a
 
 
 substExpr :: Eq t => t -> Atom t -> Expr t -> Expr t
-substExpr x (AVar x') (ECall t as) | x == t = ECall x' as
-substExpr x (ANum _)  (ECall t as) | x == t = error "substExpr with ANum" 
+substExpr x (AVar x') (ECall t as) | {-# SCC "substExprAVarEq" #-} x == t = ECall x' as
+substExpr x (ANum _)  (ECall t as) | {-# SCC "substExprANumEq" #-} x == t = error "substExpr with ANum" 
 substExpr _ _ e = e
 
-subst :: (Data t, Eq t) => t -> (Atom t) -> Expr t -> Expr t
-subst x x' = transformBi (substExpr x x') . transformBi (substAtom x x')
+subst :: (Data t, Eq t) => t -> Atom t -> Expr t -> Expr t
+subst x x' = transformBi (substExpr x x') . transformBi (substAtom x x') 
 
 substList :: (Data t, Eq t) => [t] -> [Atom t] -> Expr t -> Expr t
 substList []     []     = id

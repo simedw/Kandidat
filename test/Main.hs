@@ -133,7 +133,7 @@ interpreter = map toTestStatic testsuiteStatic ++ map toTestDyn testsuiteDyn
     abs' False x = x 
     cap y x | x > y     = y
     cap y x | otherwise = x
-
+   
     toTestStatic (file, value) = 
         I'make'my'own'test { name = file
              , action   = do 
