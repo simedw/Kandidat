@@ -124,13 +124,20 @@ afterparensExpr = (flip ECall [] `fmap` operator tok) <|> expr
 atomExpr :: P (Expr String)
 atomExpr = EAtom  `fmap` (try signedIntOrFloat)
 -- <|> ADec `fmap` float tok
--- <|> AChr `fmap` charLiteral tok
+   <|> do (EAtom . AChr) `fmap` (try $ charLiteral tok) 
+   <|> do try stringParser
 -- <|> AStr `fmap` stringLiteral tok
    <|> do i <- ident 
           if headIs isLower i
               then return (EAtom (AVar i))
               else return (ECon i [])
- 
+
+
+stringParser :: P (Expr String)
+stringParser = do 
+            s <- stringLiteral tok
+            return (EAtom (AStr s))
+
 -- Parsec allows whitespace between - and the number, as in "- 1".
 -- We cannot tolerate this! "-1" is negative one, and "x - 1" is x minus 1.
 -- Therefore all this low-level parser stuff

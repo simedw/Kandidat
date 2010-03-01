@@ -18,6 +18,7 @@ data Syntax t = Syntax
     , object   :: String -> Doc
     , var      :: t -> Doc
     , num      :: Doc -> Doc
+    , chr      :: Char -> Doc
     }
 
 syntaxNormal :: (t -> Doc) -> Syntax t
@@ -31,6 +32,7 @@ syntaxNormal prVar = Syntax
     , object   = text
     , var      = prVar
     , num      = id
+    , chr      = char
     }
 
 syntaxColour :: (t -> Doc ) -> Syntax t
@@ -44,6 +46,7 @@ syntaxColour prVar = Syntax
     , object   = bold . blue . text
     , var      = green . prVar
     , num      = green
+    , chr      = green . char
     }
 
 data PPrinters t = PPrinters
@@ -127,6 +130,7 @@ mkPretty (Syntax {..})  = PPrinters {..}
         AVar x -> var x
         ANum n -> num $ integer n
         ADec f -> num $ double f
+        AChr c -> chr c
     
     ppObj :: Obj t -> Doc
     ppObj obj = case obj of

@@ -266,7 +266,7 @@ runForce inp funs = evalState (go st) initialStgMState
         res <- step st
         case res of
             Nothing       -> force st
-            Just (r, st') -> go (gc st')
+            Just (r, st') -> go st'
  
 
 eval :: Input -> [Function String] -> [(Rule, StgState String)]

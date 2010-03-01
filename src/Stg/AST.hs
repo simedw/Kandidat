@@ -43,6 +43,7 @@ isAtom _         = False
 data Atom t   = AVar t
               | ANum Integer
               | ADec Double
+              | AChr Char
   deriving (Data, Eq, Show, Typeable)
 
 isVar (AVar _) = True
