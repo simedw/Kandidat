@@ -6,10 +6,6 @@ import "mtl" Control.Monad.State
 import Data.Map(Map)
 import qualified Data.Map as M
 
-import Text.PrettyPrint.ANSI.Leijen
-
-
-import Parser.Pretty.Pretty
 import Stg.AST
 
 type Heap  t = Map t (Obj t)
@@ -45,12 +41,5 @@ newVar = do
     st@(StgMState { nameSupply = (n:ns) }) <- get
     put $ st { nameSupply = ns }
     return n
-
-instance Show t => Show (StgState t) where
-  show st@(StgState code stack heap) = 
-    "stack: " ++ show stack 
-    ++ "\ncode: " ++ show (prExpr (text . show) code)
-    ++ "\nheap: " ++ concat [ show (id, prObj (text . show) obj) ++ "\n\t"
-                             | (id, obj) <- M.toList heap]
 
 returnJust x = return (Just x)

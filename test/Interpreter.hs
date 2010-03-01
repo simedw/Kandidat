@@ -261,7 +261,8 @@ loop originalState  = do
         outputStrLn $ "code: " ++ show (prExpr PP.text code)
 
     printStack stack = do
-        outputStrLn $ "stack(" ++ show (length stack) ++ "): " ++ show stack 
+        outputStrLn $ "stack(" ++ show (length stack) ++ "):\n" 
+                  ++ show (prStack PP.text stack) 
 
     printHeap heap = do
         outputStrLn $ "heap(" ++ show (M.size heap) ++ "): \n" 

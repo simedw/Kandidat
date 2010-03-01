@@ -4,6 +4,7 @@
 module Parser.Pretty.Pretty where
 
 import Stg.AST
+import Stg.Types
 
 import Text.PrettyPrint.ANSI.Leijen
 
@@ -46,10 +47,11 @@ syntaxColour prVar = Syntax
     }
 
 data PPrinters t = PPrinters
-    { ppFun  :: Function t -> Doc
-    , ppExpr :: Expr t     -> Doc
-    , ppObj  :: Obj t      -> Doc
-    , ppAtom :: Atom t     -> Doc
+    { ppFun   :: Function t -> Doc
+    , ppExpr  :: Expr t     -> Doc
+    , ppObj   :: Obj t      -> Doc
+    , ppAtom  :: Atom t     -> Doc
+    , ppStack :: Stack t    -> Doc
     }
 
 mkC = mkPretty . syntaxColour
@@ -71,6 +73,9 @@ prObj  = ppObj . mkC
 
 prAtomN = ppAtom . mkN
 prAtom  = ppAtom . mkC
+
+prStackN = ppStack . mkN
+prStack  = ppStack . mkC
 
 seppis syn = vcat . punctuate (text "" <$> symbol syn semi <+> text "")
 
@@ -134,3 +139,17 @@ mkPretty (Syntax {..})  = PPrinters {..}
         OThunk e -> object "THUNK" <+> mparens (ppExpr e)
         OOpt   a -> object "OPT" <+> mparens (ppAtom a)
         OBlackhole -> object "BLACKHOLE"
+
+    ppStack :: Stack t -> Doc
+    ppStack = vsep . map ppCont
+
+    ppCont :: Cont t -> Doc
+    ppCont cont = case cont of
+        CtCase brs -> key "case" <+> ppHole <+> key "of"
+            <$> indent 4 (mkBrace $ map ppBranch brs)
+        CtUpd t -> key "Upd" <+> var t <+> ppHole
+        CtArg a -> key "Arg" <+> ppAtom a
+        CtOpt t -> key "Opt" <+> var t
+        CtContOpt t -> key "ContOpt" <+> var t
+
+    ppHole = operator "()"
