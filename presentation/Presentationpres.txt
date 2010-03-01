@@ -1,0 +1,44 @@
+Typsnitt: Comic Sans
+Punkter: fmap (Presentation ++)
+* Haskell-tolk i JavaScript. Stryk över. (1min)
+  * Vi gör nåt annat istället!!!!11111
+* av språket (
+  * Haskell subset (mjölig frontend) (3min)
+    * map typ säger vi
+    * Renare än Haskell (bild på en ren)
+* av optimering (3min)
+  * Stegning genom optimeringar (bild på en stege)
+* kritik (1min)
+  * Svårt att implementera i en riktig kompilator? Diskutera introspektion.
+  * Projektets start
+* Tolken [Demo] (2min)
+* hur vi har arbetat/kritik? Vad skall de ta med sig hem? (1min)
+  * git
+  * gobby
+  * vim :)
+  * projektor
+* ø
+
+
+förslag på optimise syntax:
+
+optimise f x with { ..};
+
+with
+    { unroll = [fix, foo]
+    , BS = True
+    } optimise (letrec
+        { f = f
+        } in f);
+
+optimise 
+    { unroll = [fix, foo]
+    , BS = True
+    }  letrec
+        { f = f
+        } in f;
+
+let t = Thunk (f x)
+    d = {..}
+    o = Opt t d
+in o
