@@ -20,6 +20,8 @@ isAtom _         = False
 data Atom t   = AVar t
               | ANum Integer
               | ADec Double
+              | AChr Char
+              | AStr String
   deriving Show
 
 data Branch t = BCon t [t] (Expr t)

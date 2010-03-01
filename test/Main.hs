@@ -87,7 +87,8 @@ testsuiteStatic = [
   , "PrimeTest1.hls"  ---> True
   , "OptTest1.hls"    ---> length (take 3 (repeat 4))
   , "ListTest6.hls"   ---> sort (reverse (take 3 [(0 :: Integer)..]))
-  , "NegTest1.hls"   ---> (-1) - (-1 :: Integer)
+  , "NegTest1.hls"    ---> (-1) - (-1 :: Integer)
+  , "StringTest1.hls" ---> True
     ]
 -- note that we are working on a :: Integer -> [Integer] -> String
 -- (Filename, function, absolute value?)
@@ -100,7 +101,7 @@ testsuiteDyn =
   , "ListTest1.hls"   |-> \x _ -> length (replicate (fromInteger x) 4)
   , "ListTest2.hls"   |-> \x _ -> length (take (fromInteger x) (repeat 4))
   , "PrimeTest2.hls"  --> \_ xs -> 
-              let isprime t n = case t * t >= n of
+              let isprime t n = case t * t > n of
                       True  -> True
                       False -> if (n `mod` t == 0) 
                                 then False

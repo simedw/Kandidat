@@ -25,6 +25,9 @@ data DiaState t = DiaState
     , mkEmptyCon :: t -> t
     , numCon :: t
     , decCon :: t
+    , chrCon :: t
+    , consCon :: t
+    , nilCon :: t
     }
 
 test :: String -> [AST.Function String]
@@ -51,6 +54,9 @@ run fs = conses ++ funs
         , mkEmptyCon = toCons
         , numCon     = PP.numCon
         , decCon     = PP.decCon
+        , chrCon     = PP.chrCon
+        , consCon    = PP.consCon
+        , nilCon     = PP.nilCon
         }
 
 desugar :: Ord a => ST.Function a -> Dia a (AST.Function a)
@@ -111,12 +117,37 @@ magic [] = return ([], [])
 magic (ST.EAtom (ST.AVar var):xs) = do
     (as,bs) <- magic xs
     return (AST.AVar var : as, bs)
-magic (ST.EAtom x:xs) = do -- x is either ANum or ADec
+
+magic (ST.EAtom (ST.AStr str):xs) = do
+   (as,bs) <- magic xs
+   var     <- newVar
+   n       <- newVar
+   vars    <- replicateM ((length str) * 2) newVar
+   consC   <- gets consCon
+   nilC    <- gets nilCon
+   chrC    <- gets chrCon
+   let  varNums    = zip vars $ reverse str
+        conVars    = drop (length str) vars
+        conVarNums = zip conVars varNums
+        rest       = ((n, AST.OCon nilC []) : lets consC chrC conVarNums n)
+   return (AST.AVar var : as,
+          (var, AST.OThunk (AST.ELet False rest 
+            (AST.EAtom . AST.AVar . fst $ last conVarNums))) : bs)
+  where
+   lets _ _ [] _  = []
+   lets consC chrC ((conVar, (numVar, s)):rest) prev
+               = (numVar, AST.OCon chrC [AST.AChr s])
+               : (conVar, AST.OCon consC [AST.AVar numVar, AST.AVar prev])
+               : lets consC chrC rest conVar
+        
+
+magic (ST.EAtom x:xs) = do -- x is either ANum or ADec  or AChr or AStr
     (as,bs) <- magic xs
     var <- newVar
     let cons = case x of
             ST.ANum n -> numCon
             ST.ADec d -> decCon
+            ST.AChr c -> chrCon
     c <- gets cons
     return (AST.AVar var : as, (var, AST.OCon c [atomST2AST x]) : bs)
 magic (ST.ECon t [] : xs ) = do
@@ -133,3 +164,4 @@ magic (x:xs) = do
 atomST2AST :: ST.Atom a -> AST.Atom a
 atomST2AST (ST.ANum n) = AST.ANum n
 atomST2AST (ST.ADec n) = AST.ADec n
+atomST2AST (ST.AChr n) = AST.AChr n

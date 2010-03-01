@@ -1,0 +1,2 @@
+
+main = length "Simon" == 5;

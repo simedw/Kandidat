@@ -2,15 +2,21 @@ module Stg.PrePrelude
   ( prePrelude
   , numCon
   , decCon
+  , chrCon
+  , consCon
+  , nilCon
   ) where
 
 import Data.Char
 
 import Stg.AST
 
-numCon, decCon :: String
+numCon, decCon, chrCon, consCon, nilCon :: String
 numCon = "I#"
 decCon = "D#"
+chrCon = "C#"
+consCon = "Cons"
+nilCon  = "Nil"
 
 prePrelude :: [Function String]
 prePrelude = 
