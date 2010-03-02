@@ -100,6 +100,7 @@ mkPretty (Syntax {..})  = PPrinters {..}
             <$> indent 4 (mkBrace $ map ppBranch binds)
         EPop op as -> operator (show op) <> operator "#" 
                         <+> hsep [ ppAtom a | a <- as ]  
+        ESVal sval -> ppSVal sval
     
     mparens, mbraces :: Doc -> Doc
     mparens = enclose (symbol lparen) (symbol rparen)
@@ -144,6 +145,13 @@ mkPretty (Syntax {..})  = PPrinters {..}
         OOpt   a -> object "OPT" <+> mparens (ppAtom a)
         OBlackhole -> object "BLACKHOLE"
 
+    ppSVal :: SValue t -> Doc
+    ppSVal sval = case sval of
+        SAtom a -> ppAtom a
+        SFun    -> key "<FUN>"
+        SCon c sval | null sval -> conVar c
+                    | otherwise -> mparens $ conVar c <+> hsep (map ppSVal sval)
+
     ppStack :: Stack t -> Doc
     ppStack = vsep . map ppCont
 
@@ -155,5 +163,8 @@ mkPretty (Syntax {..})  = PPrinters {..}
         CtArg a -> key "Arg" <+> ppAtom a
         CtOpt t -> key "Opt" <+> var t
         CtContOpt t -> key "ContOpt" <+> var t
+        CtPrint     -> key "Print"
+        CtPrintCon c pr ne -> key "PrintCont" <+> conVar c <+> text (show pr) 
+                       <+> mparens (hsep (map ppAtom ne)) 
 
     ppHole = operator "()"

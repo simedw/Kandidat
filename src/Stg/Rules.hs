@@ -24,6 +24,10 @@ data Rule
   | RUpdateOpt
   | ROpt OptRule
   | RContOpt
+  | RPrintCon
+  | RPrintVal
+  | RPrintFun
+  | RPrintCont
  deriving (Show, Eq, Ord, Read)
 
 data OptRule

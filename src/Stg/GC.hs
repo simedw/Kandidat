@@ -95,4 +95,6 @@ instance FV Cont where
     freeVars (CtArg a)       = freeVars a
     freeVars (CtOpt i)       = S.singleton i
     freeVars (CtContOpt i)   = S.singleton i
+    freeVars (CtPrint)       = S.empty
+    freeVars (CtPrintCon _ _ as) = freeVarsList as
     

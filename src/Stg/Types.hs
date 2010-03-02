@@ -16,6 +16,8 @@ data Cont t
   | CtArg (Atom t)
   | CtOpt t
   | CtContOpt t
+  | CtPrint
+  | CtPrintCon t [SValue t] [Atom t]
  deriving Show
 
 type Stack t = [Cont t]

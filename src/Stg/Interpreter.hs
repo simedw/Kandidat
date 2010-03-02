@@ -43,6 +43,13 @@ topContOpt :: Stack t -> Bool
 topContOpt (CtContOpt _ : _) = True
 topContOpt _                 = False
 
+topPrint :: Stack t -> Bool
+topPrint (CtPrint : _) = True
+topPrint _             = False
+
+topPrintCon :: Stack t -> Bool
+topPrintCon (CtPrintCon _ _ _ : _) = True
+topPrintCon _                      = False
 
 numArgs :: Stack t -> Int
 numArgs = length . takeWhile isArg
@@ -102,6 +109,7 @@ step st@(StgState code stack heap) = case code of
     ECall ident args  -> rpush st ident args 
     EAtom a | not (isVar a) && topUpd stack  -> rupdate st (OThunk code)
             | not (isVar a) && topCase stack -> rret st
+            | not (isVar a) && topPrint stack -> rprintval st a
     EAtom (AVar var) -> case M.lookup var heap of  
         Nothing  -> return Nothing
         Just obj -> case obj of
@@ -110,6 +118,8 @@ step st@(StgState code stack heap) = case code of
             _ | topUpd  stack -> rupdate st obj
             _ | topCase stack -> rret st
             _ | topContOpt stack -> rcontopt st
+            OCon t atoms | topPrint stack -> rprintcon st t atoms
+            _            | topPrintCon stack -> rprintfun st
             OPap ident atoms | topArg stack -> rpenter st ident atoms
                              | topOpt stack -> roptpap st ident atoms
             _ | topOpt stack  -> rupdateopt st obj var
@@ -121,6 +131,7 @@ step st@(StgState code stack heap) = case code of
                     True  -> rfenter st args lenArgs expr
                     False -> rpap st stackArgs var 
             _                               -> return Nothing
+    ESVal sval | topPrintCon stack -> rprintcont st sval
     -- if there is no rule to apply, do nothing
     _              -> return Nothing
   where
@@ -232,6 +243,46 @@ step st@(StgState code stack heap) = case code of
                 , heap  = M.insert alpha obj heap
                 }
             ) 
+    rprintcon st@(StgState code stack heap) c atoms = do
+        let CtPrint : stack' = stack
+        case null atoms of
+            True -> returnJust
+                ( RPrintCon
+                , st
+                    { code = ESVal (SCon c [])
+                    , stack = stack'})
+            False -> returnJust
+                ( RPrintCon
+                , st
+                    { code = EAtom (head atoms)
+                    , stack = CtPrint : CtPrintCon c [] (tail atoms) : stack'}) 
+    rprintval st@(StgState code stack heap) atom = do
+        let CtPrint : stack' = stack
+        returnJust
+            ( RPrintVal
+            , st 
+                { code  = ESVal (SAtom atom)
+                , stack = stack'})
+    rprintfun st@(StgState code stack heap) = do
+        let CtPrint : stack' = stack
+        returnJust
+            ( RPrintFun
+            , st
+                { code = ESVal SFun
+                , stack = stack'})
+    rprintcont st@(StgState code stack heap) sval = do
+        let CtPrintCon c ps ns : stack' = stack
+        case ns of 
+            [] -> returnJust
+                ( RPrintCont
+                , st
+                    { code = ESVal (SCon c (reverse (sval:ps)))
+                    , stack = stack'})
+            n : ns -> returnJust
+                ( RPrintCont
+                , st 
+                    { code = EAtom n
+                    , stack = CtPrint : CtPrintCon c (sval:ps) ns : stack'})
 
 
 

@@ -13,6 +13,7 @@ data Expr t   = EAtom (Atom t)
               | EPop (Pop t) [Atom t]
               | ELet Bool [(t,Obj t)] (Expr t)  -- True if recursive
               | ECase (Expr t) [Branch t]
+              | ESVal (SValue t)
   deriving (Data, Eq, Show, Typeable)
 
 data Pop t    = PBinOp t
@@ -61,3 +62,8 @@ data Obj t    = OFun [t] (Expr t)
               | OOpt (Atom t)
   deriving (Data, Eq, Show, Typeable)
 
+data SValue t 
+  = SAtom (Atom t) -- invariant, this is not an variable
+  | SCon t [SValue t]
+  | SFun
+  deriving (Data, Eq, Show, Typeable)
