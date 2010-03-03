@@ -62,13 +62,13 @@ main = do
         res  <- readFile (dir </>  "testsuite" </> name)
         case parseSugar (res ++ "\n" ++ prelude) of
            Right fs -> do rest   <- readData dir prelude xs
-                          return $ (name, indata, D.run fs) : rest
+                          return $ (name, indata, D.run prePrelude fs) : rest
            Left r   -> do putStrLn $ "Failed to parse: " ++ name 
                                    ++ "\nReason: " ++ show r
                           exitFailure
   
     force :: Settings -> [Function String] -> String
-    force settings indata = runForce (input settings) (prePrelude ++ indata)
+    force settings indata = runForce (input settings)  indata
 
     settingsWith (int,intlist) opt = defaultSettings { input = Input (Just int) (Just intlist) }
     

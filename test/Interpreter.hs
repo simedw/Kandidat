@@ -96,7 +96,7 @@ forceInterpreter settings file = do
     prelude <- readFile (dir </>  "prelude" </> prelude settings)
     res     <- readFile (dir </>  "testsuite" </> file)
     case parseSugar (res ++ "\n" ++ prelude) of
-      Right fs -> return $ runForce (input settings) (prePrelude ++ run fs)
+      Right fs -> return $ runForce (input settings) (run prePrelude fs)
       Left  r  -> putStrLn ("fail: " ++ show r) >> return "Fail"
 
 
@@ -109,9 +109,8 @@ testInterpreter set file = do
     -- prelude must be last, otherwise parse error messages get wrong line numbers!
     case parseSugar (res ++ "\n" ++ prelude) of  
       Right fs -> do
-        let st = initialState ( createGetFuns (input set)
-                              ++ prePrelude
-                              ++ run fs)
+        let st = initialState (run (createGetFuns (input set)
+                              ++ prePrelude) fs)
         evalStateT (Hl.runInputT Hl.defaultSettings (loop st)) IS
             { settings = set
             , stgm     = initialStgMState

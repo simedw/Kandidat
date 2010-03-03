@@ -13,8 +13,10 @@ import qualified Data.Set as S
 import qualified Parser.SugarTree as ST
 import qualified Stg.AST          as AST
 import qualified Stg.PrePrelude   as PP
+import qualified Stg.GC           as GC
 
 import Parser.SugarParser
+
 
 
 type Dia a = State (DiaState a) 
@@ -32,7 +34,7 @@ data DiaState t = DiaState
 
 test :: String -> [AST.Function String]
 test str = case parseSugar str of
-  Right funs -> run funs
+  Right funs -> run [] funs
   Left err -> error (show err)
 
 -- | Create a fresh unbound variable
@@ -42,12 +44,19 @@ newVar = do
   put $ st { nameSupply = ns }
   return n
 
-run :: [ST.Function String] -> [AST.Function String]
-run fs = conses ++ funs
+run :: [AST.Function String] -> [ST.Function String] -> [AST.Function String]
+run prelude fs = conses ++ funs
   where
-    (funs, DiaState { emptyCons = set }) = runState (mapM desugar fs) defaultState
+    (funs, DiaState { emptyCons = set }) = runState action defaultState
     conses = map (\c -> AST.Function (toCons c) (AST.OCon c [])) $ S.toList set
     toCons = ('$' :)
+    action = do
+        ds <- mapM desugar fs
+        nullCon <- gets emptyCons
+        let dt = S.fromList (map (\(AST.Function t _) -> t) (ds ++ prelude)) `S.union` nullCon
+        lds <- mapM (llift dt) ds
+        return $ prelude ++ concat lds
+        
     defaultState = DiaState
         { nameSupply = map ("t." ++) $ [1..] >>= flip replicateM ['a'..'z']
         , emptyCons  = S.empty
@@ -153,6 +162,7 @@ magic (ST.EAtom x:xs) = do -- x is either ANum or ADec  or AChr or AStr
 magic (ST.ECon t [] : xs ) = do
     (as, bs) <- magic xs
     mkCon <- gets mkEmptyCon
+    modify $ \s -> s { emptyCons = S.insert (mkCon t) (emptyCons s) } 
     return (AST.AVar (mkCon t) : as, bs) 
 magic (x:xs) = do
     var     <- newVar
@@ -165,3 +175,70 @@ atomST2AST :: ST.Atom a -> AST.Atom a
 atomST2AST (ST.ANum n) = AST.ANum n
 atomST2AST (ST.ADec n) = AST.ADec n
 atomST2AST (ST.AChr n) = AST.AChr n
+
+call :: a -> [AST.Atom a] -> AST.Expr a
+call f [] = AST.EAtom (AST.AVar f)
+call f as = AST.ECall f as
+
+llift :: Ord a => Set a -> AST.Function a -> Dia a [AST.Function a]
+llift dt (AST.Function t (AST.OFun args e)) = do 
+    (e', fs) <- lliftExpr dt e
+    return (AST.Function t (AST.OFun args e') : fs)
+llift dt (AST.Function t obj) = do 
+    (obj', fs) <- lliftObj dt obj
+    return (AST.Function t obj' : fs)
+
+
+lliftObj :: Ord a => Set a -> AST.Obj a -> Dia a (AST.Obj a, [AST.Function a])
+lliftObj dt obj = case obj of
+    AST.OFun args e -> do
+        funName <- newVar
+        (e', fs) <- lliftExpr dt e
+        let fv = S.toList $ GC.freeVars obj `S.difference` dt
+        return ( AST.OThunk (call funName (map AST.AVar fv))
+               , AST.Function funName (AST.OFun (fv ++ args) e') : fs)
+    AST.OPap t as -> do
+        return (obj, [])
+    AST.OCon t as -> do
+        return (obj, [])
+    AST.OThunk expr -> do
+        (e', fs) <- lliftExpr dt expr
+        return (AST.OThunk e', fs)
+    AST.OBlackhole -> do
+        return (obj, [])
+    AST.OOpt atom  -> do
+        return (obj, [])
+
+lliftExpr :: Ord a => Set a -> AST.Expr a -> Dia a (AST.Expr a, [AST.Function a])
+lliftExpr dt expr = case expr of
+    AST.EAtom _a -> do
+        return (expr, [])
+    AST.ECall _t _as -> do
+        return (expr, [])
+    AST.EPop _pop _as -> do
+        return (expr, [])
+    AST.ELet rec binds e -> do
+        (binds', fs) <- liftM unzip (mapM (lliftBind dt) binds)
+        (e', efs) <- lliftExpr dt e
+        return (AST.ELet rec binds' e', efs ++ concat fs)
+    AST.ECase escrut brs -> do
+        (escrut', efs) <- lliftExpr dt escrut
+        (brs', bfs) <- liftM unzip (mapM (lliftBranch dt) brs)
+        return (AST.ECase escrut' brs', efs ++ concat bfs)
+    AST.ESVal _sval -> do
+        return (expr, [])
+            
+
+lliftBind :: Ord a => Set a -> (a, AST.Obj a) -> Dia a ((a, AST.Obj a), [AST.Function a])
+lliftBind dt (t, obj) = do
+    (obj', ofs) <- lliftObj dt obj
+    return ((t, obj'), ofs)
+
+lliftBranch :: Ord a => Set a -> AST.Branch a -> Dia a (AST.Branch a, [AST.Function a])
+lliftBranch dt branch = case branch of
+    AST.BCon con args e -> do
+        (e', fs) <- lliftExpr dt e
+        return (AST.BCon con args e', fs)
+    AST.BDef var e -> do
+        (e', fs) <- lliftExpr dt e
+        return (AST.BDef var e', fs)

@@ -85,7 +85,7 @@ unArg o = error $ "unArg: not an arg: " ++ show o
 initialState :: [Function String] -> StgState String
 initialState funs = gc StgState
   { code  = getMain funs
-  , stack = [CtPrint]
+  , stack = []
   , heap  = initialHeap funs
   }
      where gc = id
