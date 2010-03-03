@@ -16,6 +16,7 @@ data Expr t   = EAtom (Atom t)
               | ESVal (SValue t)
   deriving (Data, Eq, Show, Typeable)
 
+
 data Pop t    = PBinOp t
                   (Integer -> Integer -> Integer)
                   (Double  -> Double  -> Double)

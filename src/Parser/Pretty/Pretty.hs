@@ -3,6 +3,8 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Parser.Pretty.Pretty where
 
+import Unsafe.Coerce
+
 import Stg.AST
 import Stg.Types
 
@@ -162,9 +164,9 @@ mkPretty (Syntax {..})  = PPrinters {..}
         CtUpd t -> key "Upd" <+> var t <+> ppHole
         CtArg a -> key "Arg" <+> ppAtom a
         CtOpt t -> key "Opt" <+> var t
-        CtContOpt t -> key "ContOpt" <+> var t
         CtPrint     -> key "Print"
         CtPrintCon c pr ne -> key "PrintCont" <+> conVar c <+> text (show pr) 
                        <+> mparens (hsep (map ppAtom ne)) 
+        x -> text (show (unsafeCoerce x :: Cont String))
 
     ppHole = operator "()"

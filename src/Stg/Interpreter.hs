@@ -1,5 +1,6 @@
 {-# LANGUAGE NamedFieldPuns  #-}
 {-# LANGUAGE PackageImports #-}
+{-# LANGUAGE ViewPatterns #-}
 module Stg.Interpreter where
 
 -- Naive Stg interpreter
@@ -39,9 +40,11 @@ topOpt :: Stack t -> Bool
 topOpt (CtOpt _ : _) = True
 topOpt _             = False
 
+{-
 topContOpt :: Stack t -> Bool
 topContOpt (CtContOpt _ : _) = True
 topContOpt _                 = False
+-}
 
 topPrint :: Stack t -> Bool
 topPrint (CtPrint : _) = True
@@ -50,6 +53,23 @@ topPrint _             = False
 topPrintCon :: Stack t -> Bool
 topPrintCon (CtPrintCon _ _ _ : _) = True
 topPrintCon _                      = False
+
+topIsO :: Stack t -> Bool
+topIsO (cont : _) = case cont of
+    CtOFun  _ _     -> True
+    CtOCase _       -> True
+    CtOLetObj _ _   -> True
+    CtOLetThunk _ _ -> True
+    _               -> False
+topIsO _          = False
+
+topOInstant :: Stack t -> Bool
+topOInstant (CtOInstant n: _) = n <= 0
+topOInstant _                = False
+
+decTop :: Stack t -> Stack t
+decTop (CtOInstant n : xs) = CtOInstant (n-1) : xs
+decTop xs = xs 
 
 numArgs :: Stack t -> Int
 numArgs = length . takeWhile isArg
@@ -65,7 +85,7 @@ unArg o = error $ "unArg: not an arg: " ++ show o
 initialState :: [Function String] -> StgState String
 initialState funs = gc StgState
   { code  = getMain funs
-  , stack = []
+  , stack = [CtPrint]
   , heap  = initialHeap funs
   }
      where gc = id
@@ -91,9 +111,9 @@ initialHeap = M.fromList . map (\(Function name obj) -> (name, obj))
 
 
 step :: (Ord t, Data t, Show t) => StgState t -> StgM t (Maybe (Rule, StgState t))
-step st@(StgState code stack heap) = case code of
-    ELet recursive defs _  -> rlet st recursive defs 
-    ECase expr branch      -> case expr of
+step st'@(StgState code (decTop -> stack) heap) = case code of
+    _ | topOInstant stack -> omega (drop 1 stack) heap code -- for inlining
+    ECase expr branch     -> case expr of
         EAtom (AVar var)  ->
             case M.lookup var heap of
                 Nothing             -> error "var not in heap" -- return Nothing
@@ -104,7 +124,7 @@ step st@(StgState code stack heap) = case code of
                 _                   -> rany expr branch
         EAtom a          -> rany  expr branch
         _                -> rcase expr branch
-
+    ELet recursive defs _  -> rlet st recursive defs 
     EPop  op args     -> rprimop st op args 
     ECall ident args  -> rpush st ident args 
     EAtom a | not (isVar a) && topUpd stack  -> rupdate st (OThunk code)
@@ -113,11 +133,12 @@ step st@(StgState code stack heap) = case code of
     EAtom (AVar var) -> case M.lookup var heap of  
         Nothing  -> return Nothing
         Just obj -> case obj of
-            OThunk expr       -> rthunk st expr var 
+            OThunk expr       -> rthunk st expr var
+            _ | topIsO stack  -> psi stack heap var
             OOpt   alpha      -> roptimise st alpha var
             _ | topUpd  stack -> rupdate st obj
             _ | topCase stack -> rret st
-            _ | topContOpt stack -> rcontopt st
+--            _ | topContOpt stack -> rcontopt st
             OCon t atoms | topPrint stack -> rprintcon st t atoms
             _            | topPrintCon stack -> rprintfun st
             OPap ident atoms | topArg stack -> rpenter st ident atoms
@@ -135,6 +156,7 @@ step st@(StgState code stack heap) = case code of
     -- if there is no rule to apply, do nothing
     _              -> return Nothing
   where
+    st = st' { stack = stack}
     rlet st@(StgState code stack heap) recursive defs = do
         vars <- replicateM (length defs) newVar
         let (ids, _objs) = unzip defs
@@ -224,15 +246,16 @@ step st@(StgState code stack heap) = case code of
             Just (OFun args e) ->
                 let (argsA, argsL) = splitAt (length atoms) args
                     CtOpt alpha : stack' = stack
-                    e'  = substList argsA atoms e
-                    fun = OFun argsL e'
-                in omega alpha stack' heap fun
+                    e' = substList argsA atoms e
+                in omega (CtOFun argsL alpha:stack') heap e'
             _ -> error "OPTPAP: pap doesn't point to FUN"
+{-
     rcontopt st@(StgState code stack heap) = do
         let CtContOpt alpha : stack' = stack
         case M.lookup alpha heap of
             Nothing -> error $ "ContOpt rule: alpha not in heap buh huh: " ++ show alpha
             Just obj -> omega alpha stack' heap obj 
+-}
     rupdateopt st@(StgState code stack heap) obj var = do
         let CtOpt alpha : stack' = stack
         returnJust

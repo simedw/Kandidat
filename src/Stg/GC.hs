@@ -11,6 +11,7 @@ module Stg.GC where
 -- Set difference of these is the free variables
 
 import Unsafe.Coerce
+import Debug.Trace
 
 import Stg.AST
 import Stg.Types
@@ -56,7 +57,7 @@ mkGC untouchable (StgState code stack heap) =
     heapify s = M.filterWithKey (\k a -> S.member k s) heap
 
     fel :: t -> Maybe (Obj t) -> Obj t
-    fel x t = maybe (error $ "GC: couldn't find: " ++ unsafeCoerce x) id t
+    fel x t = maybe (trace ("GC: couldn't find: " ++ unsafeCoerce x) OBlackhole) id t
 
 class FV e where
     freeVars :: Ord t => e t -> Set t 
@@ -69,6 +70,7 @@ instance FV Expr where
         let (range,domain)   = unzip defs
         in  (freeVarsList domain `S.union` freeVars e) `S.difference` S.fromList range
     freeVars (ECase e brs)   = freeVars e `S.union` freeVarsList brs
+    freeVars (ESVal _)     = S.empty
 
 instance FV Atom where
     freeVars (AVar v)        = S.singleton v
@@ -94,7 +96,11 @@ instance FV Cont where
     freeVars (CtUpd i)       = S.singleton i
     freeVars (CtArg a)       = freeVars a
     freeVars (CtOpt i)       = S.singleton i
-    freeVars (CtContOpt i)   = S.singleton i
     freeVars (CtPrint)       = S.empty
-    freeVars (CtPrintCon _ _ as) = freeVarsList as
+    freeVars (CtPrintCon _ _ as)  = freeVarsList as
+    freeVars (CtOFun args alpha)  = S.singleton alpha
+    freeVars (CtOCase brs)        = freeVarsList brs
+    freeVars (CtOLetObj x obj)    = freeVars obj 
+    freeVars (CtOLetThunk t expr) = freeVars expr `S.difference` S.singleton t
+    freeVars (CtOInstant _)          = S.empty
     

@@ -14,10 +14,14 @@ data Cont t
   = CtCase [Branch t]
   | CtUpd t
   | CtArg (Atom t)
-  | CtOpt t
-  | CtContOpt t
   | CtPrint
   | CtPrintCon t [SValue t] [Atom t]
+  | CtOpt t
+  | CtOFun  [t] t
+  | CtOCase [Branch t]
+  | CtOLetObj t (Obj t)
+  | CtOLetThunk t (Expr t)
+  | CtOInstant Int
  deriving Show
 
 type Stack t = [Cont t]

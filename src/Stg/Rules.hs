@@ -35,7 +35,9 @@ data OptRule
   | ORKnownCase
   | ORDone
   | ORCaseThunk
+  | ORInline
  deriving (Show, Eq, Ord, Read)
+
 
 info :: Rule -> String
 info RLet = "Let"
