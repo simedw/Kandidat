@@ -1,0 +1,33 @@
+nytt Expr:
+
+sval ::= n num
+      |  K C [sval]
+      |  <FUN>
+
+nya Cont:
+
+* Print
+* PrintCont C [sval] [atom]
+
+nya regler:
+
+printCon
+x ; Print : s ; H[x -> Con( C a1 .. an)
+  => a1 ; Print : PrintCon C [] [a2 .. an] : s ; H   , n > 0
+  => K C [] ; s ; H                                  , n = 0
+
+printVal
+x ; Print : s ; H   , x value other than sval
+  => n x ; s ; H
+
+printFun
+x ; Print : s ; H[x -> FUN / PAP / OPT]
+  => <FUN> ; s ; H
+
+printAddVal
+sv ; PrintCon C ps (n : ns) : s ; H
+  => n ; Print : PrintCon C (ps ++ sv) ns : s ; H
+
+printMkCon
+sv ; PrintCon C ps [] : s ; H
+  => K C (ps ++ sv) ; s ; H
