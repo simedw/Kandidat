@@ -1,0 +1,395 @@
+#LyX 1.6.5 created this file. For more info see http://www.lyx.org/
+\lyxformat 345
+\begin_document
+\begin_header
+\textclass beamer
+\begin_preamble
+\usetheme{Goettingen}
+\end_preamble
+\use_default_options true
+\language british
+\inputencoding auto
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_amsmath 1
+\use_esint 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\author "" 
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Optimering under körningstid
+\end_layout
+
+\begin_layout Author
+Simon Edwardsson
+\lang english
+
+\begin_inset Flex InstituteMark
+status open
+
+\begin_layout Plain Layout
+
+\lang english
+1
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+and
+\end_layout
+
+\end_inset
+
+ Olle Fredriksson
+\begin_inset Flex InstituteMark
+status open
+
+\begin_layout Plain Layout
+
+\lang english
+1
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+and
+\end_layout
+
+\end_inset
+
+
+\begin_inset Newline linebreak
+\end_inset
+
+ Daniel Gustafsson
+\begin_inset Flex InstituteMark
+status open
+
+\begin_layout Plain Layout
+
+\lang english
+1
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+and
+\end_layout
+
+\end_inset
+
+ Dan Rosén
+\begin_inset Flex InstituteMark
+status open
+
+\begin_layout Plain Layout
+2
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Institute
+
+\lang english
+\begin_inset Flex InstituteMark
+status collapsed
+
+\begin_layout Plain Layout
+
+\lang english
+1
+\end_layout
+
+\end_inset
+
+Chalmers Tekniska Högskola
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+and
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset Flex InstituteMark
+status collapsed
+
+\begin_layout Plain Layout
+
+\lang english
+2
+\end_layout
+
+\end_inset
+
+Göteborgs Universitet
+\begin_inset Newline newline
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Introduktion
+\end_layout
+
+\begin_layout BeginFrame
+Motivering
+\end_layout
+
+\begin_layout BeginFrame
+
+\lang english
+Kortfattat
+\end_layout
+
+\begin_layout Itemize
+
+\lang english
+Tolk för ett funktionellt språk
+\end_layout
+
+\begin_layout Itemize
+
+\lang english
+Optimeras när det körs
+\end_layout
+
+\begin_layout Itemize
+
+\lang english
+Programmeraren väljer var
+\end_layout
+
+\begin_layout BeginFrame
+
+\lang english
+Språk
+\end_layout
+
+\begin_layout Itemize
+
+\lang english
+Innehåller få konstruktioner: 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+
+\lang english
+case
+\end_layout
+
+\begin_layout Itemize
+
+\lang english
+let
+\end_layout
+
+\begin_layout Itemize
+
+\lang english
+lambda
+\end_layout
+
+\begin_layout Itemize
+
+\lang english
+samt primitiva datatyper
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\lang english
+Förutsätter att koden är vältypad
+\end_layout
+
+\begin_layout Pause
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Box Shadowbox
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "100col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "sprak.txt"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+
+\lang english
+Optimering
+\end_layout
+
+\begin_layout BeginFrame
+Optimering
+\end_layout
+
+\begin_layout Standard
+\begin_inset Box Shadowbox
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "100col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "optimise1.txt"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout BeginFrame
+Optimering
+\end_layout
+
+\begin_layout Standard
+\begin_inset Box Shadowbox
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "100col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "optimise2.txt"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout EndFrame
+
+\end_layout
+
+\begin_layout Section
+Kritik
+\end_layout
+
+\begin_layout BeginFrame
+Kritik
+\end_layout
+
+\begin_layout Section
+Metodik
+\end_layout
+
+\begin_layout BeginFrame
+Metodik
+\end_layout
+
+\begin_layout EndFrame
+
+\end_layout
+
+\end_body
+\end_document

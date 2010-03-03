@@ -4,7 +4,7 @@
 \begin_header
 \textclass beamer
 \begin_preamble
-\usetheme{Warsaw}
+\usetheme{Goettingen}
 % or ...
 
 \setbeamercovered{transparent}
@@ -27,7 +27,7 @@
 \spacing single
 \use_hyperref false
 \papersize default
-\use_geometry false
+\use_geometry true
 \use_amsmath 2
 \use_esint 0
 \cite_engine basic
@@ -127,7 +127,7 @@ optional, use only with long paper titles
 \end_layout
 
 \begin_layout Author
-Simon Edwardsson, Olle Fredriksson, Daniel Gustafsson
+Simon Edwardsson
 \begin_inset Flex InstituteMark
 status open
 
@@ -139,7 +139,57 @@ status open
 
  
 \begin_inset ERT
-status collapsed
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+and
+\end_layout
+
+\end_inset
+
+ Olle Fredriksson
+\begin_inset Flex InstituteMark
+status open
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+and
+\end_layout
+
+\end_inset
+
+
+\begin_inset Newline linebreak
+\end_inset
+
+ Daniel Gustafsson
+\begin_inset Flex InstituteMark
+status open
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset ERT
+status open
 
 \begin_layout Plain Layout
 
@@ -194,7 +244,7 @@ InstituteMark
 status open
 
 \begin_layout Plain Layout
-Edwardsson, Fredriksson, Gustafsson, Rosén
+Fredriksson, Edwardsson, Gustafsson, Rosén
 \begin_inset Note Note
 status collapsed
 

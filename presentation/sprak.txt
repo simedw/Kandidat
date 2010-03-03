@@ -1,0 +1,8 @@
+map f li = case li of
+    { Nil  -> Nil
+    ; Cons x xs -> Cons (f x) (map f xs)
+    };
+
+main = let
+    { xs = 1 : 2 : 3 : 4 : 5 : Nil
+    } in map (\ x. x + 5) xs;
