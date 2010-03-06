@@ -15,11 +15,11 @@ var = EAtom . AVar
 test :: Expr String
 test = ECase (var "xs")
              [BCon "Cons" ["y","ys"]
-                (ELet False [("h",OThunk (ECall "f" [AVar "y"]))
-                            ,("t",OThunk (ECall "map" [AVar "f", AVar "ys"]))
-                            ,("x",OOpt (AVar "function"))
-                            ,("r",OCon "Cons" [AVar "h", AVar "t"])
-                            ] (var "r"))
+                (ELet (Rec [("h",OThunk (ECall "f" [AVar "y"]))
+                           ,("t",OThunk (ECall "map" [AVar "f", AVar "ys"]))
+                           ,("x",OOpt (AVar "function"))
+                           ,("r",OCon "Cons" [AVar "h", AVar "t"])
+                           ]) (var "r"))
              , BDef "x" (var "nil")
              ]
 

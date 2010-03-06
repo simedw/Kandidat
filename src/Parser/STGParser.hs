@@ -121,16 +121,22 @@ app = do
 -- 1: let x = obj in e
 -- 2: let { x1 = obj1 ; .. ; xn = objn } in e
 letdef :: P (Expr String)
-letdef = rest =<< (let' <|> letrec')
+letdef = let' <|> letrec'
   where 
-    let'    = reserved tok "let" >> return False
-    letrec' = reserved tok "letrec" >> return True
-    rest b  = do
+    let'    = do
+        reserved tok "let" 
         defs <- braces tok (semiSep tok def) 
                  <|> ((:[]) `fmap` def)
         reserved tok "in"
         e <- expr
-        return $ ELet b defs e
+        return $ foldr (\(id, obj) e' -> ELet (NonRec id obj) e') e defs 
+    letrec' = do
+        reserved tok "letrec"
+        defs <- braces tok (semiSep tok def) 
+                 <|> ((:[]) `fmap` def)
+        reserved tok "in"
+        e <- expr
+        return $ ELet (Rec defs) e
     def = do 
         lhs <- ident
         reservedOp tok "="

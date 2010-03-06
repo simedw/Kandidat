@@ -56,7 +56,7 @@ getExpr 0 = oneof
 getExpr s = oneof
     [ EAtom <$> getAtom
     , ECall <$> getId <*> listOf1 getAtom
-    , ELet <$> arbitrary <*> getBinds s' <*> getExpr s'
+    , ELet  <$> getBind s' <*> getExpr s'
     , ECase <$> getExpr s' <*> myListOf1 s getBranch
     ]
     where s' = s `div` 2
@@ -71,7 +71,11 @@ myListOf1 s g = do
     size <- choose (1, s)
     replicateM size (g $ s `div` size)
 
-getBinds s = myListOf1 s $ \s' -> (,) <$> getId <*> getObj s'
+getBind s = oneof
+    [ NonRec <$> getId <*> getObj s'
+    , Rec <$> (myListOf1 s $ \s' -> (,) <$> getId <*> getObj s')
+    ]
+  where s' = s `div` 2
 
 getBranch s = oneof
     [ BCon <$> getId <*> listOf getId <*> getExpr s'
@@ -91,13 +95,13 @@ shrinkObj obj = case obj of
 shrinkExpr expr = case expr of
     EAtom _ -> []
     ECall _ _ -> []
-    ELet b binds e -> e : [ELet b binds e' | e' <- shrinkExpr e]
-        ++ [ELet b bs' e | bs' <- shrinkBinds binds]
+    ELet binds e -> e : [ELet binds e' | e' <- shrinkExpr e]
+        ++ [ELet bs' e | bs' <- shrinkBinds binds]
         -- ++ [ELet b bs' e | bs' <- shrink binds]
     ECase scrut branches -> [scrut]
 
-shrinkBinds bs = [ [ (t, o') | o' <- shrinkObj o]
-                 | (t, o) <- bs
+shrinkBinds bs = [ Rec [ (t, o') | o' <- shrinkObj o]
+                 | (t, o) <- getBinds bs
                  , not (null t)]
 
 shrinkBranche br = case br of

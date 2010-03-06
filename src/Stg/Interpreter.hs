@@ -124,7 +124,7 @@ step st'@(StgState code (decTop -> stack) heap) = case code of
                 _                   -> rany expr branch
         EAtom a          -> rany  expr branch
         _                -> rcase expr branch
-    ELet recursive defs _  -> rlet st recursive defs 
+    ELet defs _  -> rlet st defs 
     EPop  op args     -> rprimop st op args 
     ECall ident args  -> rpush st ident args 
     EAtom a | not (isVar a) && topUpd stack  -> rupdate st (OThunk code)
@@ -157,12 +157,12 @@ step st'@(StgState code (decTop -> stack) heap) = case code of
     _              -> return Nothing
   where
     st = st' { stack = stack}
-    rlet st@(StgState code stack heap) recursive defs = do
-        vars <- replicateM (length defs) newVar
-        let (ids, _objs) = unzip defs
-            code'@(ELet _ defs' e') = substList ids (map AVar vars) code
-            (_ids, objs) = unzip defs'
-            heap' = foldr (uncurry M.insert) heap (zip vars objs)
+    rlet st@(StgState code stack heap) defs = do
+        vars <- replicateM (length (getBinds defs)) newVar
+        let ids  = map fst (getBinds defs)
+            code'@(ELet defs' e') = substList ids (map AVar vars) code
+            objs = map snd $ (getBinds defs')
+            heap' = foldr (\(v,o) h ->  M.insert v o h) heap (zip vars objs)
         returnJust (RLet, st { code = e'
                              , heap = heap' })
                           

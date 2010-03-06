@@ -30,10 +30,10 @@ var = EAtom . AVar
 test :: Expr String
 test = ECase (var "xs")
              [BCon "Cons" ["y","ys"]
-                (ELet False [("h",OThunk (ECall "f" [AVar "y"]))
-                            ,("t",OThunk (ECall "map" [AVar "f", AVar "ys"]))
-                            ,("r",OCon "Cons" [AVar "h", AVar "t"])
-                            ] (var "r"))
+                (ELet (Rec [("h",OThunk (ECall "f" [AVar "y"]))
+                           ,("t",OThunk (ECall "map" [AVar "f", AVar "ys"]))
+                           ,("r",OCon "Cons" [AVar "h", AVar "t"])
+                           ]) (var "r"))
              , BDef "x" (var "nil")
              ]
 
@@ -66,11 +66,16 @@ instance FV Expr where
     freeVars (EAtom e)       = freeVars e
     freeVars (ECall i as)    = S.insert i (freeVarsList as)
     freeVars (EPop  _ as)    = freeVarsList as
-    freeVars (ELet _ defs e) = 
-        let (range,domain)   = unzip defs
-        in  (freeVarsList domain `S.union` freeVars e) `S.difference` S.fromList range
+    freeVars (ELet binds e) = freeVars binds `S.union` 
+      (freeVars e `S.difference` S.fromList (map fst (getBinds binds)))
     freeVars (ECase e brs)   = freeVars e `S.union` freeVarsList brs
     freeVars (ESVal _)     = S.empty
+
+instance FV Bind where
+    freeVars (NonRec t obj) = freeVars obj
+    freeVars (Rec binds)    = 
+        let (range, domain) = unzip binds
+        in freeVarsList domain `S.difference` S.fromList range
 
 instance FV Atom where
     freeVars (AVar v)        = S.singleton v

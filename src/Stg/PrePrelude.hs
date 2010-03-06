@@ -65,7 +65,7 @@ unOp box name op = Function name $ OFun ["x"] $
              case box of
                  True -> ECase (EPop op [AVar "x'"])
                      [ BDef "r" 
-                         $ ELet False [("r'", OCon c [AVar "r"])] 
+                         $ ELet (NonRec "r'"  (OCon c [AVar "r"])) 
                          $ EAtom $ AVar "r'" 
                      ]
                  False -> EPop op [AVar "x'"]
@@ -84,7 +84,7 @@ binOp box name op = Function name $ OFun ["x", "y"] $
                      case box of
                          True  -> ECase (EPop op [AVar "x'", AVar "y'"]) 
                              [ BDef "r" 
-                                 $ ELet False [("r'", OCon c [AVar "r"])] 
+                                 $ ELet (NonRec "r'" (OCon c [AVar "r"])) 
                                  $ EAtom $ AVar "r'" 
                              ]
                          False -> EPop op [AVar "x'", AVar "y'"]

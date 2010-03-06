@@ -81,22 +81,22 @@ desugarE x@(ST.EAtom _) = do
     ([atom], binds) <- magic [x] -- hackity hackity hack!
     case binds of
         [] -> return $ AST.EAtom atom
-        _  -> return $ AST.ELet False binds (AST.EAtom atom)
+        _  -> return $ AST.mkELet False binds (AST.EAtom atom)
 desugarE (ST.ELam args expr) = do
     n <- newVar
     e <- desugarE expr
-    return $ AST.ELet False [(n,AST.OFun args e)] (AST.EAtom (AST.AVar n))
+    return $ AST.mkELet False [(n,AST.OFun args e)] (AST.EAtom (AST.AVar n))
 desugarE (ST.ECall t exprs) = do
   (atoms, binds) <- magic exprs
   case binds of
     []    -> return $ AST.ECall t atoms
-    binds -> return $ AST.ELet False binds
+    binds -> return $ AST.mkELet False binds
                                (AST.ECall t atoms)
 desugarE (ST.EOpt expr) = do
     ([atom], binds) <- magic [expr] -- hackity hack
     var <- newVar
     let opt = AST.OOpt atom
-    return $ AST.ELet False (binds ++ [(var, opt)])
+    return $ AST.mkELet False (binds ++ [(var, opt)])
                             (AST.EAtom (AST.AVar var))
 desugarE (ST.ECon t exprs) | null exprs = do
     st <- get
@@ -106,13 +106,13 @@ desugarE (ST.ECon t exprs) | null exprs = do
     (atoms, binds) <- magic exprs
     var <- newVar
     let con = AST.OCon t atoms
-    return $  AST.ELet False (binds ++ [(var, con)])
+    return $  AST.mkELet False (binds ++ [(var, con)])
                              (AST.EAtom (AST.AVar var))
 
 desugarE (ST.ELet rec vars expr) = do
   binds <- mapM (\(name, args, exp) 
                    -> (,) name `liftM` createFun args exp) vars
-  AST.ELet rec binds `liftM` desugarE expr
+  AST.mkELet rec binds `liftM` desugarE expr
 
 desugarE (ST.ECase expr branches) = 
   liftM2 AST.ECase (desugarE expr) (mapM desugarB branches)
@@ -140,7 +140,7 @@ magic (ST.EAtom (ST.AStr str):xs) = do
         conVarNums = zip conVars varNums
         rest       = ((n, AST.OCon nilC []) : lets consC chrC conVarNums n)
    return (AST.AVar var : as,
-          (var, AST.OThunk (AST.ELet False rest 
+          (var, AST.OThunk (AST.mkELet False rest 
             (AST.EAtom . AST.AVar . fst $ last conVarNums))) : bs)
   where
    lets _ _ [] _  = []
@@ -188,7 +188,6 @@ llift dt (AST.Function t obj) = do
     (obj', fs) <- lliftObj dt obj
     return (AST.Function t obj' : fs)
 
-
 lliftObj :: Ord a => Set a -> AST.Obj a -> Dia a (AST.Obj a, [AST.Function a])
 lliftObj dt obj = case obj of
     AST.OFun args e -> do
@@ -197,17 +196,13 @@ lliftObj dt obj = case obj of
         let fv = S.toList $ GC.freeVars obj `S.difference` dt
         return ( AST.OThunk (call funName (map AST.AVar fv))
                , AST.Function funName (AST.OFun (fv ++ args) e') : fs)
-    AST.OPap t as -> do
-        return (obj, [])
-    AST.OCon t as -> do
-        return (obj, [])
+    AST.OPap t as -> return (obj, [])
+    AST.OCon t as -> return (obj, [])
     AST.OThunk expr -> do
         (e', fs) <- lliftExpr dt expr
         return (AST.OThunk e', fs)
-    AST.OBlackhole -> do
-        return (obj, [])
-    AST.OOpt atom  -> do
-        return (obj, [])
+    AST.OBlackhole -> return (obj, [])
+    AST.OOpt atom  -> return (obj, [])
 
 lliftExpr :: Ord a => Set a -> AST.Expr a -> Dia a (AST.Expr a, [AST.Function a])
 lliftExpr dt expr = case expr of
@@ -215,22 +210,26 @@ lliftExpr dt expr = case expr of
         return (expr, [])
     AST.ECall _t _as -> do
         return (expr, [])
-    AST.EPop _pop _as -> do
-        return (expr, [])
-    AST.ELet rec binds e -> do
-        (binds', fs) <- liftM unzip (mapM (lliftBind dt) binds)
+    AST.EPop _pop _as -> return (expr, [])
+    AST.ELet binds e -> do
+        (binds', fs) <- lliftBind dt binds
         (e', efs) <- lliftExpr dt e
-        return (AST.ELet rec binds' e', efs ++ concat fs)
+        return (AST.ELet binds' e', efs ++ fs)
     AST.ECase escrut brs -> do
         (escrut', efs) <- lliftExpr dt escrut
         (brs', bfs) <- liftM unzip (mapM (lliftBranch dt) brs)
         return (AST.ECase escrut' brs', efs ++ concat bfs)
-    AST.ESVal _sval -> do
-        return (expr, [])
+    AST.ESVal _sval -> return (expr, [])
             
-
-lliftBind :: Ord a => Set a -> (a, AST.Obj a) -> Dia a ((a, AST.Obj a), [AST.Function a])
-lliftBind dt (t, obj) = do
+lliftBind :: Ord a => Set a -> AST.Bind a -> Dia a (AST.Bind a, [AST.Function a])
+lliftBind dt (AST.NonRec t obj) = do
+    (obj', fs) <- lliftObj dt obj
+    return (AST.NonRec t obj, fs)
+lliftBind dt (AST.Rec binds) = do
+    (binds', fss) <- liftM unzip (mapM recBind binds)
+    return (AST.Rec binds', concat fss)
+  where
+    recBind (t, obj) = do
     (obj', ofs) <- lliftObj dt obj
     return ((t, obj'), ofs)
 

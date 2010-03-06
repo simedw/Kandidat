@@ -26,7 +26,7 @@ createGetFuns inp =
         Just nums ->
             [ Function "getIntList"
                 $ OThunk
-                $ ELet False ((".n", OCon "Nil" []) : lets conVarNums ".n")
+                $ mkELet False ((".n", OCon "Nil" []) : lets conVarNums ".n")
                     $ EAtom $ AVar $ fst $ last conVarNums ]
           where
             vars       = [1..] >>= flip replicateM ['a'..'z'] 

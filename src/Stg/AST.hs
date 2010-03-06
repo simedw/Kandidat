@@ -11,11 +11,27 @@ data Function t = Function t (Obj t)
 data Expr t   = EAtom (Atom t)
               | ECall t [Atom t]
               | EPop (Pop t) [Atom t]
-              | ELet Bool [(t,Obj t)] (Expr t)  -- True if recursive
+              | ELet (Bind t) (Expr t)  -- True if recursive
               | ECase (Expr t) [Branch t]
               | ESVal (SValue t)
   deriving (Data, Eq, Show, Typeable)
 
+data Bind t
+    = NonRec t (Obj t)
+    | Rec [(t, Obj t)]
+    deriving (Data, Eq, Show, Typeable)
+
+isRecursive :: Bind t -> Bool
+isRecursive (Rec _) = True
+isRecursive _       = False
+
+getBinds :: Bind t -> [(t, Obj t)]
+getBinds (NonRec t obj) = [(t, obj)]
+getBinds (Rec binds)    = binds
+
+mkELet :: Bool -> [(t, Obj t)] -> Expr t -> Expr t
+mkELet True  = ELet . Rec
+mkELet False = flip $ foldr (\(t, obj) e' -> ELet (NonRec t obj) e')
 
 data Pop t    = PBinOp t
                   (Integer -> Integer -> Integer)

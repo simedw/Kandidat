@@ -94,7 +94,7 @@ mkPretty (Syntax {..})  = PPrinters {..}
     ppExpr e = case e of
         EAtom atom -> ppAtom atom
         ECall id as -> var id <+> hsep [ ppAtom a | a <- as ]
-        ELet b binds e -> (key $ case b of
+        ELet binds e -> (key $ case isRecursive binds of
             True  -> "letrec"
             False -> "let" ) <$>  indent 4 (ppLetBind binds) 
                                <+> key "in" <+> ppExpr e
@@ -122,8 +122,10 @@ mkPretty (Syntax {..})  = PPrinters {..}
              <+> ppExpr e
         BDef name e -> mbraces (bindVar name) <+> operator "->" <+> ppExpr e
     
-    ppLetBind :: [(t, Obj t)] -> Doc
-    ppLetBind binds = mkBrace
+    ppLetBind :: Bind t -> Doc
+    ppLetBind (NonRec t obj) = mkBrace
+        [ bindVar t <+> equal <+> ppObj obj ]
+    ppLetBind (Rec binds) = mkBrace
         [ bindVar x <+> equal <+> ppObj obj
         | (x, obj) <- binds ]
     

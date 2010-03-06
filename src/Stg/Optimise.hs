@@ -46,8 +46,8 @@ omega stack heap code = case code of
                         }
                     )
             _ -> irreducible
-    ELet False [(x, OThunk e)]  e' -> omega (CtOLetThunk x e' : stack) heap e
-    ELet False [(x, OCon c as)] e' 
+    ELet (NonRec x (OThunk e))  e' -> omega (CtOLetThunk x e' : stack) heap e
+    ELet (NonRec x (OCon c as)) e' 
         | all (isKnown heap) as -> do
             x' <- newVar
             omega stack (M.insert x' (OCon c as) heap) (subst x (AVar x') e')
@@ -60,7 +60,7 @@ omega stack heap code = case code of
 irr :: (Ord t, Data t) => Stack t -> Heap t -> Expr t -> StgM t (Maybe (Rule, StgState t))
 irr (CtOLetThunk x e : ss) h e' = omega (CtOLetObj x (OThunk e') : ss) h e
 irr (CtOCase brs     : ss) h e  = irr ss h (ECase e brs)
-irr (CtOLetObj x o   : ss) h e  = irr ss h (ELet False [(x, o)] e)
+irr (CtOLetObj x o   : ss) h e  = irr ss h (ELet (NonRec x o) e)
 irr (CtOFun xs a     : ss) h e  = do 
     let h' = M.insert a (OFun xs e) h 
     returnJust
@@ -75,7 +75,7 @@ irr (CtOFun xs a     : ss) h e  = do
 
 psi :: (Ord t, Data t) => Stack t -> Heap t -> t -> StgM t (Maybe (Rule, StgState t))
 psi (CtOLetThunk t e : ss) h v = omega ss h (subst t (AVar v) e)
-psi (CtOLetObj t obj : ss) h v = irr ss h (ELet False [(t, obj)] (EAtom (AVar v)))
+psi (CtOLetObj t obj : ss) h v = irr ss h (ELet (NonRec t obj) (EAtom (AVar v)))
 psi (CtOCase brs     : ss) h v = returnJust $ 
     ( ROpt ORKnownCase
     , StgState
