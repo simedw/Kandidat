@@ -1,0 +1,13 @@
+main = listSeq (map (optimise (exp getInt)) getIntList);
+
+mult x y = if (x == 0) 0 
+         $ if (x == 1) y 
+         $ if (y == 0) 0 
+         $ if (y == 1) x 
+         $ x * y;
+
+exp to x = case to == 0 of
+    { True  -> 1
+    ; False -> mult x $ exp (to - 1) x
+    };
+    

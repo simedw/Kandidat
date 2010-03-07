@@ -3,5 +3,5 @@ power n x = if n == 0
     else x * power (n - 1) x
 
 
-power 4 <x> => 
+power 4 x => 
     x * power 3 x

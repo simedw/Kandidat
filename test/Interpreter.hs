@@ -199,7 +199,7 @@ loop originalState  = do
     addHistory res = lift . modify $ \set -> set { history = res : history set }
 
     addbp xs = case xs of
-        ["rule", r] -> case reads r of 
+        "rule": rs -> case reads (unwords rs) of 
             (r', "") : _ -> do
                 outputStrLn "ok"
                 lift . modify $ \set -> set { breakPoints = AtRule r' : breakPoints set }

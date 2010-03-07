@@ -11,7 +11,7 @@ data Function t = Function t (Obj t)
 data Expr t   = EAtom (Atom t)
               | ECall t [Atom t]
               | EPop (Pop t) [Atom t]
-              | ELet (Bind t) (Expr t)  -- True if recursive
+              | ELet (Bind t) (Expr t)
               | ECase (Expr t) [Branch t]
               | ESVal (SValue t)
   deriving (Data, Eq, Show, Typeable)

@@ -224,7 +224,7 @@ lliftExpr dt expr = case expr of
 lliftBind :: Ord a => Set a -> AST.Bind a -> Dia a (AST.Bind a, [AST.Function a])
 lliftBind dt (AST.NonRec t obj) = do
     (obj', fs) <- lliftObj dt obj
-    return (AST.NonRec t obj, fs)
+    return (AST.NonRec t obj', fs)
 lliftBind dt (AST.Rec binds) = do
     (binds', fss) <- liftM unzip (mapM recBind binds)
     return (AST.Rec binds', concat fss)

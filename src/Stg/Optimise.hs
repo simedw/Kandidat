@@ -2,6 +2,8 @@ module Stg.Optimise where
 
 import Control.Monad
 
+import Unsafe.Coerce
+
 import Data.Generics
 import Data.Generics.PlateData
 
@@ -24,6 +26,16 @@ isKnown _ _        = True
 
 omega :: (Ord t, Data t) => Stack t -> Heap t -> Expr t-> StgM t (Maybe (Rule, StgState t))
 omega stack heap code = case code of
+    EAtom a@(AVar t) | isKnown heap a -> case M.lookup t heap of
+        Just (OThunk e) -> returnJust
+            ( ROpt ORKnownAtom
+            , StgState
+                { code  = code
+                , stack = stack
+                , heap  = heap
+                }
+            )
+        _ -> irreducible
     ECase expr brs -> omega (CtOCase brs : stack) heap expr
     ECall f args | isKnown heap (AVar f) && all (isKnown heap) args -> returnJust
         ( ROpt ORKnownCall
@@ -46,7 +58,9 @@ omega stack heap code = case code of
                         }
                     )
             _ -> irreducible
-    ELet (NonRec x (OThunk e))  e' -> omega (CtOLetThunk x e' : stack) heap e
+    ELet (NonRec x (OThunk e))  e' -> do
+        x' <- newVar
+        omega (CtOLetThunk x' (subst x (AVar x') e') : stack) heap e
     ELet (NonRec x (OCon c as)) e' 
         | all (isKnown heap) as -> do
             x' <- newVar
@@ -58,6 +72,10 @@ omega stack heap code = case code of
     irreducible = irr stack heap code
 
 irr :: (Ord t, Data t) => Stack t -> Heap t -> Expr t -> StgM t (Maybe (Rule, StgState t))
+{-irr (CtOLetThunk x e : ss) h e'@(EAtom (AVar v)) = case M.lookup v h of
+    Just (OCon c as) -> omega ss (M.insert x 
+    _ -> omega (CtOLetObj x (OThunk e') : ss) h e
+-}
 irr (CtOLetThunk x e : ss) h e' = omega (CtOLetObj x (OThunk e') : ss) h e
 irr (CtOCase brs     : ss) h e  = irr ss h (ECase e brs)
 irr (CtOLetObj x o   : ss) h e  = irr ss h (ELet (NonRec x o) e)
@@ -84,64 +102,5 @@ psi (CtOCase brs     : ss) h v = returnJust $
         , heap  = h
         }
     )
-
---psi (CtOInstant     : ss) h v = omega ss h e
-{-
-omega alpha stack heap obj@(OFun args code) = case code of
-    ECase e brs -> case e of
-        EAtom v@(AVar x) | isKnown heap v -> do
-            case M.lookup x heap of
-                Just (OCon c as) -> case instantiateBranch c as brs of
-                    Nothing -> case findDefaultBranch v brs of
-                        Nothing -> error "defect :("
-                        Just e' -> rknowncase e'
-                    Just e' -> rknowncase e'
-                Just (OThunk _) -> do
-                    returnJust
-                        ( ROpt ORCaseThunk
-                        , StgState
-                            { code = e
-                            , stack = CtContOpt alpha : stack
-                            , heap = M.insert alpha obj heap
-                            }
-                        )
-                Just fun -> do
-                    case findDefaultBranch v brs of
-                        Nothing -> error "omega.ecase.eatom.nocon.nodefaultbranch"
-                        Just e' -> rknowncase e'
-                _               -> done
-        ECall f as | all (isKnown heap) as -> do
-            t <- newVar
-            let heap'  = M.insert t (OThunk e) heap
-                heap'' = M.insert alpha (OFun args (ECase (EAtom (AVar t)) brs)) heap'
-            returnJust
-                ( ROpt ORKnownCall
-                , StgState 
-                    { code  = EAtom (AVar t)
-                    , stack = CtContOpt alpha : stack
-                    , heap  = heap'' }
-                )
-        ELet b binds expr -> done
-        _ -> done
-    _ -> done
-  where
-    rknowncase expr = 
-        let fun = OFun args expr
-        in returnJust
-        ( ROpt ORKnownCase
-        , StgState
-            { code  = EAtom (AVar alpha)
-            , stack = CtContOpt alpha : stack
-            , heap  = M.insert alpha fun heap
-            }
-        )
-    done = 
-        returnJust
-            ( ROpt ORDone
-            , StgState
-                { code  = EAtom (AVar alpha)
-                , stack = stack
-                , heap  = M.insert alpha obj heap
-                }
-            )
--}
+psi ss@(CtOFun args alpha : _) h v = irr ss h (EAtom (AVar v))  
+psi s h v = error $ show (unsafeCoerce s :: Stack String)

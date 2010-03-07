@@ -1,0 +1,9 @@
+main = listSeq (map (id (exp getInt)) getIntList);
+
+
+
+exp to x = case to == 0 of
+    { True  -> 1
+    ; False -> x * exp (to - 1) x
+    };
+    

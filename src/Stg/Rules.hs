@@ -33,6 +33,7 @@ data Rule
 data OptRule
   = ORKnownCall
   | ORKnownCase
+  | ORKnownAtom
   | ORDone
   | ORCaseThunk
   | ORInline

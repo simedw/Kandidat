@@ -1,0 +1,12 @@
+main = listSeq (map (optimise (exp getInt)) getIntList);
+
+exp n x = case n == 0 of
+    { True  -> 1
+    ; False -> case n % 2 == 0 of 
+        { True  -> let a = exp (n / 2) x in a * a
+        ; False -> x * exp (n - 1) x
+        }
+    };
+
+
+    

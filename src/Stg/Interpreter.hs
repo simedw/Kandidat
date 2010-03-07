@@ -85,7 +85,7 @@ unArg o = error $ "unArg: not an arg: " ++ show o
 initialState :: [Function String] -> StgState String
 initialState funs = gc StgState
   { code  = getMain funs
-  , stack = []
+  , stack = [CtPrint]
   , heap  = initialHeap funs
   }
      where gc = id
@@ -143,14 +143,16 @@ step st'@(StgState code (decTop -> stack) heap) = case code of
             _            | topPrintCon stack -> rprintfun st
             OPap ident atoms | topArg stack -> rpenter st ident atoms
                              | topOpt stack -> roptpap st ident atoms
-            _ | topOpt stack  -> rupdateopt st obj var
-            OFun args expr    -> let lenArgs = length args
-                                     stackArgs = numArgs stack 
+            OFun args expr   | topOpt stack -> roptfun st args expr
+                             | otherwise    -> 
+                let lenArgs = length args
+                    stackArgs = numArgs stack 
                 -- depending on the number of arguments the function is either
                 -- saturated or not 
                 in case lenArgs <= stackArgs of
                     True  -> rfenter st args lenArgs expr
                     False -> rpap st stackArgs var 
+            _ | topOpt stack  -> rupdateopt st obj var
             _                               -> return Nothing
     ESVal sval | topPrintCon stack -> rprintcont st sval
     -- if there is no rule to apply, do nothing
@@ -249,6 +251,9 @@ step st'@(StgState code (decTop -> stack) heap) = case code of
                     e' = substList argsA atoms e
                 in omega (CtOFun argsL alpha:stack') heap e'
             _ -> error "OPTPAP: pap doesn't point to FUN"
+    roptfun st@(StgState code stack heap) args expr = do
+        let CtOpt alpha : stack' = stack
+        omega (CtOFun args alpha : stack') heap expr
 {-
     rcontopt st@(StgState code stack heap) = do
         let CtContOpt alpha : stack' = stack

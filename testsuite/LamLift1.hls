@@ -1,0 +1,14 @@
+
+foo x y = let bar a = a + x in bar y;
+
+main = letrec
+    { even x = case x == 0 of
+        { True -> True
+        ; False -> odd (x - 1)
+        }
+    ; odd y = case y == 0 of
+        { True -> False
+        ; False -> even (y - 1)
+        }
+    } in even (foo 4 5);
+
