@@ -166,9 +166,15 @@ mkPretty (Syntax {..})  = PPrinters {..}
         CtUpd t -> key "Upd" <+> var t <+> ppHole
         CtArg a -> key "Arg" <+> ppAtom a
         CtOpt t -> key "Opt" <+> var t
-        CtPrint     -> key "Print"
+        CtPrint -> key "Print"
         CtPrintCon c pr ne -> key "PrintCont" <+> conVar c <+> text (show pr) 
                        <+> mparens (hsep (map ppAtom ne)) 
-        x -> text (show (unsafeCoerce x :: Cont String))
+        CtOFun xs a -> key "OFun" <+> bindVar a 
+                       <+> mparens (hsep (map bindVar xs) <+> operator "->" <+> ppHole)
+        CtOCase brs -> key "OCase" <+> ppCont (CtCase brs)
+        CtOLetObj a obj -> key "Olet" <+> bindVar a <+> operator "=" <+> ppObj obj <+> key "in" <+> ppHole 
+        CtOLetThunk a e -> key "Olet" <+> bindVar a <+> operator "=" <+> object "THUNK" <+> ppHole <+> key "in" <+> ppExpr e 
+        CtOInstant n -> key "OInstant" <+> ppAtom (ANum $ toInteger n)
+        -- x -> text (show (unsafeCoerce x :: Cont String))
 
     ppHole = operator "()"
