@@ -230,6 +230,8 @@ loop originalState  = do
         case xs of
             ["h"]    -> printHeap heap
             ["heap"] -> printHeap heap
+            "heap":fs -> mapM_ (printHeapLookup heap) fs
+            "h":fs -> mapM_ (printHeapLookup heap) fs
             ["set"]  -> printSetting =<< lift (gets settings)
             ["settings"] -> printSetting =<< lift (gets settings)
             ["s"]     -> printStack stack
@@ -255,23 +257,26 @@ loop originalState  = do
       where
         (~>) = (,)
 
-    printCode code = do
-        outputStrLn $ "code: " ++ show (prExpr PP.text code)
+    printCode code = outputStrLn $ "code: " ++ show (prExpr PP.text code)
 
-    printStack stack = do
-        outputStrLn $ "stack(" ++ show (length stack) ++ "):\n" 
-                  ++ show (prStack PP.text stack) 
+    printStack stack = outputStrLn $ "stack(" ++ show (length stack) ++ "):\n" 
+                                  ++ show (prStack PP.text stack) 
 
-    printHeap heap = do
-        outputStrLn $ "heap(" ++ show (M.size heap) ++ "): \n" 
-                    ++ concat [ foo (id, show $ prObj PP.text obj)
-                              | (id, obj) <- M.toList heap]
+    printHeapLookup heap f = outputStrLn $ printHeapFunctions $ M.filterWithKey (\k _ -> k == f) heap
+
+    printHeap heap = outputStrLn $ "heap(" ++ show (M.size heap) ++ "): \n" 
+                                ++ printHeapFunctions heap
+
+    printHeapFunctions :: Heap String -> String
+    printHeapFunctions heap = concat [ padFunction (id, show $ prObj PP.text obj)
+                                     | (id, obj) <- M.toList heap]
       where
-        foo :: (String, String) -> String
-        foo (id, obj) = unlines . map ("  " ++) $ case lines obj of
+        padFunction :: (String, String) -> String
+        padFunction (id, obj) = unlines . map ("  " ++) $ case lines obj of
             []     -> []
             x : xs -> (id ++ " = " ++ x) 
                         : map (\y -> replicate (length id + 3) ' ' ++ y) xs
+
             
     printRules = do
         ruls <- lift $ gets history
@@ -286,6 +291,7 @@ loop originalState  = do
             , ":q - to quit"
             , ":v or :view - to view something"
             , "   h or heap  - the heap"
+            , "                accepts a list of heap objects to be printed"
             , "   s or stack - the stack"
             , "   c or code  - the code"
             , "   rules      - the number of rules fired"
