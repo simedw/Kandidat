@@ -225,11 +225,12 @@ Programmeraren väljer var
 \end_layout
 
 \begin_layout Standard
+\align center
 
 \lang english
 \begin_inset Graphics
 	filename pipeline.svg
-	scale 17.5
+	scale 18
 
 \end_inset
 
@@ -482,6 +483,38 @@ filename "optimise5.txt"
 
 \end_layout
 
+\begin_layout BeginFrame
+Användning
+\end_layout
+
+\begin_layout Standard
+\begin_inset Box Shadowbox
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "100col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "optimiseuse.txt"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Section
 Kritik
 \end_layout
@@ -572,7 +605,7 @@ map (power 101) [1..20]
 
 \begin_layout Standard
 \begin_inset Graphics
-	filename /home/danten/chalmers/kandidat/rep/Kandidat/testresults/opttest12.hls-(101,20)[optimise:-false]-densities-432x324.pdf
+	filename ../testresults/opttest12.hls-(101,20)[optimise:-false]-densities-432x324.pdf
 	width 75page%
 	height 40pheight%
 
@@ -591,7 +624,7 @@ Med optimering
 
 \begin_layout Standard
 \begin_inset Graphics
-	filename /home/danten/chalmers/kandidat/rep/Kandidat/testresults/opttest12.hls-(101,20)[optimise:-true]-densities-432x324.pdf
+	filename ../testresults/opttest12.hls-(101,20)[optimise:-true]-densities-432x324.pdf
 	width 75page%
 	height 40pheight%
 
