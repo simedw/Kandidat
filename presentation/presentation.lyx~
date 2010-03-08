@@ -495,12 +495,13 @@ Git
 \end_layout
 
 \begin_layout Standard
-Git är ett revisionssystem.
- Vårt projekt finns på github.
-\end_layout
+\begin_inset Graphics
+	filename /home/danten/Kandidat/presentation/git.png
+	width 100text%
 
-\begin_layout Standard
-http://github.com/simedw/Kandidat
+\end_inset
+
+
 \end_layout
 
 \begin_layout BeginFrame
@@ -513,73 +514,6 @@ gobby
 
 \begin_layout Itemize
 projektor
-\end_layout
-
-\begin_layout BeginFrame
-Testsvit
-\end_layout
-
-\begin_layout Itemize
-Stort antal test
-\end_layout
-
-\begin_layout Itemize
-Automatiserade test
-\end_layout
-
-\begin_layout Standard
-\align center
-\begin_inset Graphics
-	filename tests.png
-	scale 50
-	BoundingBox 0bp 0bp 400bp 337bp
-	clip
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Section
-Resultat
-\end_layout
-
-\begin_layout BeginFrame
-Resultat
-\end_layout
-
-\begin_layout Standard
-map (power 101) [1..20]
-\end_layout
-
-\begin_layout Standard
-\begin_inset Graphics
-	filename /home/danten/chalmers/kandidat/rep/Kandidat/testresults/opttest12.hls-(101,20)[optimise:-false]-densities-432x324.pdf
-	width 75page%
-	height 40pheight%
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Pause
-
-\end_layout
-
-\begin_layout Standard
-Med optimering
-\end_layout
-
-\begin_layout Standard
-\begin_inset Graphics
-	filename /home/danten/chalmers/kandidat/rep/Kandidat/testresults/opttest12.hls-(101,20)[optimise:-true]-densities-432x324.pdf
-	width 75page%
-	height 40pheight%
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout EndFrame
