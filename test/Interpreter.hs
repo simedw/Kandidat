@@ -87,19 +87,22 @@ data InterpreterState = IS
     , breakPoints  :: [BreakPoint]
     }
 
--- forceInterpreter forces the return value to be evaluted
--- so we can display it in a nice fashion
--- current directory is the base directory to run `cabal test'
+
+-- note that PrintCt must be the first thing on the stack
 forceInterpreter :: Settings -> FilePath -> IO String
 forceInterpreter settings file = do
     dir     <- getCurrentDirectory
     prelude <- readFile (dir </>  "prelude" </> prelude settings)
     res     <- readFile (dir </>  "testsuite" </> file)
     case parseSugar (res ++ "\n" ++ prelude) of
-      Right fs -> return $ runForce (input settings) (run prePrelude fs)
-      Left  r  -> putStrLn ("fail: " ++ show r) >> return "Fail"
-
-
+      Right fs -> let res = eval (input settings) (run prePrelude fs)
+                      lc  = code . snd . last $ res
+                   in  case lc of
+                        (ESVal x) -> return $ show $ prExprN PP.text lc
+                        x       -> putStrLn ("fail: Didn't end with ESVal") 
+                                   >> return "Fail"
+      Left  r  -> putStrLn ("fail: " ++ show r) 
+                  >> return "Fail"
 
 testInterpreter :: Settings -> FilePath -> IO ()
 testInterpreter set file = do
