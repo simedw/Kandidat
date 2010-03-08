@@ -1,6 +1,7 @@
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE PackageImports #-}
 {-# LANGUAGE PatternGuards #-}
+{-# LANGUAGE RecordWildCards #-}
 module Interpreter where
 
 import "mtl" Control.Monad.State
@@ -27,7 +28,8 @@ import Stg.Input
 import Stg.Interpreter
 import Stg.PrePrelude
 import Stg.Rules
-import Stg.Types
+import Stg.Types hiding (settings)
+import qualified Stg.Types as ST
 
 data Settings = Settings
   { steping      :: Bool
@@ -48,7 +50,7 @@ data BreakPoint
     deriving (Eq, Show)
 
 evalBP :: BreakPoint -> Result -> Bool
-evalBP bp (rule, StgState code stack heap) = case bp of
+evalBP bp (rule, StgState {..}) = case bp of
     AtRule r -> r == rule
     AtCall id -> case code of 
         ECall fid _ -> id == fid
@@ -126,7 +128,7 @@ loop :: StgState String -> InputT (StateT InterpreterState IO) ()
 loop originalState  = do
     minput <- getInputLine "% " 
     set <- lift $ gets settings
-    let st@(StgState code stack heap) = (if toGC set then gc else id) originalState
+    let st@(StgState {..}) = (if toGC set then gc else id) originalState
     case minput of
         Nothing -> return ()
         Just xs -> case words xs of
@@ -212,7 +214,7 @@ loop originalState  = do
             lift . modify $ \set -> set { breakPoints = AtCall f : breakPoints set }
         _ -> outputStrLn "Sirisly u want m3 too parse that?"
 
-    printSummary st@(StgState code stack heap) = do
+    printSummary st@(StgState {..}) = do
         hist <- lift (gets history)
         case hist of
             [] -> do
@@ -221,7 +223,7 @@ loop originalState  = do
                 printStack stack
                 outputStrLn $ "heap("  ++ show (M.size heap) ++ ")"
                 loop st
-            (rule, StgState code stack heap) : _ -> do
+            (rule, StgState {..}) : _ -> do
                 outputStrLn $ "Rule: " ++ show rule
                 printCode code
                 printStack stack
@@ -229,7 +231,7 @@ loop originalState  = do
                 loop st
                 
 
-    loopView st@(StgState code stack heap) xs = do
+    loopView st@(StgState code stack heap set) xs = do
         case xs of
             ["h"]    -> printHeap heap
             ["heap"] -> printHeap heap

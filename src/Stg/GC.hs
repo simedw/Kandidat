@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE RecordWildCards #-}
 module Stg.GC where
 
 -- Bindings
@@ -38,9 +39,9 @@ test = ECase (var "xs")
              ]
 
 mkGC :: forall t . Ord t => [t] -> StgState t -> StgState t
-mkGC untouchable (StgState code stack heap) = 
+mkGC untouchable st@(StgState {..}) = 
     let initial = freeVars code `S.union` freeVarsList stack
-    in  StgState code stack $ heapify $ gcStep (initial`S.union` S.fromList untouchable) initial
+    in  st{ heap = heapify $ gcStep (initial`S.union` S.fromList untouchable) initial}
   where
     gcStep :: Set t -> Set t -> Set t
     gcStep acc s | S.null s  = acc

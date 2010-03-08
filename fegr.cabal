@@ -19,7 +19,7 @@ Executable benchmark
     other-modules:   Parser.Pretty.Test
     build-depends:   base, QuickCheck >= 2, ansi-wl-pprint, parsec, filepath
                      , directory, uniplate, haskell98, containers, mtl
-                     , haskeline, criterion, deepseq
+                     , haskeline, criterion, deepseq, syb
   if !flag(benchmark)
     buildable:     False
   
@@ -30,6 +30,6 @@ Executable test
   main-is:         Main.hs
   build-depends:   base, QuickCheck >= 2, ansi-wl-pprint, parsec, filepath
                    , directory, uniplate, haskell98, containers, mtl
-                   , haskeline
+                   , haskeline, syb
   if !flag(test)
     buildable:     False

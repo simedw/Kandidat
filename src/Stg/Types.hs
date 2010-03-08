@@ -32,7 +32,11 @@ data StgState t = StgState
   { code  :: Expr  t
   , stack :: Stack t
   , heap  :: Map   t (Obj t)
+  , settings :: StgSettings
   }
+
+data StgSettings = StgSettings
+
  -- deriving Show
 
 
