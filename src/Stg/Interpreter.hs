@@ -1,6 +1,7 @@
 {-# LANGUAGE NamedFieldPuns  #-}
 {-# LANGUAGE PackageImports #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE RecordWildCards #-}
 module Stg.Interpreter where
 
 -- Naive Stg interpreter
@@ -83,6 +84,7 @@ initialState funs = gc StgState
   { code  = getMain funs
   , stack = [CtPrint]
   , heap  = initialHeap funs
+  , settings = StgSettings
   }
      where gc = id
 
@@ -107,212 +109,214 @@ initialHeap = M.fromList . map (\(Function name obj) -> (name, obj))
 
 
 step :: (Ord t, Data t, Show t) => StgState t -> StgM t (Maybe (Rule, StgState t))
-step st'@(StgState code (decTop -> stack) heap) = case code of
-    _ | topOInstant stack -> omega (drop 1 stack) heap code -- for inlining
-    ECase expr branch     -> case expr of
-        EAtom (AVar var)  ->
-            case M.lookup var heap of
-                Nothing             -> error "var not in heap" -- return Nothing
-                Just (OThunk _)     -> rcase expr branch
-                Just (OCon c atoms) -> case instantiateBranch c atoms branch of
-                    Nothing   -> rany expr branch
-                    Just expr -> rcasecon st expr 
-                _                   -> rany expr branch
-        EAtom a          -> rany  expr branch
-        _                -> rcase expr branch
-    ELet defs _  -> rlet st defs 
-    EPop  op args     -> rprimop st op args 
-    ECall ident args  -> rpush st ident args 
-    EAtom a | not (isVar a) && topUpd stack  -> rupdate st (OThunk code)
-            | not (isVar a) && topCase stack -> rret st
-            | not (isVar a) && topPrint stack -> rprintval st a
-    EAtom (AVar var) -> case M.lookup var heap of  
-        Nothing  -> return Nothing
-        Just obj -> case obj of
-            OThunk expr       -> rthunk st expr var
-            _ | topIsO stack  -> psi stack heap var
-            OOpt   alpha      -> roptimise st alpha var
-            _ | topUpd  stack -> rupdate st obj
-            _ | topCase stack -> rret st
---            _ | topContOpt stack -> rcontopt st
-            OCon t atoms | topPrint stack -> rprintcon st t atoms
-            _            | topPrintCon stack -> rprintfun st
-            OPap ident atoms | topArg stack -> rpenter st ident atoms
-                             | topOpt stack -> roptpap st ident atoms
-            OFun args expr   | topOpt stack -> roptfun st args expr
-                             | otherwise    -> 
-                let lenArgs = length args
-                    stackArgs = numArgs stack 
-                -- depending on the number of arguments the function is either
-                -- saturated or not 
-                in case lenArgs <= stackArgs of
-                    True  -> rfenter st args lenArgs expr
-                    False -> rpap st stackArgs var 
-            _ | topOpt stack  -> rupdateopt st obj var
-            _                               -> return Nothing
-    ESVal sval | topPrintCon stack -> rprintcont st sval
-    -- if there is no rule to apply, do nothing
-    _              -> return Nothing
+step st@(StgState {..}) =  step' $ st{stack = decTop stack}
   where
-    st = st' { stack = stack}
-    rlet st@(StgState code stack heap) defs = do
-        vars <- replicateM (length (getBinds defs)) newVar
-        let ids  = map fst (getBinds defs)
-            code'@(ELet defs' e') = substList ids (map AVar vars) code
-            objs = map snd $ (getBinds defs')
-            heap' = foldr (\(v,o) h ->  M.insert v o h) heap (zip vars objs)
-        returnJust (RLet, st { code = e'
-                             , heap = heap' })
-                          
-    rcase expr branch = returnJust 
-          (RCaseCon
-          , st { code  = expr
-               , stack = CtCase branch : stack
-               }
-          )
-    rany (EAtom var) branch = case findDefaultBranch var branch of
-                Nothing     -> return Nothing
-                Just expr'  -> returnJust
-                    ( RCaseAny
-                    , st { code = expr' }
-                    )
-    rcasecon st@(StgState code stack heap) expr = returnJust
-        ( RCaseCon
-        , st { code = expr}
-        )
-
-    rprimop st op args = do
-        mkConFun <- gets mkCons
-        returnJust 
-            ( RPrimOP
-            , st { code = applyPrimOp mkConFun op args }
+   step' st'@(StgState {..}) = case code of
+       _ | topOInstant stack -> omega (drop 1 stack) heap code settings -- for inlining
+       ECase expr branch     -> case expr of
+           EAtom (AVar var)  ->
+               case M.lookup var heap of
+                   Nothing             -> error "var not in heap" -- return Nothing
+                   Just (OThunk _)     -> rcase expr branch
+                   Just (OCon c atoms) -> case instantiateBranch c atoms branch of
+                       Nothing   -> rany expr branch
+                       Just expr -> rcasecon st expr 
+                   _                   -> rany expr branch
+           EAtom a          -> rany  expr branch
+           _                -> rcase expr branch
+       ELet defs _  -> rlet st defs 
+       EPop  op args     -> rprimop st op args 
+       ECall ident args  -> rpush st ident args 
+       EAtom a | not (isVar a) && topUpd stack  -> rupdate st (OThunk code)
+               | not (isVar a) && topCase stack -> rret st
+               | not (isVar a) && topPrint stack -> rprintval st a
+       EAtom (AVar var) -> case M.lookup var heap of  
+           Nothing  -> return Nothing
+           Just obj -> case obj of
+               OThunk expr       -> rthunk st expr var
+               _ | topIsO stack  -> psi stack heap var settings
+               OOpt   alpha      -> roptimise st alpha var
+               _ | topUpd  stack -> rupdate st obj
+               _ | topCase stack -> rret st
+--               _ | topContOpt stack -> rcontopt st
+               OCon t atoms | topPrint stack -> rprintcon st t atoms
+               _            | topPrintCon stack -> rprintfun st
+               OPap ident atoms | topArg stack -> rpenter st ident atoms
+                                | topOpt stack -> roptpap st ident atoms
+               OFun args expr   | topOpt stack -> roptfun st args expr
+                                | otherwise    -> 
+                   let lenArgs = length args
+                       stackArgs = numArgs stack 
+                   -- depending on the number of arguments the function is either
+                   -- saturated or not 
+                   in case lenArgs <= stackArgs of
+                       True  -> rfenter st args lenArgs expr
+                       False -> rpap st stackArgs var 
+               _ | topOpt stack  -> rupdateopt st obj var
+               _                               -> return Nothing
+       ESVal sval | topPrintCon stack -> rprintcont st sval
+       -- if there is no rule to apply, do nothing
+       _              -> return Nothing
+    where
+      st = st' { stack = stack}
+      rlet st@(StgState {..}) defs = do
+          vars <- replicateM (length (getBinds defs)) newVar
+          let ids  = map fst (getBinds defs)
+              code'@(ELet defs' e') = substList ids (map AVar vars) code
+              objs = map snd $ (getBinds defs')
+              heap' = foldr (\(v,o) h ->  M.insert v o h) heap (zip vars objs)
+          returnJust (RLet, st { code = e'
+                               , heap = heap' })
+                            
+      rcase expr branch = returnJust 
+            (RCaseCon
+            , st { code  = expr
+                 , stack = CtCase branch : stack
+                 }
             )
-    
-    rpush st@(StgState code stack heap) ident args = returnJust 
-        (RPush
-        , st { code = EAtom (AVar ident)
-             , stack = map CtArg args ++ stack})
+      rany (EAtom var) branch = case findDefaultBranch var branch of
+                  Nothing     -> return Nothing
+                  Just expr'  -> returnJust
+                      ( RCaseAny
+                      , st { code = expr' }
+                      )
+      rcasecon st@(StgState {..}) expr = returnJust
+          ( RCaseCon
+          , st { code = expr}
+          )
 
-    rret st@(StgState code stack heap) =
-        let CtCase bs : rest = stack
-        in returnJust
-          ( RRet
-          , st { code = ECase code bs
-               , stack = rest})
-    rthunk st@(StgState code stack heap) e v = returnJust      
-        ( RThunk
-        , st { code  = e
-        , stack = CtUpd v : stack
-        , heap  = M.insert v OBlackhole heap})
-    rupdate st@(StgState code stack heap) obj = 
-        let CtUpd x : rest = stack -- the object is a value, update memory
-        in  returnJust ( RUpdate
-                       , st { stack = rest
-                       , heap  = M.insert x obj heap})
-    rfenter st@(StgState code stack heap) args lenArgs e = 
-        let args' = map unArg $ take lenArgs stack 
-        in returnJust
-                       ( RFEnter
-                       , st { code  = substList args args' e  
-                            , stack = drop lenArgs stack })
+      rprimop st op args = do
+          mkConFun <- gets mkCons
+          returnJust 
+              ( RPrimOP
+              , st { code = applyPrimOp mkConFun op args }
+              )
+      
+      rpush st@(StgState {..}) ident args = returnJust 
+          (RPush
+          , st { code = EAtom (AVar ident)
+               , stack = map CtArg args ++ stack})
 
-    rpap st@(StgState code stack heap) stackArgs var = do
-        p <- newVar
-        let args' = map unArg $ take stackArgs stack
-            pap   = OPap var args'
-        returnJust ( RPap1
-                   , st { code  = EAtom (AVar p)
-                        , stack = drop stackArgs stack
-                        , heap  = M.insert p pap heap }
-                   )
-    rpenter st@(StgState code stack heap) var atoms = returnJust
-        ( RPEnter
-        , st { code  = EAtom (AVar var)
-        , stack = map CtArg atoms ++ stack
-        , heap  = heap })
-    roptimise st@(StgState code stack heap) omeg alpha = returnJust
-        ( ROptimise
-        , st 
-            { code = EAtom omeg
-            , stack = CtOpt alpha : stack
-            , heap  = M.insert alpha OBlackhole heap
-            }
-        )
-    roptpap st@(StgState code stack heap) var atoms =
-        case M.lookup var heap of
-            Nothing -> error $ "OPTPAP: var not in heap: " -- ++ var
-            Just (OFun args e) ->
-                let (argsA, argsL) = splitAt (length atoms) args
-                    CtOpt alpha : stack' = stack
-                    e' = substList argsA atoms e
-                in omega (CtOFun argsL alpha:stack') heap e'
-            _ -> error "OPTPAP: pap doesn't point to FUN"
-    roptfun st@(StgState code stack heap) args expr = do
-        let CtOpt alpha : stack' = stack
-        omega (CtOFun args alpha : stack') heap expr
-{-
-    rcontopt st@(StgState code stack heap) = do
-        let CtContOpt alpha : stack' = stack
-        case M.lookup alpha heap of
-            Nothing -> error $ "ContOpt rule: alpha not in heap buh huh: " ++ show alpha
-            Just obj -> omega alpha stack' heap obj 
--}
-    rupdateopt st@(StgState code stack heap) obj var = do
-        let CtOpt alpha : stack' = stack
-        returnJust
-            ( RUpdateOpt
-            , st
-                { code  = EAtom (AVar var)
-                , stack = stack'
-                , heap  = M.insert alpha obj heap
-                }
-            ) 
-    rprintcon st@(StgState code stack heap) c atoms = do
-        let CtPrint : stack' = stack
-        case null atoms of
-            True -> returnJust
-                ( RPrintCon
-                , st
-                    { code = ESVal (SCon c [])
-                    , stack = stack'})
-            False -> returnJust
-                ( RPrintCon
-                , st
-                    { code = EAtom (head atoms)
-                    , stack = CtPrint : CtPrintCon c [] (tail atoms) : stack'}) 
-    rprintval st@(StgState code stack heap) atom = do
-        let CtPrint : stack' = stack
-        returnJust
-            ( RPrintVal
-            , st 
-                { code  = ESVal (SAtom atom)
-                , stack = stack'})
-    rprintfun st@(StgState code stack heap) = do
-        let CtPrint : stack' = stack
-        returnJust
-            ( RPrintFun
-            , st
-                { code = ESVal SFun
-                , stack = stack'})
-    rprintcont st@(StgState code stack heap) sval = do
-        let CtPrintCon c ps ns : stack' = stack
-        case ns of 
-            [] -> returnJust
-                ( RPrintCont
-                , st
-                    { code = ESVal (SCon c (reverse (sval:ps)))
-                    , stack = stack'})
-            n : ns -> returnJust
-                ( RPrintCont
-                , st 
-                    { code = EAtom n
-                    , stack = CtPrint : CtPrintCon c (sval:ps) ns : stack'})
+      rret st@(StgState {..}) =
+          let CtCase bs : rest = stack
+          in returnJust
+            ( RRet
+            , st { code = ECase code bs
+                 , stack = rest})
+      rthunk st@(StgState {..}) e v = returnJust      
+          ( RThunk
+          , st { code  = e
+          , stack = CtUpd v : stack
+          , heap  = M.insert v OBlackhole heap})
+      rupdate st@(StgState {..}) obj = 
+          let CtUpd x : rest = stack -- the object is a value, update memory
+          in  returnJust ( RUpdate
+                         , st { stack = rest
+                         , heap  = M.insert x obj heap})
+      rfenter st@(StgState {..}) args lenArgs e = 
+          let args' = map unArg $ take lenArgs stack 
+          in returnJust
+                         ( RFEnter
+                         , st { code  = substList args args' e  
+                              , stack = drop lenArgs stack })
+
+      rpap st@(StgState {..}) stackArgs var = do
+          p <- newVar
+          let args' = map unArg $ take stackArgs stack
+              pap   = OPap var args'
+          returnJust ( RPap1
+                     , st { code  = EAtom (AVar p)
+                          , stack = drop stackArgs stack
+                          , heap  = M.insert p pap heap }
+                     )
+      rpenter st@(StgState {..}) var atoms = returnJust
+          ( RPEnter
+          , st { code  = EAtom (AVar var)
+          , stack = map CtArg atoms ++ stack
+          , heap  = heap })
+      roptimise st@(StgState {..}) omeg alpha = returnJust
+          ( ROptimise
+          , st 
+              { code = EAtom omeg
+              , stack = CtOpt alpha : stack
+              , heap  = M.insert alpha OBlackhole heap
+              }
+          )
+      roptpap st@(StgState {..}) var atoms =
+          case M.lookup var heap of
+              Nothing -> error $ "OPTPAP: var not in heap: " -- ++ var
+              Just (OFun args e) ->
+                  let (argsA, argsL) = splitAt (length atoms) args
+                      CtOpt alpha : stack' = stack
+                      e' = substList argsA atoms e
+                  in omega (CtOFun argsL alpha:stack') heap e' settings
+              _ -> error "OPTPAP: pap doesn't point to FUN"
+      roptfun st@(StgState {..}) args expr = do
+          let CtOpt alpha : stack' = stack
+          omega (CtOFun args alpha : stack') heap expr settings
+{-  
+      rcontopt st@(StgState {..}) = do
+          let CtContOpt alpha : stack' = stack
+          case M.lookup alpha heap of
+              Nothing -> error $ "ContOpt rule: alpha not in heap buh huh: " ++ show alpha
+              Just obj -> omega alpha stack' heap obj 
+-}  
+      rupdateopt st@(StgState {..}) obj var = do
+          let CtOpt alpha : stack' = stack
+          returnJust
+              ( RUpdateOpt
+              , st
+                  { code  = EAtom (AVar var)
+                  , stack = stack'
+                  , heap  = M.insert alpha obj heap
+                  }
+              ) 
+      rprintcon st@(StgState {..}) c atoms = do
+          let CtPrint : stack' = stack
+          case null atoms of
+              True -> returnJust
+                  ( RPrintCon
+                  , st
+                      { code = ESVal (SCon c [])
+                      , stack = stack'})
+              False -> returnJust
+                  ( RPrintCon
+                  , st
+                      { code = EAtom (head atoms)
+                      , stack = CtPrint : CtPrintCon c [] (tail atoms) : stack'}) 
+      rprintval st@(StgState {..}) atom = do
+          let CtPrint : stack' = stack
+          returnJust
+              ( RPrintVal
+              , st 
+                  { code  = ESVal (SAtom atom)
+                  , stack = stack'})
+      rprintfun st@(StgState {..}) = do
+          let CtPrint : stack' = stack
+          returnJust
+              ( RPrintFun
+              , st
+                  { code = ESVal SFun
+                  , stack = stack'})
+      rprintcont st@(StgState {..}) sval = do
+          let CtPrintCon c ps ns : stack' = stack
+          case ns of 
+              [] -> returnJust
+                  ( RPrintCont
+                  , st
+                      { code = ESVal (SCon c (reverse (sval:ps)))
+                      , stack = stack'})
+              n : ns -> returnJust
+                  ( RPrintCont
+                  , st 
+                      { code = EAtom n
+                      , stack = CtPrint : CtPrintCon c (sval:ps) ns : stack'})
 
 
 
 -- if we find anything that is point to a OThunk
 -- we try to evalutate it
-force st@(StgState code stack heap) = do 
+force st@(StgState {..}) = do 
   res <- step st 
   case res of
     Nothing -> case code of
