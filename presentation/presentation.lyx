@@ -221,6 +221,24 @@ Programmeraren väljer var
 \begin_layout BeginFrame
 
 \lang english
+Överblick
+\end_layout
+
+\begin_layout Standard
+
+\lang english
+\begin_inset Graphics
+	filename pipeline.svg
+	scale 17.5
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout BeginFrame
+
+\lang english
 Språk
 \end_layout
 
