@@ -159,6 +159,7 @@ mkPretty (Syntax {..})  = PPrinters {..}
     ppStack :: Stack t -> Doc
     ppStack = vsep . map ppCont
 
+
     ppCont :: Cont t -> Doc
     ppCont cont = case cont of
         CtCase brs -> key "case" <+> ppHole <+> key "of"
@@ -174,6 +175,18 @@ mkPretty (Syntax {..})  = PPrinters {..}
         CtOCase brs -> key "OCase" <+> ppCont (CtCase brs)
         CtOLetObj a obj -> key "Olet" <+> bindVar a <+> operator "=" <+> ppObj obj <+> key "in" <+> ppHole 
         CtOLetThunk a e -> key "Olet" <+> bindVar a <+> operator "=" <+> object "THUNK" <+> ppHole <+> key "in" <+> ppExpr e 
+        CtOBranch e brdone brleft ->
+            key "OBranch" <+> key "case" <+> ppExpr e <+> key "of"
+            <$> indent 4 (mkBrace $ map ppBranch brdone ++ 
+                                    case brleft of
+                                       BCon c as _:left -> 
+                                           conVar c <+> hsep (map bindVar as) <+> operator "->" <+> ppHole :
+                                           map ppBranch left
+                                       BDef v _:left ->
+                                           mbraces (bindVar v) <+> operator "->" <+> ppHole :
+                                           map ppBranch left
+                                       [] ->
+                                           [ppHole])
         CtOInstant n -> key "OInstant" <+> ppAtom (ANum $ toInteger n)
         -- x -> text (show (unsafeCoerce x :: Cont String))
 

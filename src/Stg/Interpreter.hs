@@ -40,12 +40,6 @@ topOpt :: Stack t -> Bool
 topOpt (CtOpt _ : _) = True
 topOpt _             = False
 
-{-
-topContOpt :: Stack t -> Bool
-topContOpt (CtContOpt _ : _) = True
-topContOpt _                 = False
--}
-
 topPrint :: Stack t -> Bool
 topPrint (CtPrint : _) = True
 topPrint _             = False
@@ -60,8 +54,10 @@ topIsO (cont : _) = case cont of
     CtOCase _       -> True
     CtOLetObj _ _   -> True
     CtOLetThunk _ _ -> True
+    CtOBranch{}     -> True
     _               -> False
 topIsO _          = False
+
 
 topOInstant :: Stack t -> Bool
 topOInstant (CtOInstant n: _) = n <= 0

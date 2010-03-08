@@ -21,6 +21,7 @@ data Cont t
   | CtOCase [Branch t]
   | CtOLetObj t (Obj t)
   | CtOLetThunk t (Expr t)
+  | CtOBranch (Expr t) [Branch t] [Branch t]  
   | CtOInstant Int
  deriving Show
 
@@ -33,6 +34,7 @@ data StgState t = StgState
   , heap  :: Map   t (Obj t)
   }
  -- deriving Show
+
 
 data StgMState t = StgMState
     { nameSupply :: [t]

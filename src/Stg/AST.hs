@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 module Stg.AST where 
 -- The data type of the language, and auxilliary functions.
+--
 
 import Data.Generics
 import Data.Generics.PlateData

@@ -71,25 +71,30 @@ omega stack heap code = case code of
   where
     irreducible = irr stack heap code
 
+beta :: (Ord t, Data t) => Stack t -> Heap t -> StgM t (Maybe (Rule, StgState t))
+beta stack@(CtOBranch e brdone brleft:ss) h = case brleft of
+    BDef x e   :_ -> omega stack h e
+    BCon c as e:_ -> omega stack h e
+    []            -> irr ss h (ECase e brdone)
+
+
 irr :: (Ord t, Data t) => Stack t -> Heap t -> Expr t -> StgM t (Maybe (Rule, StgState t))
-{-irr (CtOLetThunk x e : ss) h e'@(EAtom (AVar v)) = case M.lookup v h of
-    Just (OCon c as) -> omega ss (M.insert x 
-    _ -> omega (CtOLetObj x (OThunk e') : ss) h e
--}
 irr (CtOLetThunk x e : ss) h e' = omega (CtOLetObj x (OThunk e') : ss) h e
-irr (CtOCase brs     : ss) h e  = irr ss h (ECase e brs)
+-- irr (CtOCase brs     : ss) h e  = irr ss h (ECase e brs)
+irr (CtOCase brs     : ss) h e  = beta (CtOBranch e [] brs:ss) h 
 irr (CtOLetObj x o   : ss) h e  = irr ss h (ELet (NonRec x o) e)
 irr (CtOFun xs a     : ss) h e  = do 
     let h' = M.insert a (OFun xs e) h 
     returnJust
          ( ROpt ORDone
          , StgState
-            { code  = EAtom (AVar a) --lpha
+            { code  = EAtom (AVar a) 
             , stack = ss
             , heap  = h'
             }
          )
-
+irr (CtOBranch e brdone (BDef x _   :brleft) : ss) h e' = beta (CtOBranch e (brdone ++ [BDef x    e']) brleft:ss) h
+irr (CtOBranch e brdone (BCon c as _:brleft) : ss) h e' = beta (CtOBranch e (brdone ++ [BCon c as e']) brleft:ss) h
 
 psi :: (Ord t, Data t) => Stack t -> Heap t -> t -> StgM t (Maybe (Rule, StgState t))
 psi (CtOLetThunk t e : ss) h v = omega ss h (subst t (AVar v) e)
@@ -102,5 +107,6 @@ psi (CtOCase brs     : ss) h v = returnJust $
         , heap  = h
         }
     )
+psi ss@(CtOBranch e brdone brleft : _) h v = irr ss h (EAtom (AVar v))
 psi ss@(CtOFun args alpha : _) h v = irr ss h (EAtom (AVar v))  
 psi s h v = error $ show (unsafeCoerce s :: Stack String)
