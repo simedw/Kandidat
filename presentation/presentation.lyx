@@ -4,7 +4,7 @@
 \begin_header
 \textclass beamer
 \begin_preamble
-\usetheme{Goettingen}
+\usetheme{default}
 \end_preamble
 \use_default_options true
 \language british
@@ -195,90 +195,35 @@ Introduktion
 \end_layout
 
 \begin_layout BeginFrame
-
-\lang english
 Kortfattat
 \end_layout
 
-\begin_layout Itemize
-
-\lang english
-Tolk för ett funktionellt språk
-\end_layout
-
-\begin_layout Itemize
-
-\lang english
-Optimeras när det körs
-\end_layout
-
-\begin_layout Itemize
-
-\lang english
-Programmeraren väljer var
-\end_layout
-
-\begin_layout BeginFrame
-
-\lang english
-Överblick
-\end_layout
-
 \begin_layout Standard
-\align center
+\begin_inset Box Shadowbox
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "100col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
 
-\lang english
-\begin_inset Graphics
-	filename pipeline.svg
-	scale 18
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "optimisenotuse.txt"
 
 \end_inset
 
 
 \end_layout
 
-\begin_layout BeginFrame
+\end_inset
 
-\lang english
-Språk
-\end_layout
 
-\begin_layout Itemize
-
-\lang english
-Innehåller få konstruktioner: 
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-
-\lang english
-case
-\end_layout
-
-\begin_layout Itemize
-
-\lang english
-let
-\end_layout
-
-\begin_layout Itemize
-
-\lang english
-lambda
-\end_layout
-
-\begin_layout Itemize
-
-\lang english
-samt primitiva datatyper
-\end_layout
-
-\end_deeper
-\begin_layout Itemize
-
-\lang english
-Förutsätter att koden är vältypad
 \end_layout
 
 \begin_layout Pause
@@ -301,45 +246,7 @@ status open
 \begin_layout Plain Layout
 \begin_inset CommandInset include
 LatexCommand lstinputlisting
-filename "sprak.txt"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Section
-
-\lang english
-Optimering
-\end_layout
-
-\begin_layout BeginFrame
-Optimering
-\end_layout
-
-\begin_layout Standard
-\begin_inset Box Shadowbox
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-width "100col%"
-special "none"
-height "1in"
-height_special "totalheight"
-status open
-
-\begin_layout Plain Layout
-\begin_inset CommandInset include
-LatexCommand lstinputlisting
-filename "optimise1.txt"
+filename "power.txt"
 
 \end_inset
 
@@ -352,139 +259,7 @@ filename "optimise1.txt"
 \end_layout
 
 \begin_layout BeginFrame
-Optimering
-\end_layout
-
-\begin_layout Standard
-\begin_inset Box Shadowbox
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-width "100col%"
-special "none"
-height "1in"
-height_special "totalheight"
-status collapsed
-
-\begin_layout Plain Layout
-\begin_inset CommandInset include
-LatexCommand lstinputlisting
-filename "optimise2.txt"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout BeginFrame
-Optimering
-\end_layout
-
-\begin_layout Standard
-\begin_inset Box Shadowbox
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-width "100col%"
-special "none"
-height "1in"
-height_special "totalheight"
-status open
-
-\begin_layout Plain Layout
-\begin_inset CommandInset include
-LatexCommand lstinputlisting
-filename "optimise3.txt"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout BeginFrame
-Optimering
-\end_layout
-
-\begin_layout Standard
-\begin_inset Box Shadowbox
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-width "100col%"
-special "none"
-height "1in"
-height_special "totalheight"
-status open
-
-\begin_layout Plain Layout
-\begin_inset CommandInset include
-LatexCommand lstinputlisting
-filename "optimise4.txt"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout BeginFrame
-Optimering
-\end_layout
-
-\begin_layout Standard
-\begin_inset Box Shadowbox
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-width "100col%"
-special "none"
-height "1in"
-height_special "totalheight"
-status open
-
-\begin_layout Plain Layout
-\begin_inset CommandInset include
-LatexCommand lstinputlisting
-filename "optimise5.txt"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout EndFrame
-
-\end_layout
-
-\begin_layout BeginFrame
-Användning
+Vår optimering
 \end_layout
 
 \begin_layout Standard
@@ -515,26 +290,237 @@ filename "optimiseuse.txt"
 
 \end_layout
 
+\begin_layout Standard
+\begin_inset Box Shadowbox
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "100col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "power.txt"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Section
-Kritik
+
+\lang english
+Optimering
 \end_layout
 
 \begin_layout BeginFrame
-Kritik
+Optimering
+\end_layout
+
+\begin_layout Standard
+\begin_inset Box Shadowbox
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "100col%"
+special "none"
+height "50pheight%"
+height_special "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "optimise1.txt"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout BeginFrame
+Optimering
+\end_layout
+
+\begin_layout Standard
+\begin_inset Box Shadowbox
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "100col%"
+special "none"
+height "50pheight%"
+height_special "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "optimise2.txt"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout BeginFrame
+Optimering
+\end_layout
+
+\begin_layout Standard
+\begin_inset Box Shadowbox
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "100col%"
+special "none"
+height "50pheight%"
+height_special "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "optimise3.txt"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout BeginFrame
+Optimering
+\end_layout
+
+\begin_layout Standard
+\begin_inset Box Shadowbox
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "100col%"
+special "none"
+height "50pheight%"
+height_special "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "optimise4.txt"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout BeginFrame
+Optimering
+\end_layout
+
+\begin_layout Standard
+\begin_inset Box Shadowbox
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "100col%"
+special "none"
+height "50pheight%"
+height_special "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "optimise5.txt"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout EndFrame
+
+\end_layout
+
+\begin_layout BeginFrame
+Sammanfattat
 \end_layout
 
 \begin_layout Itemize
-Implementerbart i en kompilator?
+
+\lang english
+Tolk för ett funktionellt språk
 \end_layout
 
-\begin_deeper
 \begin_layout Itemize
-Introspektion
+
+\lang english
+Optimeras när det körs
 \end_layout
 
-\end_deeper
 \begin_layout Itemize
-Hur mycket går att göra statiskt?
+
+\lang english
+Programmeraren väljer var
+\end_layout
+
+\begin_layout Standard
+\align center
+
+\lang english
+\begin_inset Graphics
+	filename pipeline.svg
+	scale 18
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Section
@@ -546,7 +532,7 @@ Git
 \end_layout
 
 \begin_layout Standard
-Git är ett revisionssystem.
+Vi använder revisionssystemet Git .
  Vårt projekt finns på github.
 \end_layout
 
@@ -631,6 +617,36 @@ Med optimering
 \end_inset
 
 
+\end_layout
+
+\begin_layout Section
+Diskussion
+\end_layout
+
+\begin_layout BeginFrame
+Diskussion om framtid
+\end_layout
+
+\begin_layout Itemize
+Implementerbart i en kompilator?
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Introspektion
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Optimeringen kan loopa
+\end_layout
+
+\begin_layout Itemize
+Konfiguerbar optimise
+\end_layout
+
+\begin_layout Itemize
+Uppdatering av planneringsrapport
 \end_layout
 
 \begin_layout EndFrame

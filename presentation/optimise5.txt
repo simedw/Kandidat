@@ -3,6 +3,6 @@ power n x = if n == 0
     else x * power (n - 1) x
 
 
-power 4 x => 
+optimise (power 4) x => 
     x * ( x * ( x * (x * 1)))
 

@@ -1,0 +1,2 @@
+main = let xs = 1 : 2 : 3 : 4 : 5 : []
+       in map (power 4) xs
