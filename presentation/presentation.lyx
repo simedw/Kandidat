@@ -195,7 +195,7 @@ Introduktion
 \end_layout
 
 \begin_layout BeginFrame
-Kortfattat
+Introduktion
 \end_layout
 
 \begin_layout Standard
@@ -259,7 +259,7 @@ filename "power.txt"
 \end_layout
 
 \begin_layout BeginFrame
-Vår optimering
+Introduktion
 \end_layout
 
 \begin_layout Standard
@@ -516,6 +516,7 @@ Programmeraren väljer var
 \lang english
 \begin_inset Graphics
 	filename pipeline.svg
+	lyxscale 10
 	scale 18
 
 \end_inset
@@ -550,6 +551,18 @@ gobby
 
 \begin_layout Itemize
 projektor
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename IMG_1605.JPG
+	lyxscale 10
+	width 85col%
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout BeginFrame
@@ -642,11 +655,11 @@ Optimeringen kan loopa
 \end_layout
 
 \begin_layout Itemize
-Konfiguerbar optimise
+Konfigurerbar optimise
 \end_layout
 
 \begin_layout Itemize
-Uppdatering av planneringsrapport
+Planering
 \end_layout
 
 \begin_layout EndFrame
