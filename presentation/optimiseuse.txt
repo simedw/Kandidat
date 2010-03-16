@@ -1,2 +1,2 @@
-main = let xs = 1 : 2 : 3 : 4 : 5 : []
+main = let xs = [1, 2, 3, 4, 5]
        in map (optimise (power 4)) xs

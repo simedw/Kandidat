@@ -541,6 +541,20 @@ Vi använder revisionssystemet Git .
 http://github.com/simedw/Kandidat
 \end_layout
 
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename git.png
+	lyxscale 10
+	scale 40
+	BoundingBox 0bp 300bp 600bp 600bp
+	clip
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout BeginFrame
 Gobby
 \end_layout
