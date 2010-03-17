@@ -953,41 +953,230 @@ Föreberedelser för halvtidsredovisningen som skall presenteras 16 mars.
 \end_layout
 
 \begin_layout Subsection
-Milstolpe 2010-03-22
+Milstolpe 2010-03-19 (Fredag LV 1)
 \end_layout
 
 \begin_layout Itemize
-Tolken klarar av alla språkkonstruktioner, inklusive letrec.
+Ha gjort ett skelett för rapporten som innehåller rubriker och i grova drag
+ innehåll (punktlistor eller stolpar).
 \end_layout
 
 \begin_layout Itemize
-En sammanställning av möjliga och intressanta optimeringar som skulle kunna
- implementeras.
+Kunna stänga av och på inlining med hjälp av en ny språkkonstruktion (optimise
+ with).
 \end_layout
 
+\begin_deeper
+\begin_layout Standard
+\begin_inset Box Shadowbox
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "100col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+lstparams "basicstyle={\rmfamily},language=Haskell,tabsize=4"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+optimise power 4 with 
+\end_layout
+
+\begin_layout Plain Layout
+
+	{ inline     = power : if : Nil 
+\end_layout
+
+\begin_layout Plain Layout
+
+	; caseInCase = False
+\end_layout
+
+\begin_layout Plain Layout
+
+	}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+opt f n = optimise f with 
+\end_layout
+
+\begin_layout Plain Layout
+
+	{ noInline  = take : Nil
+\end_layout
+
+\begin_layout Plain Layout
+
+	; maxInline = n
+\end_layout
+
+\begin_layout Plain Layout
+
+	}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
 \begin_layout Itemize
-Planera framtida milstolpar.
+Analysera vilka optimeringar shapesexemplet skulle kunna dra nytta av.
 \end_layout
 
 \begin_layout Subsection
-Post-påsk
+Milstolpe 2010-03-26 (Fredag LV 2)
 \end_layout
 
 \begin_layout Itemize
-Ett första utkast på ca 15 sidor till rapporten skall vara klar 23:e april.
- Planeras mer i föregående milstolpe.
+Få optimeringen att enbart forcera thunkar som behövs.
+ Detta gör så att till exempel optimise av if-funktionen terminerar.
 \end_layout
 
 \begin_layout Itemize
-18/5 Inlämning av slutrapport 
+Kortare texter i rapporten där det är möjligt.
+ I alla fall ska det här innefatta tidigare arbeten, inledning/problemställning,
+ beskrivning av stg-maskinen, arbetsmetodik och den optimise-semantik som
+ vid den här tidpunkten är klar.
+\end_layout
+
+\begin_layout Subsection
+Milstolpe 2010-04-16 (Fredag LV 3)
 \end_layout
 
 \begin_layout Itemize
-26/5 Inlämning av skriftlig opposition 
+Använda en anropsstack istället för (hjärndöd) substituering i tolken.
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Alla program ska fortfarande fungera med den här ändringen och de ska vara
+ snabbare.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Utkast till sammanfattning, resultat, diskussion för rapporten.
+\end_layout
+
+\begin_layout Subsection
+Milstolpe 2010-04-23 (Fredag LV 4)
 \end_layout
 
 \begin_layout Itemize
-31/5 Slutredovisning, opposition
+\begin_inset Formula $\alpha$
+\end_inset
+
+-rapport.
+ En sammanställd rapport som innehåller tillräckligt mycket information
+ för att en läsare ska kunna förstå den, vilket möjliggör återkoppling.
+ Detta betyder att våra poänger måste gå fram men att den är så koncentrerad
+ att vi snabbt kan få synpunkter på den.
+ 
+\begin_inset Formula $\alpha$
+\end_inset
+
+-rapporten ska vara inlämningsbar men kanske inget vi skulle vara stolta
+ över.
+\end_layout
+
+\begin_layout Itemize
+Regexpexempel klart.
+\end_layout
+
+\begin_layout Subsection
+Milstolpe 2010-05-07 (Fredag LV 6)
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $\beta$
+\end_inset
+
+-rapport.
+ En enligt oss helt inlämningsbar (med stoltheten och betyget i behåll)
+ rapport som vi kan få synpunkter på.
+\end_layout
+
+\begin_layout Subsection
+Milstolpe 2010-05-17 (Måndag LV 8)
+\end_layout
+
+\begin_layout Itemize
+Helt
+\noun on
+ 
+\noun default
+klar rapport ändrad utifrån givna synpunkter och finslipad på alla sätt
+ och vis.
+\end_layout
+
+\begin_layout Subsection
+Milstolpe 2010-05-24 (Måndag 
+\begin_inset Quotes eld
+\end_inset
+
+LV 9
+\begin_inset Quotes erd
+\end_inset
+
+)
+\end_layout
+
+\begin_layout Itemize
+Skriftlig opponering färdig.
+ (Ska vara klar 26:e).
+\end_layout
+
+\begin_layout Itemize
+Demonstrationsbara exempel - shapes och regexp.
+\end_layout
+
+\begin_layout Itemize
+Förberett en slutpresentation med demo.
+ (Slutpresentation 31:a)
+\end_layout
+
+\begin_layout Subsection
+Milstolpe 2010-05-28 (Fredag 
+\begin_inset Quotes eld
+\end_inset
+
+LV 9
+\begin_inset Quotes erd
+\end_inset
+
+)
+\end_layout
+
+\begin_layout Itemize
+Allting färdigt, speciellt presentationsförberedelser och muntlig opponeringsför
+beredelser.
+ 
+\end_layout
+
+\begin_layout Itemize
+Melonfest!
 \end_layout
 
 \end_body

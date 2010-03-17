@@ -1,0 +1,13 @@
+Titelsida
+Sammandrag/Abstract
+Innehållsförteckning
+Inledning
+Huvuddel
+Slutsats/Diskussion
+Källförteckning
+Bilagor
+
+knyt samman inledning och slutsats
+
+Nu:
+Related work, problemställning, exempel
