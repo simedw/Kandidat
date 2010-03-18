@@ -32,13 +32,35 @@ data StgState t = StgState
   { code  :: Expr  t
   , stack :: Stack t
   , heap  :: Map   t (Obj t)
-  , settings :: StgSettings
+  , settings :: StgSettings t
   }
 
-data StgSettings = StgSettings
+data StgSettings t = StgSettings
+  { globalInline :: Integer
+  , inlines  :: Map t Integer
+  , caseBranches :: Bool
+  }
 
- -- deriving Show
+  {-
 
+  I assumed it would be in the monad...
+
+defaultSettings :: StgSettings t
+defaultSettings = StgSettings (-1) M.empty False
+
+modifySettings :: (StgSettings t -> StgSettings t) -> StgM t () 
+modifySettings f = do
+    s <- get
+    put s { settings = f (settings s) }
+
+decrementGlobal :: StgM t ()
+decrementGlobal = modifySettings $ \s -> s { globalInline = globalInline s - 1 }
+
+decrementInline :: Ord t => t -> StgM t ()
+decrementInline f = modifySettings $ \s -> s 
+    { inlines = M.update (Just . (subtract 1)) f (inlines s)  }
+    
+    -}
 
 data StgMState t = StgMState
     { nameSupply :: [t]

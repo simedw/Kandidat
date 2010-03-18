@@ -134,7 +134,7 @@ atomExpr = EAtom  `fmap` (try signedIntOrFloat)
 
 
 stringParser :: P (Expr String)
-stringParser = (EAtom . AStr) <$> stringLiteral tok  
+stringParser = (EAtom . AStr) `fmap` stringLiteral tok  
 
 -- Parsec allows whitespace between - and the number, as in "- 1".
 -- We cannot tolerate this! "-1" is negative one, and "x - 1" is x minus 1.
@@ -152,12 +152,22 @@ opt :: P (Expr String)
 opt = do
     reserved tok "optimise"
     e <- expr
-    -- reserved tok "with" 
-    return $ EOpt e 
+    args <- with <|> return []
+    return $ EOpt e args
   where
     with    = reserved tok "with" >> braces tok (semiSep tok setting)
-    setting = undefined 
-
+    setting = do
+        s <- ident
+        case s of
+            "inlinings" -> Inlinings `fmap` expr
+            "noinlinings" -> return $ Inlinings $ EAtom $ ANum 0
+            "inline" -> do
+               f <- lident
+               e <- expr
+               return $ Inline f e
+            "noinline" -> flip Inline (EAtom $ ANum 0) `fmap` lident
+            "casebranches" -> return CaseBranches
+            _ -> unexpected $ s ++ " as argument in with"
 -- Singlevariable, application or constructor!
 -- with sugar: f e1 .. en
 app :: P (Expr String)

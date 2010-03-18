@@ -77,7 +77,12 @@ data Obj t    = OFun [t] (Expr t)
               | OCon t [Atom t]        
               | OThunk (Expr t)
               | OBlackhole
-              | OOpt (Atom t)
+              | OOpt (Atom t) [Setting t]
+  deriving (Data, Eq, Show, Typeable)
+
+data Setting t = Inlinings (Atom t)
+               | Inline t (Atom t)
+               | CaseBranches
   deriving (Data, Eq, Show, Typeable)
 
 data SValue t 

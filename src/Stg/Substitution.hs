@@ -17,7 +17,7 @@ test = ECase (var "xs")
              [BCon "Cons" ["y","ys"]
                 (ELet (Rec [("h",OThunk (ECall "f" [AVar "y"]))
                            ,("t",OThunk (ECall "map" [AVar "f", AVar "ys"]))
-                           ,("x",OOpt (AVar "function"))
+                           ,("x",OOpt (AVar "function") [])
                            ,("r",OCon "Cons" [AVar "h", AVar "t"])
                            ]) (var "r"))
              , BDef "x" (var "nil")
@@ -48,7 +48,7 @@ removeOPT :: Function String -> Function String
 removeOPT = transformBi f
   where
     f :: Obj String -> Obj String
-    f (OOpt x)   = OThunk (EAtom x)
+    f (OOpt x _) = OThunk (EAtom x)
     f x          = x
 
 

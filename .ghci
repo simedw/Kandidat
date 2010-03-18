@@ -1,2 +1,2 @@
+let fromRight (Right x) = x
 :set -isrc:test
-:let fromRight (Right x) = x

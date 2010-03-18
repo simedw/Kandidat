@@ -7,7 +7,7 @@ data Function t = Function t [t] (Expr t)
 
 data Expr t    = EAtom (Atom t)
                | ECall t [Expr t]
-               | EOpt (Expr t) [Settings t]
+               | EOpt (Expr t) [Setting t]
                | ECon t [Expr t]
                | ELet Bool [(t,[t],Expr t)] (Expr t)  -- True if recursive
                | ELam [t] (Expr t)
@@ -17,9 +17,10 @@ data Expr t    = EAtom (Atom t)
 isAtom (EAtom _) = True
 isAtom _         = False
 
-data Setting t = Inlinings Int
-               | Inline t Int
+data Setting t = Inlinings (Expr t)
+               | Inline t (Expr t)
                | CaseBranches
+  deriving Show
 
 data Atom t    = AVar t
                | ANum Integer
