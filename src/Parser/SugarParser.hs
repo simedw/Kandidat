@@ -8,6 +8,7 @@ import Text.ParserCombinators.Parsec.Prim
 import Data.Maybe
 import Data.Char
 import Control.Monad
+import Control.Applicative hiding ((<|>), many)
 
 import Parser.SugarTree
 
