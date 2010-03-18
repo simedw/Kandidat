@@ -37,6 +37,7 @@ omega stack heap code set = case code of
                 , settings = set
                 }
             )
+        Just (OCon _ _) -> psi stack heap t set
         _ -> irreducible
     ECase expr brs -> omega (CtOCase brs : stack) heap expr set
     ECall f args | isKnown heap (AVar f) && all (isKnown heap) args -> returnJust
