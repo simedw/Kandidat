@@ -101,12 +101,12 @@ desugarE (ST.EOpt expr with) = do
     -- Need to force optimising of all numbers, as in inline map (length xs),
     -- this is done via standard case-seq
     let thunk = AST.OThunk $ foldr    
-            (\atom e -> AST.ECase (AST.EAtom atom) (AST.BDef dummy e) 
-            (map fst sbinds)
+            (\atom e -> AST.ECase (AST.EAtom (AST.AVar atom)) [AST.BDef dummy e])
             (AST.EAtom (AST.AVar varOpt))
+            (map fst sbinds)
     return $ AST.mkELet False 
-                        (binds ++ sbinds ++ [(varOpt, opt),(varThunk, thunk])
-                        (AST.EAtom (AST.AVar vart))
+                        (binds ++ sbinds ++ [(varOpt, opt),(varThunk, thunk)])
+                        (AST.EAtom (AST.AVar varThunk))
   where
     desugarS :: Ord t => ST.Setting t -> Dia t (AST.Setting t, [(t, AST.Obj t)])
     desugarS (ST.Inlinings expr) = do

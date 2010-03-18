@@ -84,7 +84,7 @@ initialState funs = gc StgState
   { code  = getMain funs
   , stack = [CtPrint]
   , heap  = initialHeap funs
-  , settings = StgSettings
+  , settings = []
   }
      where gc = id
 
@@ -135,7 +135,7 @@ step st@(StgState {..}) =  step' $ st{stack = decTop stack}
            Just obj -> case obj of
                OThunk expr       -> rthunk st expr var
                _ | topIsO stack  -> psi stack heap var settings
-               OOpt   alpha      -> roptimise st alpha var
+               OOpt alpha sets   -> roptimise st alpha sets var
                _ | topUpd  stack -> rupdate st obj
                _ | topCase stack -> rret st
 --               _ | topContOpt stack -> rcontopt st
@@ -234,14 +234,16 @@ step st@(StgState {..}) =  step' $ st{stack = decTop stack}
           , st { code  = EAtom (AVar var)
           , stack = map CtArg atoms ++ stack
           , heap  = heap })
-      roptimise st@(StgState {..}) omeg alpha = returnJust
-          ( ROptimise
-          , st 
-              { code = EAtom omeg
-              , stack = CtOpt alpha : stack
-              , heap  = M.insert alpha OBlackhole heap
-              }
-          )
+      roptimise st@(StgState {..}) omeg sets alpha = 
+          returnJust
+              ( ROptimise
+              , st 
+                  { code = EAtom omeg
+                  , stack = CtOpt alpha : stack
+                  , heap  = M.insert alpha OBlackhole heap
+                  , settings = makeSettings heap sets : settings 
+                  }
+              )
       roptpap st@(StgState {..}) var atoms =
           case M.lookup var heap of
               Nothing -> error $ "OPTPAP: var not in heap: " -- ++ var

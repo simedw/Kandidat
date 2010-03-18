@@ -32,7 +32,7 @@ data StgState t = StgState
   { code  :: Expr  t
   , stack :: Stack t
   , heap  :: Map   t (Obj t)
-  , settings :: StgSettings t
+  , settings :: [StgSettings t]
   }
 
 data StgSettings t = StgSettings
@@ -41,12 +41,34 @@ data StgSettings t = StgSettings
   , caseBranches :: Bool
   }
 
-  {-
+defaultOptSettings :: StgSettings t
+defaultOptSettings = StgSettings (-1) M.empty False
+
+decrementGlobal :: StgSettings t -> StgSettings t
+decrementGlobal s = s { globalInline = globalInline s - 1 }
+
+decrementInline :: Ord t => t -> StgSettings t -> StgSettings t
+decrementInline f s = s 
+    { inlines = M.update (Just . (subtract 1)) f (inlines s)  }
+
+makeSettings :: Ord t => Heap t -> [Setting t] -> StgSettings t
+makeSettings h = foldr
+    (\setting s -> case setting of
+          Inlinings a  -> s { globalInline = lookupInteger a }
+          Inline f a   -> s { inlines = M.insert f (lookupInteger a) (inlines s) }
+          CaseBranches -> s { caseBranches = True } )
+    defaultOptSettings
+  where
+    lookupInteger (ANum x) = x
+    lookupInteger (AVar v) = case M.lookup v h of
+        Just (OCon _ [ANum x]) -> x
+        Nothing -> error "makeSettings, invalid arguments to optimise with"
+
+
+{-
 
   I assumed it would be in the monad...
 
-defaultSettings :: StgSettings t
-defaultSettings = StgSettings (-1) M.empty False
 
 modifySettings :: (StgSettings t -> StgSettings t) -> StgM t () 
 modifySettings f = do
@@ -54,7 +76,6 @@ modifySettings f = do
     put s { settings = f (settings s) }
 
 decrementGlobal :: StgM t ()
-decrementGlobal = modifySettings $ \s -> s { globalInline = globalInline s - 1 }
 
 decrementInline :: Ord t => t -> StgM t ()
 decrementInline f = modifySettings $ \s -> s 

@@ -95,12 +95,7 @@ instance FV Obj where
     freeVars (OCon c as)     = freeVarsList as
     freeVars (OThunk e)      = freeVars e
     freeVars (OBlackhole)    = S.empty
-    freeVars (OOpt a ss)     = freeVars a `S.union` freeVarsList ss
-
-instance FV Setting where
-    freeVars (Inlinings a)   = freeVars a
-    freeVars (Inline x as)   = S.singleton x `S.union` freeVars as
-    freeVars CaseBranches    = S.empty
+    freeVars (OOpt a _)      = freeVars a 
 
 instance FV Cont where
     freeVars (CtCase brs)           = freeVarsList brs

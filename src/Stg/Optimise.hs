@@ -25,7 +25,7 @@ isKnown _ _        = True
     
 
 omega :: (Ord t, Data t) => Stack t -> Heap t -> Expr t -> 
-                            StgSettings -> StgM t (Maybe (Rule, StgState t))
+                            [StgSettings t] -> StgM t (Maybe (Rule, StgState t))
 omega stack heap code set = case code of
     EAtom a@(AVar t) | isKnown heap a -> case M.lookup t heap of
         Just (OThunk e) -> returnJust
@@ -76,7 +76,7 @@ omega stack heap code set = case code of
     irreducible = irr stack heap code set
 
 beta :: (Ord t, Data t) => Stack t -> Heap t -> 
-                           StgSettings -> StgM t (Maybe (Rule, StgState t))
+                           [StgSettings t] -> StgM t (Maybe (Rule, StgState t))
 beta stack@(CtOBranch e brdone brleft:ss) h set = case brleft of
     BDef x e   :_ -> omega stack h e set
     BCon c as e:_ -> omega stack h e set
@@ -84,10 +84,11 @@ beta stack@(CtOBranch e brdone brleft:ss) h set = case brleft of
 
 
 irr :: (Ord t, Data t) => Stack t -> Heap t -> Expr t -> 
-                          StgSettings -> StgM t (Maybe (Rule, StgState t))
+                          [StgSettings t] -> StgM t (Maybe (Rule, StgState t))
 irr (CtOLetThunk x e : ss) h e' set = omega (CtOLetObj x (OThunk e') : ss) h e set
--- irr (CtOCase brs     : ss) h e  = irr ss h (ECase e brs)
-irr (CtOCase brs     : ss) h e  set = beta (CtOBranch e [] brs:ss) h set
+irr (CtOCase brs     : ss) h e  set = if caseBranches (head set) 
+                                          then beta (CtOBranch e [] brs:ss) h set
+                                          else irr ss h (ECase e brs) set
 irr (CtOLetObj x o   : ss) h e  set = irr ss h (ELet (NonRec x o) e) set 
 irr (CtOFun xs a     : ss) h e  set = do 
     let h' = M.insert a (OFun xs e) h 
@@ -106,7 +107,7 @@ irr (CtOBranch e brdone (BCon c as _:brleft) : ss) h e' set =
         beta (CtOBranch e (brdone ++ [BCon c as e']) brleft:ss) h set
 
 psi :: (Ord t, Data t) => Stack t -> Heap t -> t -> 
-                          StgSettings -> StgM t (Maybe (Rule, StgState t)) 
+                          [StgSettings t] -> StgM t (Maybe (Rule, StgState t)) 
 psi (CtOLetThunk t e : ss) h v set = omega ss h (subst t (AVar v) e) set 
 psi (CtOLetObj t obj : ss) h v set = irr ss h (ELet (NonRec t obj) (EAtom (AVar v))) set
 psi (CtOCase brs     : ss) h v set = returnJust $ 
