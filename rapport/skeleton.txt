@@ -1,11 +1,83 @@
-Titelsida
-Sammandrag/Abstract
-Innehållsförteckning
-Inledning
-Huvuddel
-Slutsats/Diskussion
+= Titelsida =
+    * Titel
+    * Författare
+    * Kurs, institution
+    * Datum
+
+= Sammandrag/Abstract =
+    * Både på svenska och engelska
+    * Kortfattat:
+        * Syftet <optimering under korningstid>
+        * Problemformulering
+        * Slutsatser/Resultat <[..]vilket har givit mellan 1.1-2.4 ggr speedup[..]>
+        
+
+= Innehållsförteckning =
+    * ...
+
+= Förkortningslista =
+    * Innehåller förkortningar samt påhittade symboler
+        * STG <Spineless Tagless G-machine>
+        * phi <funktion som arbetar på..>
+        
+= Inledning =
+    * Syfte: <Vi optimerar kod under körningstid>
+        * Bakgrund, om optimering, 
+        * Mål
+        * Vad har andra personer gjort
+            * Statiska optimeringar
+            * Runtime (JIT)
+            * 
+    * Vad är det nya med vårt sätt.
+        * Varför Runtime
+        * Lat funktionellt språk
+    * Vad är svårt med optimer under körningstid (?)
+    * Avgränsningar t.ex typechecker
+
+= STG = {kommer ev att mergat med någon annan pkt}
+    * Varför STG
+    * Hur fungerar STG
+
+= Teori del = {To be or not to be}
+    * Opertional semantics
+    * Hur fungerar STG
+
+= Huvuddel =
+/*
+Står inte mycket vettigt i text så här är våran tolkning
+*/
+    * Vårt språk
+        * Varför ett nytt språk?
+        * Syntax
+        * Steg i parsning och desugaring
+            * lambda lifting
+        * Pros and cons
+            * Liknar riktiga programmeringsspråk (Haskell)
+        * Funktionsanrop
+            * Substitution
+            * Call stack 
+    * Vad gör optimise
+        * Regler, Transformationer
+    * Våran tolk
+    * Arbetsmetodik
+        * Git
+        * Gobby projektor
+        * Planneringsrapport
+        * Veckliga möten
+        * Iterativ process
+        * Test
+            * QuickCheck
+            * Criterion
+        
+    * 
+= Slutsats/Diskussion =
+    * Har vi uppnått vårat mål
+    * Hur förehåller sig den mot statisk optimering
+    * Skulle den gå att implementera i en kompilator
+    * Liknande 
 Källförteckning
 Bilagor
+    * Ev kod(-delar)
 
 knyt samman inledning och slutsats
 

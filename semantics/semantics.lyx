@@ -17,14 +17,22 @@
 
 \graphics default
 \paperfontsize default
+\spacing single
 \use_hyperref false
-\papersize default
-\use_geometry false
+\papersize a4paper
+\use_geometry true
 \use_amsmath 1
 \use_esint 1
 \cite_engine basic
 \use_bibtopic false
 \paperorientation portrait
+\leftmargin 0cm
+\topmargin 0cm
+\rightmargin 0cm
+\bottommargin 0cm
+\headheight 0cm
+\headsep 0cm
+\footskip 0cm
 \secnumdepth 3
 \tocdepth 3
 \paragraph_separation indent
@@ -36,36 +44,258 @@
 \tracking_changes false
 \output_changes false
 \author "" 
+\author "" 
 \end_header
 
 \begin_body
 
 \begin_layout Standard
-\begin_inset Formula $\omega;\: s;\: H[\omega\mapsto OPT(\alpha)]\quad\Rightarrow\quad\alpha;\: OPT\:\alpha:s;\: H[\omega\mapsto BLACKHOLE]$
-\end_inset
-
- (OPTIMISE)
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula $\chi;\; OPT\;\alpha:s;\ H[\chi\mapsto PAP(f\; a_{1}\cdots a_{n}),\; f\mapsto FUN(x_{1}\cdots x_{m}\rightarrow e)]\quad\Rightarrow\Omega_{\alpha,s,H}(FUN(x_{n+1}\cdots x_{m}\rightarrow e[a_{1}/x_{1}\cdots a_{n}/x_{n}])$
+\begin_inset FormulaMacro
+\newcommand{\mc}[3]{#1;#2;#3}
 \end_inset
 
 
 \end_layout
 
 \begin_layout Standard
-\begin_inset Formula $\chi;\; ContinueOPT\;\alpha:s;\ H[\chi\nrightarrow THUNK(e'),\ \alpha\mapsto FUN(\bar{x}\rightarrow e)\quad\Rightarrow\quad\Omega_{\alpha,s,H}(FUN(\bar{x}\rightarrow e)))$
+\begin_inset FormulaMacro
+\newcommand{\OMEGA}[3]{\Omega_{#1;#2}(#3)}
 \end_inset
 
 
 \end_layout
 
 \begin_layout Standard
-\begin_inset Formula $\Omega_{\alpha;s;H}(FUN(\bar{x}\rightarrow\mathtt{case}\ f\ \bar{k}\ \mathtt{of}\ brs)\quad\Rightarrow\quad f\ \bar{k};\ ContinueOPT\ \alpha:s\;;\ H[\alpha\mapsto FUN(\bar{x}\rightarrow\mathtt{case}\ t\ \mathtt{of}\ brs),\ t\mapsto THUNK(f\ \bar{k})]$
+\begin_inset FormulaMacro
+\newcommand{\PSI}[3]{\Psi_{#1\,;\,#2}(#3)}
 \end_inset
 
- (OPTKNOWNCALL)
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\IRR}[3]{\Phi_{#1\,;\,#2}(#3)}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\red}[2]{#1\Rightarrow#2}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\lred}[2]{\begin{array}{c}
+ #1\\
+\Rightarrow#2\end{array}}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\heap}[2]{H[#1\mapsto#2]}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\nheap}[2]{H[#1\nrightarrow#2]}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\heapp}[4]{H[#1\mapsto#2\,;\,#3\mapsto#4]}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\OPT}[1]{OPT(#1)}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\PAP}[2]{PAP(#1\,#2)}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\FUN}[2]{FUN(#1\to#2)}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\THUNK}[1]{THUNK\,#1}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\cOPT}[2]{OPT\,#1\,:\,#2}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\cOFUN}[3]{OFUN\,(#1\to\bullet)_{#2}\,:\,#3}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\oCase}[2]{O\mathtt{case}\,\bullet\,\mathtt{of}\,#1\,:\,#2}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\oLet}[3]{O\mathtt{let\,}#1=THUNK\,\bullet\,\mathtt{in}\,#2\,:\,#3}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\oLetObj}[3]{O\mathtt{let\,}#1=#2\,\mathtt{in}\,\bullet\,:\,#3}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\oFun}[3]{OFUN\,#1\,#2\,:\,#3}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\oInline}[1]{OInlining\,:\,#1}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\BH}{BLACKHOLE}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\eCase}[2]{\mathtt{case}\,#1\,\mathtt{of}\,#2}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\eLet}[3]{\mathtt{let}\,#1=#2\,\mathtt{in}\,#3}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+New rules
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \begin{align*}
+\mc as{\heap a{\OPT t}} & \Rightarrow & \mc t{\cOPT{a\,}s}{\heap a{\BH}}\\
+\mc x{\cOPT as}{\heapp x{\PAP f{a_{1}\cdots a_{n}}}f{\FUN{x_{1}\cdots x_{m}}e}} & \Rightarrow & \OMEGA{\cOFUN{x_{n+1}\cdots x_{m}}as}H{e[a_{1}/x_{1}\cdots a_{n}/x_{n}]}\\
+\mc v{O.\star\,:\, s}{\nheap v{\THUNK e}} & \Rightarrow & \PSI{O.\star\,:\, s}Hv\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Omega:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \begin{align*}
+\OMEGA sH{\eCase e{brs}} & \Rightarrow & \OMEGA{\oCase{brs}s}He\\
+\OMEGA sH{f\,\bar{k}} & \Rightarrow & \mc{f\,\bar{k}}sH\\
+\OMEGA sH{f\,\bar{x}\, k\,\bar{y}} & \Rightarrow & \mc{f\,\bar{x}\, k\,\bar{y}}{\oInline s}H\\
+\OMEGA sH{\eLet x{\THUNK e}{e'}} & \Rightarrow & \OMEGA{\oLet x{e'}s}He\\
+\OMEGA s{\nheap x{\,}}{\bullet} & \Rightarrow & \IRR sH{\bullet}\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Irr:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \begin{align*}
+\IRR{\oLet xes}H{e'} & \Rightarrow & \OMEGA{\oLetObj x{\THUNK{e'}}s}He\\
+\IRR{\oCase{brs}s}He & \Rightarrow & ?\\
+\IRR{\oLetObj x{OBJ}s}He & \Rightarrow & \IRR sH{\eLet x{OBJ}e}\\
+\IRR{\cOFUN{\bar{x}}{\alpha}s}He & \Rightarrow & \mc{\alpha}s{\heap{\alpha}{\FUN{\bar{x}}e}}\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Psi:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \begin{align*}
+\PSI{\oLet xes}Hv & \Rightarrow & \PSI sH{e[v/x]}\\
+\PSI{\oLetObj x{OBJ}s}Hv & \Rightarrow & \IRR sH{\eLet x{OBJ}v}\\
+\PSI{\oCase{brs}s}Hv & \Rightarrow & \OMEGA sH{\text{instantiate correct brs with v}}\end{align*}
+
+\end_inset
+
+
 \end_layout
 
 \end_body
