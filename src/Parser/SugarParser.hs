@@ -18,7 +18,7 @@ operators = ["->", "=",";","\\",".",".."]
 
 -- The keywords
 keywords :: [String]
-keywords = ["let","letrec","in","case","of","optimise"]
+keywords = ["let","letrec","in","case","of","optimise","with"]
 
 -- Creating the lexer
 tok :: TokenParser st
@@ -134,9 +134,7 @@ atomExpr = EAtom  `fmap` (try signedIntOrFloat)
 
 
 stringParser :: P (Expr String)
-stringParser = do 
-            s <- stringLiteral tok
-            return (EAtom (AStr s))
+stringParser = (EAtom . AStr) <$> stringLiteral tok  
 
 -- Parsec allows whitespace between - and the number, as in "- 1".
 -- We cannot tolerate this! "-1" is negative one, and "x - 1" is x minus 1.
@@ -149,17 +147,16 @@ signedIntOrFloat = do
         Left  n -> ANum $ (fst sign) n
         Right f -> ADec $ (snd sign) f
 
--- for debugging :)
-fromRight :: Either a b -> b
-fromRight (Right x) = x
-fromRight _ = error "fromRight: isLeft"
-
 -- optimisation expression
 opt :: P (Expr String)
 opt = do
     reserved tok "optimise"
     e <- expr
+    -- reserved tok "with" 
     return $ EOpt e 
+  where
+    with    = reserved tok "with" >> braces tok (semiSep tok setting)
+    setting = undefined 
 
 -- Singlevariable, application or constructor!
 -- with sugar: f e1 .. en

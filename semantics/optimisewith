@@ -1,0 +1,47 @@
+    Optimise with - settings
+
+inlinings (n : Int)
+    Global inlinings, during optimisation at most n inlinings will be made.
+    Default: infinite (represented by a negative number)
+
+noinlinings
+    No functions are inlined unless explicitly stated.
+    Alias for inlinings 0
+    Default: off
+    Suggestion: This does not affect primitive functions.
+
+inline (f : Function) [n : Int]
+    Inline the function f, at most n times, or infinite times if n is 
+    unspecified, without affecting the global inlining count. 
+    This can be useful to restrict the amount of unrolling 
+    for a function, or to toggle inlining on for a function if inlining
+    is turned off.
+
+noinline (f : Function)
+    Do not inline function f.
+    Alias for inline f 0.
+
+casebranches
+    Optimise case branches. Breaks semantics.
+    Default: off
+
+
+Examples:
+    
+    applyOnList xs = optimise \f. map f xs with
+                        { inline map (length xs) };
+                        
+    filterShortList p xs = optimise filter p xs with 
+                        { inline filter 10
+                        ; casebranches
+                        };
+                       
+    optNo f n = optimize f with { noinline f
+                                ; casebranches
+                                ; inlinings n
+                                }
+
+    onlyOpt f n = optimize f with { noinlinings
+                                  ; inline f n 
+                                  };
+
