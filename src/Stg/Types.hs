@@ -31,12 +31,32 @@ data Cont t
 type Stack t = [Cont t]
 
 
-data StgState t = StgState
-  { code  :: Expr  t
-  , stack :: Stack t
-  , heap  :: Map   t (Obj t)
-  , settings :: [StgSettings t]
-  }
+data StgState t 
+  = StgState
+      { code  :: Expr  t
+      , stack :: Stack t
+      , heap  :: Map   t (Obj t)
+      , settings :: [StgSettings t]
+      }
+  | OmegaState
+      { code  :: Expr  t
+      , stack :: Stack t
+      , heap  :: Map   t (Obj t)
+      , settings :: [StgSettings t]
+      }
+  | PsiState
+      { code  :: Expr t
+      , stack :: Stack t
+      , heap  :: Map   t (Obj t)
+      , settings :: [StgSettings t]
+      }
+  | IrrState
+      { code  :: Expr  t
+      , stack :: Stack t
+      , heap  :: Map   t (Obj t)
+      , settings :: [StgSettings t]
+      }
+  
 
 data StgSettings t = StgSettings
   { globalInline :: Integer

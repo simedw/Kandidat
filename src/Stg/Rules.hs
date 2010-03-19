@@ -28,6 +28,9 @@ data Rule
   | RPrintVal
   | RPrintFun
   | RPrintCont
+  | ROmega
+  | RPsi
+  | RIrr
  deriving (Show, Eq, Ord, Read)
 
 data OptRule

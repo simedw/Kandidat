@@ -50,10 +50,10 @@ data BreakPoint
     deriving (Eq, Show)
 
 evalBP :: BreakPoint -> Result -> Bool
-evalBP bp (rule, StgState {..}) = case bp of
+evalBP bp (rule, _) = case bp of
     AtRule r -> r == rule
-    AtCall id -> case code of 
-        ECall fid _ -> id == fid
+    --AtCall id -> case code of 
+        --ECall fid _ -> id == fid
 
 stgState :: Bool -> Bool -> Bool -> StgState String -> String
 stgState sc ss sh st@(StgState {code, stack, heap}) = 
@@ -129,7 +129,7 @@ loop :: StgState String -> InputT (StateT InterpreterState IO) ()
 loop originalState  = do
     minput <- getInputLine "% " 
     set <- lift $ gets settings
-    let st@(StgState {..}) = (if toGC set then gc else id) originalState
+    let st = (if toGC set then gc else id) originalState
     case minput of
         Nothing -> return ()
         Just xs -> case words xs of
@@ -217,20 +217,20 @@ loop originalState  = do
             lift . modify $ \set -> set { breakPoints = AtCall f : breakPoints set }
         _ -> outputStrLn "Sirisly u want m3 too parse that?"
 
-    printSummary st@(StgState {..}) = do
+    printSummary st = do
         hist <- lift (gets history)
         case hist of
             [] -> do
                 outputStrLn $ "Rule: " ++ show RInitial
-                printCode code
-                printStack stack
-                outputStrLn $ "heap("  ++ show (M.size heap) ++ ")"
+                printCode  $ code  st
+                printStack $ stack st
+                outputStrLn $ "heap("  ++ show (M.size $ heap st) ++ ")"
                 loop st
-            (rule, StgState {..}) : _ -> do
+            (rule, st) : _ -> do
                 outputStrLn $ "Rule: " ++ show rule
-                printCode code
-                printStack stack
-                outputStrLn $ "heap("  ++ show (M.size heap) ++ ")"
+                printCode   $ code  st
+                printStack  $ stack st
+                outputStrLn $ "heap("  ++ show (M.size $ heap st) ++ ")"
                 loop st
                 
 

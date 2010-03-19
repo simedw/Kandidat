@@ -39,8 +39,8 @@ test = ECase (var "xs")
              ]
 
 mkGC :: forall t . Ord t => [t] -> StgState t -> StgState t
-mkGC untouchable st@(StgState {..}) = 
-    let initial = freeVars code `S.union` freeVarsList stack
+mkGC untouchable st = 
+    let initial = freeVars (code st) `S.union` freeVarsList (stack st)
     in  st{ heap = heapify $ gcStep (initial`S.union` S.fromList untouchable) initial}
   where
     gcStep :: Set t -> Set t -> Set t
@@ -49,13 +49,13 @@ mkGC untouchable st@(StgState {..}) =
                     let acc' = ( S.unions 
                               $ map (\x -> freeVars 
                                     $ fel x 
-                                    $ M.lookup x heap) 
+                                    $ M.lookup x (heap st)) 
                               $ S.toList s
                               ) 
                     in  gcStep (acc' `S.union` acc) (acc' `S.difference` acc)
 
     heapify :: Set t -> Heap t
-    heapify s = M.filterWithKey (\k a -> S.member k s) heap
+    heapify s = M.filterWithKey (\k a -> S.member k s) (heap st)
 
     fel :: t -> Maybe (Obj t) -> Obj t
     fel x t = maybe (trace ("GC: couldn't find: " ++ unsafeCoerce x) OBlackhole) id t

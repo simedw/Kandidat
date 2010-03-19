@@ -110,10 +110,14 @@ initialHeap = M.fromList . map (\(Function name obj) -> (name, obj))
 
 
 step :: (Ord t, Data t, Show t) => StgState t -> StgM t (Maybe (Rule, StgState t))
-step st@(StgState {..}) =  step' $ st{stack = decTop stack}
+step st@(OmegaState {..}) = omega stack heap code settings
+step st@(IrrState {..})   = irr stack heap code settings
+step st@(PsiState {..})   = case code of
+    EAtom (AVar code) -> psi stack heap code settings
+step st@(StgState {..})   = step' $ st{stack = decTop stack}
   where
    step' st'@(StgState {..}) = case code of
-       _ | topOInstant stack -> omega (drop 1 stack) heap code settings -- for inlining
+       _ | topOInstant stack -> omega' ROmega (drop 1 stack) heap code settings -- for inlining
        ECase expr branch     -> case expr of
            EAtom (AVar var)  ->
                case M.lookup var heap of
@@ -252,11 +256,11 @@ step st@(StgState {..}) =  step' $ st{stack = decTop stack}
                   let (argsA, argsL) = splitAt (length atoms) args
                       CtOpt alpha : stack' = stack
                       e' = substList argsA atoms e
-                  in omega (CtOFun argsL alpha:stack') heap e' settings
+                  in omega' ROmega (CtOFun argsL alpha:stack') heap e' settings
               _ -> error "OPTPAP: pap doesn't point to FUN"
       roptfun st@(StgState {..}) args expr = do
           let CtOpt alpha : stack' = stack
-          omega (CtOFun args alpha : stack') heap expr settings
+          omega' ROmega (CtOFun args alpha : stack') heap expr settings
 {-  
       rcontopt st@(StgState {..}) = do
           let CtContOpt alpha : stack' = stack
