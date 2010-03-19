@@ -233,18 +233,18 @@ loop originalState  = do
                 loop st
                 
 
-    loopView st@(StgState code stack heap set) xs = do
+    loopView st xs = do
         case xs of
-            ["h"]    -> printHeap heap
-            ["heap"] -> printHeap heap
-            "heap":fs -> mapM_ (printHeapLookup heap) fs
-            "h":fs -> mapM_ (printHeapLookup heap) fs
+            ["h"]    -> printHeap (heap st)
+            ["heap"] -> printHeap (heap st)
+            "heap":fs -> mapM_ (printHeapLookup (heap st)) fs
+            "h":fs -> mapM_ (printHeapLookup (heap st)) fs
             ["set"]  -> printSetting =<< lift (gets settings)
             ["settings"] -> printSetting =<< lift (gets settings)
-            ["s"]     -> printStack stack
-            ["stack"] -> printStack stack
-            ["c"]     -> printCode code
-            ["code"]  -> printCode code
+            ["s"]     -> printStack (stack st)
+            ["stack"] -> printStack (stack st)
+            ["c"]     -> printCode (code st)
+            ["code"]  -> printCode (code st)
             ["rules"] -> printRules
             ["sum"]   -> printSummary st
             ["bp"]    -> do
