@@ -146,7 +146,7 @@ mkPretty (Syntax {..})  = PPrinters {..}
         OCon name args -> object "CON" <+> mparens (conVar name 
                                                  <+> hsep (map ppAtom args))
         OThunk e -> object "THUNK" <+> mparens (ppExpr e)
-        OOpt   a ss -> object "OPT" <+> mparens (ppAtom a) <+> text (show ss)
+        OOpt   a set -> object "OPT" <+> mparens (ppAtom a) <+> text (show set)
         OBlackhole -> object "BLACKHOLE"
 
     ppSVal :: SValue t -> Doc

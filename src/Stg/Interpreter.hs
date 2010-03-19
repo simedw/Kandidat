@@ -56,6 +56,7 @@ topIsO (cont : _) = case cont of
     CtOLetObj _ _   -> True
     CtOLetThunk _ _ -> True
     CtOBranch{}     -> True
+    CtOApp _        -> True
     _               -> False
 topIsO _          = False
 
@@ -339,7 +340,7 @@ force st@(StgState {..}) = do
 -- start the force evaluation
 -- actually quite ugly
 runForce :: Input -> [Function String] -> String
-runForce inp funs = evalState (go st) initialStgMState
+runForce inp funs = runStgM (go st) initialStgMState
   where
     gc = mkGC ["$True", "$False"]
     st = gc $ initialState (createGetFuns inp ++ funs)
@@ -351,7 +352,7 @@ runForce inp funs = evalState (go st) initialStgMState
  
 
 eval :: Input -> [Function String] -> [(Rule, StgState String)]
-eval inp funs = (RInitial, st) : evalState (go st) initialStgMState
+eval inp funs = (RInitial, st) : runStgM (go st) initialStgMState
   where
     gc = mkGC ["$True", "$False"]
     st = gc $ initialState (createGetFuns inp ++ funs)

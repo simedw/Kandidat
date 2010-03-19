@@ -1,4 +1,4 @@
-main = listSeq (map (optimise (exp getInt)) getIntList);
+main = listSeq (map (optimise exp getInt with { inline exp (head getIntList) }) getIntList);
 
 exp n x = case n == 0 of
     { True  -> 1

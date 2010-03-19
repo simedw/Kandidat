@@ -2,11 +2,13 @@
 module Stg.Types where
 
 import "mtl" Control.Monad.State
+import "mtl" Control.Monad.Writer
 
 import Data.Map(Map)
 import qualified Data.Map as M
 
 import Stg.AST
+import Stg.Rules
 
 type Heap  t = Map t (Obj t)
 
@@ -18,6 +20,7 @@ data Cont t
   | CtPrintCon t [SValue t] [Atom t]
   | CtOpt t
   | CtOFun  [t] t
+  | CtOApp [Atom t]
   | CtOCase [Branch t]
   | CtOLetObj t (Obj t)
   | CtOLetThunk t (Expr t)
@@ -41,6 +44,19 @@ data StgSettings t = StgSettings
   , caseBranches :: Bool
   }
 
+canInline :: Ord t => t -> [StgSettings t] -> Bool
+canInline v (set@StgSettings { inlines = inlines, globalInline = glob } : sets) 
+    = case M.lookup v inlines of
+        Just   0 -> False
+        Just   n -> True
+        Nothing -> glob /= 0
+        
+inline :: Ord t => t -> [StgSettings t] -> [StgSettings t]
+inline v (set@StgSettings { inlines = inlines, globalInline = glob } : sets)
+    = case M.member v inlines of
+        True  -> decrementInline v set : sets
+        False -> decrementGlobal set : sets
+        
 defaultOptSettings :: StgSettings t
 defaultOptSettings = StgSettings (-1) M.empty False
 
@@ -64,31 +80,27 @@ makeSettings h = foldr
         Just (OCon _ [ANum x]) -> x
         Nothing -> error "makeSettings, invalid arguments to optimise with"
 
-
-{-
-
-  I assumed it would be in the monad...
-
-
-modifySettings :: (StgSettings t -> StgSettings t) -> StgM t () 
-modifySettings f = do
-    s <- get
-    put s { settings = f (settings s) }
-
-decrementGlobal :: StgM t ()
-
-decrementInline :: Ord t => t -> StgM t ()
-decrementInline f = modifySettings $ \s -> s 
-    { inlines = M.update (Just . (subtract 1)) f (inlines s)  }
-    
-    -}
-
 data StgMState t = StgMState
     { nameSupply :: [t]
     , mkCons     :: String -> t
     }
 
-type StgM t = State (StgMState t)
+type StgM t a = StateT (StgMState t) (Writer [String]) a
+
+unnest :: ((a, b), c) -> (a, b, c)
+unnest    ((a, b), c) =  (a, b, c)
+
+runStgM :: StgM t a -> StgMState t -> a
+runStgM m s= fst . runWriter $ evalStateT m s
+
+ruleStgM :: StgM t a -> StgMState t -> (a, StgMState t, [String])
+ruleStgM m s = unnest . runWriter $ runStateT m s
+            
+traceStgM :: StgM t a -> StgMState t -> [String]
+traceStgM m s = snd . runWriter $ runStateT m s
+
+output :: String -> StgM t ()
+output s = tell [s]
 
 -- | Create a fresh unbound variable
 newVar :: StgM t t

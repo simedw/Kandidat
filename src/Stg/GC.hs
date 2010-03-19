@@ -110,5 +110,6 @@ instance FV Cont where
     freeVars (CtOLetObj x obj)      = freeVars obj 
     freeVars (CtOLetThunk t expr)   = freeVars expr `S.difference` S.singleton t
     freeVars (CtOInstant _)         = S.empty
+    freeVars (CtOApp as)            = freeVarsList as
     
 

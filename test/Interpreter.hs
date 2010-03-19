@@ -87,8 +87,8 @@ data InterpreterState = IS
     , stgm     :: StgMState String
     , history  :: [Result]
     , breakPoints  :: [BreakPoint]
+    , trace    :: [String]
     }
-
 
 -- note that PrintCt must be the first thing on the stack
 forceInterpreter :: Settings -> FilePath -> IO String
@@ -121,6 +121,7 @@ testInterpreter set file = do
             , stgm     = initialStgMState
             , history  = []
             , breakPoints = []
+            , trace    = []
             } 
       Left  r  -> do putStrLn $ "fail: " ++ show r
 
@@ -137,14 +138,16 @@ loop originalState  = do
             ":v" : xs    -> loopView st xs
             ":view" : xs -> loopView st xs
             ":bp"  : xs -> addbp xs >> loop st
+            [":bpo"] -> addbp ["rule", "ROptimise"] >> loop st
+            [":bpd"] -> addbp ["rule", "ROpt", "ORDone"] >> loop st
             [":back", num] -> case reads num of
                 ((x, "") : _) -> evalStep (negate x) st
                 _ -> loop st
             [":step", num] -> case reads num of
                 ((x, "") : _) -> evalStep x st
                 _ -> loop st
-            [":force!"] -> forcing st >> loop st
-            [":force", var] -> forceit st var >> loop st
+  --          [":force!"] -> forcing st >> loop st
+  --          [":force", var] -> forceit st var >> loop st
             [":h"] -> printHelp >> loop st
             [":help"] -> printHelp >> loop st
             input -> do
@@ -157,7 +160,7 @@ loop originalState  = do
     bp [] _ = Nothing
     bp (b : bs) r | evalBP b r = Just b
                   | otherwise  = bp bs r
-    
+    {-
     forcing st = do
         stg <- lift $ gets stgm
         outputStrLn . fst $ runState (force st) stg
@@ -171,11 +174,7 @@ loop originalState  = do
                 case s of
                     Nothing -> outputStrLn "Something bad has happend"
                     Just x  -> outputStrLn x
-            {- do (s,state') <- liftIO $ catch 
- (return $ runState (force $ st {code = (EAtom x)} ) stg)) 
- (\e -> putStrLn "Bla... ") (undefined)
-                outputStrLn s
-            -}
+    -}
     evalStep n s | n == 0 = printSummary s
                  | n < 0  = do
         hist <- lift . gets $ history
@@ -187,21 +186,25 @@ loop originalState  = do
                  | otherwise = do
         stg <- lift $ gets stgm
         bps <- lift . gets $ breakPoints
-        case runState (step s) stg of
-            (Nothing, stg') -> do
+        case ruleStgM (step s) stg of
+            (Nothing, stg', t) -> do
                 outputStrLn "No Rule applied"
+                setTrace t
                 loop s
-            (Just res@(_, s'), stg') | Just b <- bp bps res -> do
+            (Just res@(_, s'), stg', t) | Just b <- bp bps res -> do
                 addHistory res
+                setTrace t
                 lift . modify $ \set -> set { stgm = stg' }
                 outputStrLn $ "BreakPoint! " ++ show b
                 printSummary s'
                                      | otherwise -> do
                 addHistory res
+                setTrace t
                 lift . modify $ \set -> set { stgm = stg' }
                 evalStep (n - 1) s'
                 
     addHistory res = lift . modify $ \set -> set { history = res : history set }
+    setTrace t     = lift . modify $ \set -> set { trace = trace set ++ t }
 
     addbp xs = case xs of
         "rule": rs -> case reads (unwords rs) of 
@@ -241,6 +244,7 @@ loop originalState  = do
             ["settings"] -> printSetting =<< lift (gets settings)
             ["s"]     -> printStack stack
             ["stack"] -> printStack stack
+            ["trace"] -> printTrace
             ["c"]     -> printCode code
             ["code"]  -> printCode code
             ["rules"] -> printRules
@@ -288,6 +292,10 @@ loop originalState  = do
         outputStrLn $ "number of rules: " ++ show (length ruls)
         outputStrLn . show . map (\ list -> (head list, length list))
                     . group . sort . map fst $ ruls 
+
+    printTrace = do
+        stg <- lift $ gets trace
+        forM_ stg (outputStrLn . show)
 
     printHelp = do
         mapM_ outputStrLn
