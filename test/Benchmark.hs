@@ -25,13 +25,14 @@ import qualified Parser.Diabetes as D
 
 benchmarklist :: [(String, [(Integer,[Integer])])]
 benchmarklist = 
-    [ "OptTest9.hls" --> [(0,list)] 
-    , "OptTest1.hls" --> [(0,[])]
-    , "OptTest2.hls" -->  [(0,list)]
-    , "OptTest3.hls" -->  [(0,list)]
+    [ -- "OptTest9.hls" --> [(0,list)] 
+--    , "OptTest1.hls" --> [(0,[])]
+--    , "OptTest2.hls" -->  [(0,list)]
+--    , "OptTest3.hls" -->  [(0,list)]
   --  , "OptTest4.hls" --> [(0,list)]   -- matrix 4 x 4
-    ,"OptTest6.hls" -->   [(0,list)]
-    , "RSA.hls"      -->  [(0,list)]
+--    "OptTest6.hls" -->   [(0,list)]
+    "OptTest12.hls" -->   [(101,list)]
+--    , "RSA.hls"      -->  [(0,list)]
     ]
  where
    list  = [1..20]
@@ -53,7 +54,7 @@ main = do
         [ bgroup name  [bench 
             (show (i,length li) ++ "[Optimise: " ++ show optimize++"]") $ 
             nf (force (settingsWith input optimize))  (opt optimize code)
-            | input@(i,li) <- allinput , optimize <- [False,True] ] 
+            | input@(i,li) <- allinput , optimize <- [True,False] ] 
           | (name,allinput,code) <- indata]
   
   where
