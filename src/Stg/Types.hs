@@ -105,23 +105,15 @@ data StgMState t = StgMState
     , mkCons     :: String -> t
     }
 
-type StgM t a = StateT (StgMState t) (Writer [String]) a
+type StgM t a = State (StgMState t) a
 
-unnest :: ((a, b), c) -> (a, b, c)
-unnest    ((a, b), c) =  (a, b, c)
 
-runStgM :: StgM t a -> StgMState t -> a
-runStgM m s= fst . runWriter $ evalStateT m s
+evalStgM :: StgM t a -> StgMState t -> a
+evalStgM = evalState
 
-ruleStgM :: StgM t a -> StgMState t -> (a, StgMState t, [String])
-ruleStgM m s = unnest . runWriter $ runStateT m s
+runStgM :: StgM t a -> StgMState t -> (a, StgMState t)
+runStgM m s = runState m s
             
-traceStgM :: StgM t a -> StgMState t -> [String]
-traceStgM m s = snd . runWriter $ runStateT m s
-
-output :: String -> StgM t ()
-output s = tell [s]
-
 -- | Create a fresh unbound variable
 newVar :: StgM t t
 newVar = do

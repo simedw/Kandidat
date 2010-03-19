@@ -20,11 +20,6 @@ isKnown :: Ord t => Heap t -> Atom t -> Bool
 isKnown h (AVar t) = maybe False (const True) (M.lookup t h)
 isKnown _ _        = True
 
---isBlue :: Ord t => Heap t -> Expr t -> Bool
---isBlue h ex = case ex of
-    
-outputVar :: String -> t -> StgM t ()
-outputVar str t = output $ str ++ ": " ++ unsafeCoerce t
 
 omega' rule st h e set = returnJust 
     ( rule
@@ -108,8 +103,8 @@ omega stack heap code set = case code of
 beta :: (Ord t, Data t) => Stack t -> Heap t -> 
                            [StgSettings t] -> StgM t (Maybe (Rule, StgState t))
 beta stack@(CtOBranch e brdone brleft:ss) h set = case brleft of
-    BDef x e   :_ -> outputVar "beta, def" x >> omega stack h e set
-    BCon c as e:_ -> outputVar "beta, con" c >>omega stack h e set
+    BDef x e   :_ -> omega stack h e set
+    BCon c as e:_ -> omega stack h e set
     []            -> irr' RIrr ss h (ECase e brdone) set
 
 irr' rule st h e set = returnJust 

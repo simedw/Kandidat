@@ -9,14 +9,30 @@ import System.Directory
 import System.FilePath
 import System.Exit
 
-import Interpreter hiding (main)
+--import Debugger hiding (main)
 import Stg.Interpreter
 import Stg.PrePrelude
 import Stg.Input
 import Stg.AST
+import Stg.Types
+import Stg.Rules
 import Stg.Substitution
 import Parser.SugarParser
 import qualified Parser.Diabetes as D
+
+
+data Settings = Settings
+  { prelude      :: String
+  , input        :: Input
+  , toGC         :: Bool
+  }
+
+defaultSettings = Settings {
+    prelude      = "Prelude.hls"
+  , input        = defaultInput
+  , toGC         = True
+  }
+
 
 {-
  - First of we want to define what files we are going to benchmark
@@ -46,14 +62,14 @@ main :: IO ()
 main = do
     putStrLn "Loading and parsing benchmarks"
     dir     <- getCurrentDirectory
-    prelude <- readFile (dir </> "prelude" </> "Prelude.hls")
+    prelude <- readFile (dir </> "prelude" </> prelude defaultSettings)
     indata  <- readData dir prelude benchmarklist
     putStrLn "Starting benchmarks"
     defaultMain $ 
         [ bgroup name  [bench 
-            (show (i,length li) ++ "[Optimise: " ++ show optimize++"]") $ 
-            nf (force (settingsWith input optimize))  (opt optimize code)
-            | input@(i,li) <- allinput , optimize <- [False,True] ] 
+            (show (i,length li) ++ "[Optimise: " ++ show optimise++"]") $ 
+            nf (force (settingsWith input optimise))  (opt optimise code)
+            | input@(i,li) <- allinput , optimise <- [False,True] ] 
           | (name,allinput,code) <- indata]
   
   where

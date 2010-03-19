@@ -2,7 +2,7 @@
 {-# LANGUAGE PackageImports #-}
 {-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE RecordWildCards #-}
-module Interpreter where
+module Debugger where
 
 import "mtl" Control.Monad.State
 import Data.Function
@@ -87,7 +87,6 @@ data InterpreterState = IS
     , stgm     :: StgMState String
     , history  :: [Result]
     , breakPoints  :: [BreakPoint]
-    , trace    :: [String]
     }
 
 -- note that PrintCt must be the first thing on the stack
@@ -121,7 +120,6 @@ testInterpreter set file = do
             , stgm     = initialStgMState
             , history  = []
             , breakPoints = []
-            , trace    = []
             } 
       Left  r  -> do putStrLn $ "fail: " ++ show r
 
@@ -186,25 +184,21 @@ loop originalState  = do
                  | otherwise = do
         stg <- lift $ gets stgm
         bps <- lift . gets $ breakPoints
-        case ruleStgM (step s) stg of
-            (Nothing, stg', t) -> do
+        case runStgM (step s) stg of
+            (Nothing, stg') -> do
                 outputStrLn "No Rule applied"
-                setTrace t
                 loop s
-            (Just res@(_, s'), stg', t) | Just b <- bp bps res -> do
+            (Just res@(_, s'), stg') | Just b <- bp bps res -> do
                 addHistory res
-                setTrace t
                 lift . modify $ \set -> set { stgm = stg' }
                 outputStrLn $ "BreakPoint! " ++ show b
                 printSummary s'
                                      | otherwise -> do
                 addHistory res
-                setTrace t
                 lift . modify $ \set -> set { stgm = stg' }
                 evalStep (n - 1) s'
                 
     addHistory res = lift . modify $ \set -> set { history = res : history set }
-    setTrace t     = lift . modify $ \set -> set { trace = trace set ++ t }
 
     addbp xs = case xs of
         "rule": rs -> case reads (unwords rs) of 
@@ -219,6 +213,11 @@ loop originalState  = do
 
     printSummary st = do
         hist <- lift (gets history)
+        case st of
+            StgState {}   -> return ()
+            OmegaState {} -> outputStrLn "Omega:"
+            PsiState {}   -> outputStrLn "Psi:"
+            IrrState {}   -> outputStrLn "Irr:"
         case hist of
             [] -> do
                 outputStrLn $ "Rule: " ++ show RInitial
@@ -244,7 +243,6 @@ loop originalState  = do
             ["settings"] -> printSetting =<< lift (gets settings)
             ["s"]     -> printStack stack
             ["stack"] -> printStack stack
-            ["trace"] -> printTrace
             ["c"]     -> printCode code
             ["code"]  -> printCode code
             ["rules"] -> printRules
@@ -292,10 +290,6 @@ loop originalState  = do
         outputStrLn $ "number of rules: " ++ show (length ruls)
         outputStrLn . show . map (\ list -> (head list, length list))
                     . group . sort . map fst $ ruls 
-
-    printTrace = do
-        stg <- lift $ gets trace
-        forM_ stg (outputStrLn . show)
 
     printHelp = do
         mapM_ outputStrLn

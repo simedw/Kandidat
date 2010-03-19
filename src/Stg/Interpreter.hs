@@ -344,7 +344,7 @@ force st@(StgState {..}) = do
 -- start the force evaluation
 -- actually quite ugly
 runForce :: Input -> [Function String] -> String
-runForce inp funs = runStgM (go st) initialStgMState
+runForce inp funs = evalStgM (go st) initialStgMState
   where
     gc = mkGC ["$True", "$False"]
     st = gc $ initialState (createGetFuns inp ++ funs)
@@ -356,7 +356,7 @@ runForce inp funs = runStgM (go st) initialStgMState
  
 
 eval :: Input -> [Function String] -> [(Rule, StgState String)]
-eval inp funs = (RInitial, st) : runStgM (go st) initialStgMState
+eval inp funs = (RInitial, st) : evalStgM (go st) initialStgMState
   where
     gc = mkGC ["$True", "$False"]
     st = gc $ initialState (createGetFuns inp ++ funs)
