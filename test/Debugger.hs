@@ -31,11 +31,12 @@ import Stg.Rules
 import Stg.Types hiding (settings)
 import qualified Stg.Types as ST
 
+import Stg.Heap (Heap,Location(..))
+import qualified Stg.Heap as H
+
 data Settings = Settings
   { steping      :: Bool
   , prelude      :: String
-  , showStgState :: (StgState String -> String)
-  , showStgRule  :: (Rule -> String)
   , input        :: Input
   , quiet        :: Bool
   , forceStg     :: Bool
@@ -55,31 +56,33 @@ evalBP bp (rule, _) = case bp of
     --AtCall id -> case code of 
         --ECall fid _ -> id == fid
 
+{-
 stgState :: Bool -> Bool -> Bool -> StgState String -> String
 stgState sc ss sh st@(StgState {code, stack, heap}) = 
        showi sc "code" (show (prExpr PP.text code))
     ++ showi ss ("stack(" ++ show (length stack) ++ ")") (show stack) 
-    ++ showi sh ("heap("++ show (M.size heap) ++")") (concat [ show (id, prObj PP.text obj) ++ "\n\t"
-                             | (id, obj) <- M.toList heap])
+    ++ showi sh ("heap("++ show (H.size heap) ++")") (concat [ show (id, prObj PP.text obj) ++ "\n\t"
+                             | (id, obj) <- H.toList heap])
   where
     showi :: Bool -> String -> String -> String
     showi True s d  = s ++ ": " ++ d ++ "\n"
     showi False s _ = s ++ "\n"
 
-
+-}
 
 defaultSettings = Settings {
     steping      = True
   , prelude      = "Prelude.hls"
-  , showStgState = stgState True True True
-  , showStgRule  = show 
   , input        = defaultInput
   , quiet        = False
   , forceStg     = False
   , toGC         = True
   }
 
-noheapSettings = defaultSettings { showStgState = stgState True True False }
+
+
+--noheapSettings = defaultSettings { showStgState = stgState True True False }
+
 
 
 data InterpreterState = IS
@@ -275,8 +278,10 @@ loop originalState  = do
                                 ++ printHeapFunctions heap
 
     printHeapFunctions :: Heap String -> String
-    printHeapFunctions heap = concat [ padFunction (id, show $ prObj PP.text obj)
-                                     | (id, obj) <- M.toList heap]
+    printHeapFunctions heap = concat 
+        [ padFunction (id ++ if loc == OnAbyss then "!" else ""
+                      , show $ prObj PP.text obj)
+        | (id, (obj, loc)) <- H.toList heap]
       where
         padFunction :: (String, String) -> String
         padFunction (id, obj) = unlines . map ("  " ++) $ case lines obj of
@@ -334,7 +339,7 @@ options :: [OptDescr (Settings -> IO Settings)]
 options = 
     [ Option ['S'] ["step"] (ReqArg setSteping "BOOL") "step through"
     , Option ['F'] ["force"] (ReqArg setForce "Bool") "force evaluation"
-    , Option ['V'] ["visible"] (ReqArg setVisible "\"BOOL BOOL BOOL\"") "show code stack heap"
+--    , Option ['V'] ["visible"] (ReqArg setVisible "\"BOOL BOOL BOOL\"") "show code stack heap"
     , Option ['I'] ["integerinput"] 
         (ReqArg setInputInteger "Integer") 
         "single integer input"
@@ -347,13 +352,14 @@ options =
 setSteping :: String -> Settings -> IO Settings
 setSteping arg s = return $ s { steping = read arg }
 
+{-
 setVisible :: String-> Settings -> IO Settings
 setVisible ind set = let (arg: arg2: arg3:_) = words ind
                          h = read arg3
                          s = read arg2
                          c = read arg
                      in return $ set {  showStgState =  stgState c s h }
-
+-}
 setForce :: String -> Settings -> IO Settings
 setForce arg set = return $ set { forceStg = read arg }
 

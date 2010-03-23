@@ -22,8 +22,11 @@ import Data.Maybe
 import Data.Set (Set)
 import qualified Data.Set as S
 
-import Data.Map(Map)
+import Data.Map (Map)
 import qualified Data.Map as M
+
+import Stg.Heap (Heap)
+import qualified Stg.Heap as H
 
 
 var = EAtom . AVar
@@ -49,7 +52,7 @@ mkGC untouchable st =
                     let acc' = ( S.unions 
                               $ map (\x -> freeVars 
                                     $ fel x 
-                                    $ M.lookup x (heap st)) 
+                                    $ H.lookupAnywhere x (heap st)) 
                               $ S.toList s
                               ) 
                     in  gcStep (acc' `S.union` acc) (acc' `S.difference` acc)
@@ -112,8 +115,7 @@ instance FV Cont where
     freeVars (CtOFun args alpha)    = S.singleton alpha
     freeVars (CtOCase brs)          = freeVarsList brs
     freeVars (CtOBranch e brs brs') = freeVars e `S.union` freeVarsList brs `S.union` freeVarsList brs'
-    freeVars (CtOLetObj x obj)      = freeVars obj 
-    freeVars (CtOLetThunk t expr)   = freeVars expr `S.difference` S.singleton t
+    freeVars (CtOLet v)             = S.singleton v 
     freeVars (CtOInstant _)         = S.empty
     freeVars (CtOApp as)            = freeVarsList as
     

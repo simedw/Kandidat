@@ -16,8 +16,11 @@ import Stg.Rules
 import Stg.Branch
 import Stg.Substitution
 
+import Stg.Heap (Heap,Location(..))
+import qualified Stg.Heap as H
+
 isKnown :: Ord t => Heap t -> Atom t -> Bool
-isKnown h (AVar t) = maybe False (const True) (M.lookup t h)
+isKnown h (AVar t) = maybe False (const True) (H.lookup t h)
 isKnown _ _        = True
 
 
@@ -35,8 +38,8 @@ omega :: (Ord t, Data t) => Stack t -> Heap t -> Expr t ->
                             [StgSettings t] -> StgM t (Maybe (Rule, StgState t))
 omega stack heap code set = case code of
     EAtom a@(AVar t) | isKnown heap a -> 
-      case M.lookup t heap of
-        Just (OThunk e) -> do
+      case H.locatedLookup t heap of
+        Just (OThunk e, OnHeap) -> do
             returnJust
                 ( ROpt ORKnownAtom
                 , StgState
@@ -45,11 +48,15 @@ omega stack heap code set = case code of
                     , heap  = heap
                     , settings = set
                     }
-                )        
-        Just (OCon _ _) -> do 
+                )
+        Just (OThunk e, OnAbyss) -> omega' ROmega stack heap e set        
+        Just (OCon _ _, _) -> do 
             psi' ROmega stack heap t set
         _ -> irreducible
     ECase expr brs -> omega' ROmega (CtOCase brs : stack) heap expr set
+
+    -- Function application with all known arguments,
+    -- and with known function.
     ECall f args | isKnown heap (AVar f) && all (isKnown heap) args -> returnJust
         ( ROpt ORKnownCall
         , StgState
@@ -60,11 +67,11 @@ omega stack heap code set = case code of
             }
         )
 
-    ECall f args | isKnown heap (AVar f) 
-                 -- && any (isKnown heap) args 
-                 && canInline f set ->
-        case M.lookup f heap of
-            Just (OFun as e) | length as == length args -> do
+    -- Function application
+    ECall f args | isKnown heap (AVar f) && canInline f set ->
+        case H.locatedLookup f heap of
+            -- Known function, inline it!
+            Just (OFun as e,OnHeap) | length as == length args -> do
                 returnJust
                     ( ROpt ORInline
                     , StgState
@@ -74,19 +81,26 @@ omega stack heap code set = case code of
                         , settings = inline f set
                         }
                     )
-            Just (OThunk a) -> do
-                omega' ROmega (CtOApp args : stack) heap a set
-            {- returnJust
-                ( ROpt ORInline
-                , StgState
-                    { code  = a
-                    , stack = CtOApp args  : stack
-                    , heap  = heap
-                    , settings = set
-                    }
-                )
-              -}
+            -- Unevaluated function, evaluate the thunk!
+            Just (OThunk e, OnHeap) -> 
+                returnJust
+                    ( ROpt ORAppThunk
+                    , StgState
+                        { code     = e
+                        , stack    = CtUpd f : CtOApp args : stack
+                        , heap     = heap
+                        , settings = set
+                        }
+                    )
+            -- Unevaluated, abyssimal function, omega the thunk!
+            Just (OThunk e, OnAbyss) -> 
+                omega' ROmega (CtOApp args : stack) heap e set
+            -- PAP cases??
             _ -> irreducible
+    ELet (NonRec x o) e' -> do
+        x' <- newVar
+        omega' ROmega (CtOLet x' : stack) (H.insertAbyss x' o heap) (subst x (AVar x') e') set
+    {-
     ELet (NonRec x (OThunk e))  e' -> do
         x' <- newVar
         omega' ROmega (CtOLetThunk x' (subst x (AVar x') e') : stack) heap e set
@@ -95,7 +109,7 @@ omega stack heap code set = case code of
             x' <- newVar
             omega' ROmega stack (M.insert x' (OCon c as) heap) (subst x (AVar x') e') set
         | otherwise -> omega' ROmega (CtOLetObj x (OCon c as):stack) heap e' set
-
+    -}
     _ -> irreducible
   where
     irreducible = irr' ROmega stack heap code set
@@ -119,16 +133,16 @@ irr' rule st h e set = returnJust
 
 irr :: (Ord t, Data t) => Stack t -> Heap t -> Expr t -> 
                           [StgSettings t] -> StgM t (Maybe (Rule, StgState t))
-irr (CtOLetThunk x e : ss) h e' set =
-    omega' RIrr (CtOLetObj x (OThunk e') : ss) h e set
-irr (CtOCase brs     : ss) h e  set = do
+irr (CtOCase brs     : ss) h e  set = 
     if caseBranches (head set) 
        then beta (CtOBranch e [] brs:ss) h set
        else irr' RIrr ss h (ECase e brs) set
-irr (CtOLetObj x o   : ss) h e  set = 
-    irr' RIrr ss h (ELet (NonRec x o) e) set 
+irr (CtOLet t        : ss) h e set = case H.lookupAbyss t h of
+    Just o  -> irr' RIrr ss h (ELet (NonRec t o) e) set
+    Nothing -> error "irr on CtOLet, variable not in abyss!"
+    
 irr (CtOFun xs a     : ss) h e  set = do
-    let h' = M.insert a (OFun xs e) h 
+    let h' = H.insert a (OFun xs e) h 
     returnJust
          ( ROpt ORDone
          , StgState
@@ -159,10 +173,10 @@ psi' rule st h v set = returnJust
 
 psi :: (Ord t, Data t) => Stack t -> Heap t -> t -> 
                           [StgSettings t] -> StgM t (Maybe (Rule, StgState t)) 
-psi (CtOLetThunk t e : ss) h v set =
-    omega' RPsi ss h (subst t (AVar v) e) set 
-psi (CtOLetObj t obj : ss) h v set = 
-    irr' RPsi ss h (ELet (NonRec t obj) (EAtom (AVar v))) set
+
+-- Brave assumption: The let is dead code
+psi (CtOLet t : ss) h v set = psi' RPsi ss h v set
+
 psi (CtOCase brs     : ss) h v set = returnJust $ 
     ( ROpt ORKnownCase
     , StgState

@@ -40,6 +40,7 @@ data OptRule
   | ORDone
   | ORCaseThunk
   | ORInline
+  | ORAppThunk
  deriving (Show, Eq, Ord, Read)
 
 

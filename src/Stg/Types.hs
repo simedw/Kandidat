@@ -4,13 +4,16 @@ module Stg.Types where
 import "mtl" Control.Monad.State
 import "mtl" Control.Monad.Writer
 
+
 import Data.Map(Map)
 import qualified Data.Map as M
+
 
 import Stg.AST
 import Stg.Rules
 
-type Heap  t = Map t (Obj t)
+import Stg.Heap
+import qualified Stg.Heap as H
 
 data Cont t 
   = CtCase [Branch t]
@@ -22,8 +25,7 @@ data Cont t
   | CtOFun  [t] t
   | CtOApp [Atom t]
   | CtOCase [Branch t]
-  | CtOLetObj t (Obj t)
-  | CtOLetThunk t (Expr t)
+  | CtOLet t
   | CtOBranch (Expr t) [Branch t] [Branch t]  
   | CtOInstant Int
  deriving Show
@@ -35,25 +37,25 @@ data StgState t
   = StgState
       { code  :: Expr  t
       , stack :: Stack t
-      , heap  :: Map   t (Obj t)
+      , heap  :: Heap  t
       , settings :: [StgSettings t]
       }
   | OmegaState
       { code  :: Expr  t
       , stack :: Stack t
-      , heap  :: Map   t (Obj t)
+      , heap  :: Heap  t
       , settings :: [StgSettings t]
       }
   | PsiState
-      { code  :: Expr t
+      { code  :: Expr  t
       , stack :: Stack t
-      , heap  :: Map   t (Obj t)
+      , heap  :: Heap  t
       , settings :: [StgSettings t]
       }
   | IrrState
       { code  :: Expr  t
       , stack :: Stack t
-      , heap  :: Map   t (Obj t)
+      , heap  :: Heap  t
       , settings :: [StgSettings t]
       }
   
@@ -96,7 +98,7 @@ makeSettings h = foldr
     defaultOptSettings
   where
     lookupInteger (ANum x) = x
-    lookupInteger (AVar v) = case M.lookup v h of
+    lookupInteger (AVar v) = case H.lookup v h of
         Just (OCon _ [ANum x]) -> x
         Nothing -> error "makeSettings, invalid arguments to optimise with"
 
