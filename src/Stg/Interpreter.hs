@@ -39,6 +39,7 @@ topArg _             = False
 
 topUpd :: Stack t -> Bool
 topUpd (CtUpd _ : _) = True
+topUpd (CtOUpd _ : _) = True
 topUpd _             = False
 
 topOpt :: Stack t -> Bool
@@ -120,7 +121,8 @@ step st@(PsiState {..})   = case code of
 step st@(StgState {..})   = step' $ st{stack = decTop stack}
   where
    step' st'@(StgState {..}) = case code of
-       _ | topOInstant stack -> omega' ROmega (drop 1 stack) heap code settings -- for inlining
+       _ | topOInstant stack -> omega' (ROmega "from machine after OInstant") 
+                                       (drop 1 stack) heap code settings -- for inlining
        ECase expr branch     -> case expr of
            EAtom (AVar var)  ->
                case H.lookup var heap of
@@ -216,11 +218,21 @@ step st@(StgState {..})   = step' $ st{stack = decTop stack}
           , st { code  = e
           , stack = CtUpd v : stack
           , heap  = H.insert v OBlackhole heap})
-      rupdate st@(StgState {..}) obj = 
+      rupdate st@(StgState {..}) obj = case stack of
+            CtUpd  x : res -> returnJust 
+                ( RUpdate
+                , st { stack = res
+                , heap = H.insert x obj heap})
+            CtOUpd x : res -> returnJust 
+                ( RUpdate
+                , st { stack = res
+                , heap = H.insertAbyss x obj heap})
+      {-      
           let CtUpd x : rest = stack -- the object is a value, update memory
           in  returnJust ( RUpdate
                          , st { stack = rest
                          , heap  = H.insert x obj heap})
+      -}
       rfenter st@(StgState {..}) args lenArgs e = 
           let args' = map unArg $ take lenArgs stack 
           in returnJust
@@ -259,11 +271,11 @@ step st@(StgState {..})   = step' $ st{stack = decTop stack}
                   let (argsA, argsL) = splitAt (length atoms) args
                       CtOpt alpha : stack' = stack
                       e' = substList argsA atoms e
-                  in omega' ROmega (CtOFun argsL alpha:stack') heap e' settings
+                  in omega' ROptPap (CtOFun argsL alpha:stack') heap e' settings
               _ -> error "OPTPAP: pap doesn't point to FUN"
       roptfun st@(StgState {..}) args expr = do
           let CtOpt alpha : stack' = stack
-          omega' ROmega (CtOFun args alpha : stack') heap expr settings
+          omega' (ROmega "from machine found fun to optimise") (CtOFun args alpha : stack') heap expr settings
 {-  
       rcontopt st@(StgState {..}) = do
           let CtContOpt alpha : stack' = stack

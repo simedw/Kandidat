@@ -108,6 +108,7 @@ instance FV Setting where
 instance FV Cont where
     freeVars (CtCase brs)           = freeVarsList brs
     freeVars (CtUpd i)              = S.singleton i
+    freeVars (CtOUpd i)             = S.singleton i
     freeVars (CtArg a)              = freeVars a
     freeVars (CtOpt i)              = S.singleton i
     freeVars (CtPrint)              = S.empty

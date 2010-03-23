@@ -28,9 +28,9 @@ data Rule
   | RPrintVal
   | RPrintFun
   | RPrintCont
-  | ROmega
-  | RPsi
-  | RIrr
+  | ROmega String
+  | RPsi String
+  | RIrr String
  deriving (Show, Eq, Ord, Read)
 
 data OptRule
@@ -41,6 +41,7 @@ data OptRule
   | ORCaseThunk
   | ORInline
   | ORAppThunk
+  | ORPOp
  deriving (Show, Eq, Ord, Read)
 
 

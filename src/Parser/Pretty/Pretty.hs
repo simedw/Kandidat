@@ -187,6 +187,7 @@ mkPretty (Syntax {..})  = PPrinters {..}
                                            map ppBranch left
                                        [] ->
                                            [ppHole])
+        CtOUpd t     -> key "OUpd" <+> var t
         CtOInstant n -> key "OInstant" <+> ppAtom (ANum $ toInteger n)
         -- x -> text (show (unsafeCoerce x :: Cont String))
 

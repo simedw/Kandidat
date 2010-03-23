@@ -27,6 +27,7 @@ data Cont t
   | CtOCase [Branch t]
   | CtOLet t
   | CtOBranch (Expr t) [Branch t] [Branch t]  
+  | CtOUpd t
   | CtOInstant Int
  deriving Show
 
