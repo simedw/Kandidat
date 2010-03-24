@@ -1,0 +1,446 @@
+#LyX 1.6.5 created this file. For more info see http://www.lyx.org/
+\lyxformat 345
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\language english
+\inputencoding auto
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\paperfontsize default
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\author "" 
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Optimering under körningstid av lata funktionella programmeringsspråk
+\end_layout
+
+\begin_layout Author
+
+\lang british
+Simon Edwardsson
+ 
+\lang british
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+and
+\end_layout
+
+\end_inset
+
+
+\lang english
+ Olle Fredriksson 
+\lang british
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+and
+\end_layout
+
+\end_inset
+
+
+\lang english
+ Daniel Gustafsson 
+\lang british
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+and
+\end_layout
+
+\end_inset
+
+
+\lang english
+ Dan Rosén
+\end_layout
+
+\begin_layout Right Address
+Chalmers Tekniska Högskola & Göteborgs Universitet
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage newpage
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Inledning
+\end_layout
+
+\begin_layout Subsection
+Bakgrund och motivering
+\end_layout
+
+\begin_layout Standard
+Vanligtvis optimeras kod endast vid kompileringsfasen.
+ I följande Haskell-exempel skulle en sådan optimering inte ge ett optimalt
+ resultat.
+\end_layout
+
+\begin_layout Standard
+
+\lang swedish
+\begin_inset Box Shadowbox
+position "t"
+hor_pos "s"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "100col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+
+\lang swedish
+\begin_inset listings
+lstparams "basicstyle={\rmfamily},language=Haskell,tabsize=4"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+power :: Integer -> Integer -> Integer
+\end_layout
+
+\begin_layout Plain Layout
+
+power 0 x = 1
+\end_layout
+
+\begin_layout Plain Layout
+
+power n x = x * power (n - 1) x
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+powers :: Integer -> [Integer] -> [Integer]
+\end_layout
+
+\begin_layout Plain Layout
+
+powers n xs = map (power n) xs
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+main = do
+\end_layout
+
+\begin_layout Plain Layout
+
+	n <- getIntegerFromUserInput
+\end_layout
+
+\begin_layout Plain Layout
+
+	print (powers n [1..100])
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Funktionen 
+\begin_inset Formula $powers$
+\end_inset
+
+ tar in ett tal 
+\begin_inset Formula $n$
+\end_inset
+
+ och en lista 
+\begin_inset Formula $xs$
+\end_inset
+
+, och kör funktionen 
+\begin_inset Formula $power\mbox{ }n$
+\end_inset
+
+, som upphöjer varje element till 
+\begin_inset Formula $n$
+\end_inset
+
+, på varje element i listan.
+ Om indatan 
+\begin_inset Formula $n$
+\end_inset
+
+ till 
+\begin_inset Formula $powers$
+\end_inset
+
+ är känd statiskt (när programmet kompileras) så skulle en kompilator kunna
+ göra en specialiserad version av 
+\begin_inset Formula $power$
+\end_inset
+
+ för just det 
+\begin_inset Formula $n$
+\end_inset
+
+-värdet.
+ Till exempel, när 
+\begin_inset Formula $n=4$
+\end_inset
+
+:
+\end_layout
+
+\begin_layout Standard
+
+\lang swedish
+\begin_inset Box Shadowbox
+position "t"
+hor_pos "s"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "100col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+
+\lang swedish
+\begin_inset listings
+lstparams "basicstyle={\rmfamily},language=Haskell,tabsize=4"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+power_4 :: Integer -> Integer
+\end_layout
+
+\begin_layout Plain Layout
+
+power_4 x = x * x * x * x
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Den specialiserade versionen av 
+\begin_inset Formula $power$
+\end_inset
+
+ är snabbare än originalet, då den inte är rekursiv och ej behöver titta
+ på 
+\begin_inset Formula $n$
+\end_inset
+
+:s värde.
+\end_layout
+
+\begin_layout Standard
+I 
+\begin_inset Formula $main$
+\end_inset
+
+-funktionen ovan är dock 
+\begin_inset Formula $n$
+\end_inset
+
+ inte känt när programmet kompileras, utan läses istället in från användaren
+ under körningstid.
+ Detta gör att en kompilator inte har tillräckligt mycket information för
+ att kunna göra en specialiserad version av 
+\begin_inset Formula $power$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Vi har i det här projektet tagit fram en möjlig lösning, där programmeraren
+ kan annotera var optimeringar ska ske under körningstid.
+ 
+\end_layout
+
+\begin_layout Section
+Relaterade Arbeten
+\end_layout
+
+\begin_layout Standard
+Vårt arbete spänner över två forskningsområden, partiell evaluering och
+ optimering under körningstid.
+ I litteraturen är dessa områden oftas separerade, något som vi håller'
+\end_layout
+
+\begin_layout Subsection
+Statiska optimeringar
+\end_layout
+
+\begin_layout Standard
+Partiell evaluering för optimering av Haskel Core har tidigare gjorts av
+ bl.
+ a.
+ Mitchell men då i syfte att göra statiska optimeringar.
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "mitchell2007supercompiler"
+
+\end_inset
+
+ De använder en tidigare utvecklade metod
+\begin_inset CommandInset citation
+LatexCommand cite
+key "srensen1995algorithm"
+
+\end_inset
+
+ för att undvika icke terminerande optimeringar.
+ En börda vi lagt på programmeraren.
+\end_layout
+
+\begin_layout Subsection
+Optimeringar under körningstid
+\end_layout
+
+\begin_layout Standard
+JIT (just in time) compilation är en metod för att dynamiskt optimera de
+ delar av ett program som används mest under körningstid.
+ Val av dessa punkter sker med hjälp av statistik och heuristik gentemot
+ vår lösning där programmeraren själv har kontroll över angreppspunkterna.
+ 
+\end_layout
+
+\begin_layout Standard
+Att annotera optimeringspunkten har gjorts tidigare av Bolz C., då för en
+ Prologvariant.
+\begin_inset CommandInset citation
+LatexCommand cite
+key "bolz-automatic"
+
+\end_inset
+
+ Vårt arbete liknar hans på många punker, men skiljer sig i bl.
+ a.
+ hur vi hanterar förgreningar (i vårt fall case-satser i hans if-satser).
+ Han lägger till en callback medan vi försöker fortsätta optimeringen.
+\end_layout
+
+\begin_layout Subsection
+Funktionella maskiner
+\end_layout
+
+\begin_layout Standard
+Stg....
+\begin_inset CommandInset citation
+LatexCommand cite
+key "marlow2006making"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+newpage
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset bibtex
+LatexCommand bibtex
+bibfiles "references"
+options "apalike"
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document
