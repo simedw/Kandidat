@@ -1,0 +1,41 @@
+ Arbetsmetodik
+===============
+
+Planeringsrapport
+    * Milstolpar
+        I början av projektet under planeringsfasen så planerades det in milstolpar
+        för istort sätt varje vecka. Dessa milstolpar innefattade vad vi ansåg vara
+        minimumkraven för att vi själva skulle anse att projektet skulle kunna anses
+        vara lyckat. Milstolparna planerades i två faser, det som hände före halvtids-
+        redovisningen och efter. 
+        * Första halvan
+            De första <6> veckorna var ämnade åt att få en fungerande tolk som kunnde
+            utföra några enklare optimeringar, dessa innefattade att kända utryck skulle
+            evalueras (kända case-brancher skulle evaluerats samt numeriska beräkningar
+            skulle utföras om värdena var kända).
+
+            Angående presentationen så är den blaha blaha blaha
+        * Andra halvan
+            Denna period fokuserade mer på rapportskivning (vilket jag gör nu så meta)
+            Tid lades även på att fixa den gebrochen semantischen. 
+    * Gruppledare & Veckliga möten
+        Vi har struktuerat vårat arbete med att ha en person som har i uppgift
+        att se till att alla andra har en något att göra. Denna person byttes 
+        ut efter halvtids-redovisningen (precis som personen som förde anteckningar
+        under möten). Att vara gruppledare betydde inte att den personen fick extra
+        mycket att göra utan endast såg till att gruppen följde de målen som vi hade
+        satt upp under veckan.
+
+        Detta gjordes oftast genom att en person blev ansvarig för ett område att detta
+        skulle fixas, vilket oftast innebar att den personen implementerade det. Det var
+        dock inget krav att det skulle gå till så. På de lite större målen satt vi ofta 
+        alla och kodade tillsammans via gobby och en projektor.
+Gobby projektor
+    Gobby är ett program som gör att flera personer kan ändra i samma dokument, samtidigt.
+    Vilket vi fann var effektivt, speciellt om vi hade en projektor som gjorde att vi hade
+    en punkt att referera till.
+Git=
+==Iterativ process==
+==Test==
+===QuickCheck===
+===Criterion===

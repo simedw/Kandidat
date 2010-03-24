@@ -1,0 +1,334 @@
+#LyX 1.6.5 created this file. For more info see http://www.lyx.org/
+\lyxformat 345
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\language british
+\inputencoding auto
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\paperfontsize default
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\author "" 
+\end_header
+
+\begin_body
+
+\begin_layout Section
+Stg
+\end_layout
+
+\begin_layout Standard
+Språket som vi har definerat är en utökning till STG-maskinen, med nya regler
+ och tillstånd.
+ För att kunna diskutera dessa behöver man först förstå hur maskinen fungerar.
+ Eftersom läsaren inte förväntas ha stött på begrepp som används när man
+ beskriver abstrakta maskiner och deras semantik, kommer vi att bygga upp
+ förståelsen via ett exempel och introducera koncepten efter hand de.
+ En abstrakt maskin kan beskrivas av att den evalueras stegvis under evalueringe
+n, detta kommer bli tydligare med hjälp av genomstegning av evalueringen
+ av följande program.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Box Shadowbox
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "100col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+cube x = x * x * x
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+main = let list = [2,3,5,7,11]
+\end_layout
+
+\begin_layout Plain Layout
+
+        in map cube list
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Det som evalueras först är main funktionen och där finns ett let-uttryck.
+ De är verktyget för att binda variabler, i det här fallet variablen list,
+ till listan av de fem första primtalen.
+ Man kan använda let för att associera andra sort värden än listor, t.ex.
+ andra sorters datastrukturer, numeriska värden samt funktioner.
+\end_layout
+
+\begin_layout Standard
+Vi behöver någonstanns att reservera utrymme för listan så därför inför
+ vi en så kallad heap.
+ I ett tradionellt, imperativt språk är det en representation av minnet
+ som är för dynamisk allokering.
+ När maskinen stöter på ett let-uttryck så allokerats det på heapen, detta
+ beskrivs formellt av följande regel.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mathtt{let\; x=e\; in\; code}\,;\, Heap\Rightarrow\mathtt{code}\,;\, Heap[x\mapsto e]\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Läs det som att om maskinen är i tillståndet till vänster om 
+\begin_inset Formula $\Rightarrow$
+\end_inset
+
+så blir nästa tillstånd det som står på högra sidan.
+ Ett tillstånd i maskinen är ett uttryck och en heap, formellt separeras
+ dessa med ett semikolon.
+ I vårt fall så går maskinen från let-uttrycket till det som står efter
+ in, samt att x läggs till i heapen och pekar på e.
+ Heap[] betyder inte att heapen bara innehåller det som är inuti hakparanteserna
+ utan är bara notation för att explicit påvisa vad en variabel binds till.
+\end_layout
+
+\begin_layout Standard
+Maskinens tillstånd är nu: 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mathtt{map\; cube\; list}\,;\, Heap[list\mapsto[2,3,5,7,11],cube\mapsto\lambda x.x\cdot x\cdot x,\ldots]\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Den observanta läsaren märker att även cube ligger på heapen, det beror
+ på att funktioner på topnivå läggs in i heapen i maskinens initialtillstånd.
+ Alltså ligger även även map och andra kända standardfunktioner där.
+ 
+\end_layout
+
+\begin_layout Standard
+Som uttryck ligger nu ett anrop till map funktionen, den vill vi anropa.
+ Här låter vi oss inspereras av imperativ anropsmetodik.
+ Argumenten lägger vi på en stack.
+ Formellt får vi då denna regel:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+f\; a_{1}\;\ldots\; a_{n}\,;\, Stack\,;\, Heap\Rightarrow f\,;\, a_{1}:\ldots:a_{n}:Stack\,;\, Heap\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Stacken är placerade mellan utrycket och heapen och vi använder : för att
+ separera elementen på stacken, den tomma stacken skrivs som 
+\begin_inset Formula $\epsilon$
+\end_inset
+
+.
+ Maskinens tillstand ar:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mathtt{map\,\mathrm{;}\, cube\,:\, list\,:\,\epsilon}\,;\, Heap\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Nu behover vi diskutera koden for map:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Box Shadowbox
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "100col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+map f xs = case xs of
+\end_layout
+
+\begin_layout Plain Layout
+
+    { Cons x xs -> let { temp1 = f x 
+\end_layout
+
+\begin_layout Plain Layout
+
+                       ; temp2 = map f xs
+\end_layout
+
+\begin_layout Plain Layout
+
+                       } in Cons temp1 temp2
+\end_layout
+
+\begin_layout Plain Layout
+
+    ; Nil       -> Nil
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Anledningen till att argumenten till Cons inte ar funktionsapplikationer
+ ar att maskinen blir mer latthanterlig om funktionsapplikationer enbart
+ far let-bundna variabler, aven kallade atomer.
+ Vi ser har att map tar tva argument och ater saledes upp tva argument fran
+ argumentstacken.
+ Formellt:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+f\,;\, a_{1}:\ldots:a_{n}:Stack\,;\, Heap[f\mapsto\lambda x_{1}\ldots x_{n}.e]\Rightarrow e[a{}_{1}/x_{1}\ldots a_{n}/x_{n}];\, Stack\,;\, Heap\]
+
+\end_inset
+
+
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Har ar argumenten lika manga som det argument pa stacken.
+ Obviously!!!
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Har behover vi ersatta alla funktionens argument 
+\begin_inset Formula $x_{1}\ldots x_{n}$
+\end_inset
+
+till de atomer 
+\begin_inset Formula $a_{1}\ldots a_{n}$
+\end_inset
+
+som finns pa stacken.
+ Vi noterar denna substitution med 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\noun off
+\color none
+
+\begin_inset Formula $e[a{}_{1}/x_{1}\ldots a_{n}/x_{n}]$
+\end_inset
+
+.
+ I vart fall sa substitueras f mot cube och xs till list.
+ Maskinen:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mathtt{case\; list\; of\,\lbrace\ldots\rbrace};\,\epsilon\,;\, Heap\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\end_layout
+
+\end_body
+\end_document
