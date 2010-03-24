@@ -7,23 +7,22 @@ Dan, Daniel, Olle, Simon
 Build
 =====
 
-% cabal configure -ftest -fbenchmark
-% cabal build
+    % cabal configure -ftest -fbenchmark
+    % cabal build
 
 Benchmarks
 ==========
 
 Make sure to build fegr with the benchmark flag.
 To get started run
-% dist/build/benchmark/benchmark --help
+
+    % dist/build/benchmark/benchmark --help
 
 Testsuite
 =========
 
 Make sure to build fegr with the test flag.
 
-% cabal test
+    % cabal test
 
 It should hopefully pass all the tests.
-
-
