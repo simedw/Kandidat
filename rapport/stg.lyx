@@ -36,9 +36,42 @@
 \tracking_changes false
 \output_changes false
 \author "" 
+\author "" 
 \end_header
 
 \begin_body
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\renewcommand{\range}[1][]{#1_{1}\,\ldots\,#1_{n}}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\renewcommand{\CON}[2]{CON(#1\;#2)}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\renewcommand{\FUN}[2]{FUN(#1\rightarrow#2)}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\renewcommand{\THUNK}[1]{THUNK(#1)}
+\end_inset
+
+
+\end_layout
 
 \begin_layout Section
 Stg
@@ -122,7 +155,7 @@ Vi behöver någonstanns att reservera utrymme för listan så därför inför
 
 \begin_layout Standard
 \begin_inset Formula \[
-\mathtt{let\; x=e\; in\; code}\,;\, Heap\Rightarrow\mathtt{code}\,;\, Heap[x\mapsto e]\]
+\mathtt{let\;\mathrm{x\mathtt{=}e}\; in\; code}\,;\, Heap\Rightarrow\mathtt{code}\,;\, Heap[x\mapsto e]\]
 
 \end_inset
 
@@ -227,17 +260,17 @@ map f xs = case xs of
 
 \begin_layout Plain Layout
 
-    { Cons x xs -> let { temp1 = f x 
+    { Cons x xs -> let { a = f x 
 \end_layout
 
 \begin_layout Plain Layout
 
-                       ; temp2 = map f xs
+                       ; b = map f xs
 \end_layout
 
 \begin_layout Plain Layout
 
-                       } in Cons temp1 temp2
+                       } in Cons a b
 \end_layout
 
 \begin_layout Plain Layout
@@ -327,7 +360,492 @@ som finns pa stacken.
 \end_layout
 
 \begin_layout Standard
+I heapen pekar list på listan [2,3,5,7,11] men detta är socker för:
+\end_layout
 
+\begin_layout Standard
+\begin_inset Box Shadowbox
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "100col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+list = Cons 2 temp1
+\end_layout
+
+\begin_layout Plain Layout
+
+temp1 = Cons 3 temp2
+\end_layout
+
+\begin_layout Plain Layout
+
+temp2 = Cons 5 temp3
+\end_layout
+
+\begin_layout Plain Layout
+
+temp3 = Cons 7 temp4
+\end_layout
+
+\begin_layout Plain Layout
+
+temp4 = Cons 11 nil
+\end_layout
+
+\begin_layout Plain Layout
+
+nil = Nil
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+De temporära variablerna behövs för att konstruktorer skall kunna allokeras
+ i ett sammanhängande minne i heapen.
+ I vårat fall pekar list variabeln på en Cons konstruktor, som har en motsvarand
+e gren i map funktionens definition.
+ Det som ska hända är att maskinens uttryck blir grenen med x substituerat
+ mot 2 och xs mot temp1.
+ Detta kan vi åstadkomma med denna formella regel.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \begin{multline*}
+case\; v\; of\;\{\ldots;C\; x_{1}\,\ldots\, x_{n}\;\rightarrow e;\ldots\}\,;\, Stack\,;\, Heap[v\mapsto C\; a_{1}\ldots a_{n}]\\
+\Rightarrow e[a_{1}/x_{1}\,\ldots\, a_{n}/x_{n}]\,;\, Stack\,;\, Heap\end{multline*}
+
+\end_inset
+
+
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Default branch kan vara bra att nämna hörrö du! Dessutom inom ändlig tid,
+ 
+\begin_inset Formula $O(<\infty)$
+\end_inset
+
+ håhå håhåhå
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Det som står i granskaren, uttrycket mellan case och of, var i vårt fall
+ en variabel.
+ Det finns också fall då granskaren är andra uttryck t.ex.
+ funktionsapplikation.
+ I så fall vet vi inte vilken gren vi ska ta innan vi har evaluerat granskaren,
+ då måste vi evaluera den först.
+ Vi måste veta efter vi evaluerat klart vilken case-sats den skall gå tillbaka
+ till, det här är snarlikt en returadress.
+ Standard i imperativa språk är att returadresser pushas på stacken.
+ Det vi gör är att lägga ut en case-continuation på stacken som också innehåller
+ grenarna till case-satsen.
+ 
+\end_layout
+
+\begin_layout Standard
+Formellt kommer vi beskriva en case-continuation som 
+\begin_inset Formula $case\;\bullet\; of\;\{\ldots\}$
+\end_inset
+
+ där 
+\begin_inset Formula $\bullet$
+\end_inset
+
+ står för platsen vi skall lägga in resultatet.
+ Så regeln blir följande:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+case\; e\; of\;\{\ldots\}\,;\, Stack\,;\, Heap\Rightarrow e\,;\, case\;\bullet\; of\;\{\ldots\}:Stack\,;\, Heap\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Det här uttrycket kommer att evalueras till ett värde t.ex.
+ en konstruktor.
+ Då kommer case-continuation ligga överst på stacken och vi vill välja rätt
+ gren.
+ Vi vill återanvända grenväljarregeln som vi definerade ovan så därför inför
+ vi denna regel som ställer in maskinen för detta.
+ Formellt blir det:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+v\,;\, case\;\bullet\; of\;\{\ldots\}:Stack\,;\, Heap\Rightarrow case\; v\; of\;\{\ldots\}\,;\, Stack\,;\, Heap\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+För att återgå till löpande exempel så är koden just nu detta:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Box Shadowbox
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "100col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+let { a = cube 2
+\end_layout
+
+\begin_layout Plain Layout
+
+    ; b = map cube temp1
+\end_layout
+
+\begin_layout Plain Layout
+
+    } in Cons a b
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Nu skall a bindas till ett uttryck, f 2, i tradionella språk skulle f 2
+ först evalueras och dess värde bindas till a.
+ Men eftersom STG är lat så väntar den med att beräkna det, ifall den inte
+ skulle behövas.
+ Ett sådant senarlagt uttryck kallas för en thunk, det som händer är att
+ a binds till thunken 
+\begin_inset Formula $\mathtt{f\;2}$
+\end_inset
+
+.
+ På heapen finns flera olika sorters objekt: konstruktorer, lambda funktioner
+ och nu även thunkar.
+ Formellt kommer vi behöva skilja dem åt, så vi inför ny notation för dessa
+ objekt.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Tabular
+<lyxtabular version="3" rows="4" columns="3">
+<features>
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<row>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Föregående syntax
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Faktisk syntax
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Beskrivning
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $C\;\range[a]$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\CON C{\range[a]}$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Konstruktor
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\lambda\range[x].e$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\FUN{\range[x]}e$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Lambdafunktion
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+-
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\THUNK e$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Senarelagd beräkning
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Så här skrivs egentligen map funktionen i STG språket utan något socker:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Box Shadowbox
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "100col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+map f xs = case xs of
+\end_layout
+
+\begin_layout Plain Layout
+
+    { Cons x xs -> let { a = THUNK (f x) 
+\end_layout
+
+\begin_layout Plain Layout
+
+                       ; b = THUNK (map f xs)
+\end_layout
+
+\begin_layout Plain Layout
+
+                       ; c = CON (Cons a b)
+\end_layout
+
+\begin_layout Plain Layout
+
+                       } in c
+\end_layout
+
+\begin_layout Plain Layout
+
+    ; Nil       -> xs
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Notera att i STG är det bara med let man kan allokera objekt, således måste
+ vi använda en tempvariabel c för att returnera en konstruktor.
+ Numera är vårt exempel med riktig syntax egentligen:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Box Shadowbox
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "100col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+let { a = THUNK (cube 2)
+\end_layout
+
+\begin_layout Plain Layout
+
+    ; b = THUNK (map cube temp1)
+\end_layout
+
+\begin_layout Plain Layout
+
+    ; c = CON (Cons a b)
+\end_layout
+
+\begin_layout Plain Layout
+
+    } in c
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Maskinen kommer stega igenom let-uttrycket och allokera objekten.
+ Därefter returneras en variabel som pekar på en konstruktor i heapen som
+ är en Cons, skapad enligt ovan.
 \end_layout
 
 \end_body
