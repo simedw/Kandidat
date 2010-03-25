@@ -24,9 +24,6 @@ import Stg.Rules
 import Stg.Branch
 import Stg.Substitution
 
-
-
-
 import Stg.Heap (Heap,Location(..))
 import qualified Stg.Heap as H
 
@@ -176,19 +173,7 @@ irr (CtOLet t        : ss) h e set = case H.lookupAbyss t h of
     Just o  -> irr' (RIrr "let continuation") ss h (ELet (NonRec t o) e) set
     Nothing -> error "irr on CtOLet, variable not in abyss!"
   
-{-
-irr (CtOFun xs a     : ss) h e  set = do
-    let h' = H.insert a (OFun xs e) h 
-    returnJust
-         ( ROpt ORDone
-         , StgState
-            { code  = EAtom (AVar a) 
-            , stack = ss
-            , heap  = h'
-            , settings = set
-            }
-         )
--}
+
 irr (CtOFun xs a   : ss) h e set = do
     st <- afterburner ss h e set
     returnJust (ROpt ORDone
@@ -319,3 +304,8 @@ findCase e b = case b of
         Nothing -> e'
     findCaseX _ _ e = e
 -}
+=======
+
+psi s h v _ = error $ "Psi: I don't know what to do with this stack: " 
+     ++ show (unsafeCoerce s :: Stack String)
+>>>>>>> b2f88fc27f8affc408a23a117a3806dbf95ce31f:src/Stg/Optimise.hs
