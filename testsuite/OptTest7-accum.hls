@@ -1,0 +1,15 @@
+main = listSeq (map (optimise (exp getInt 1)) getIntList);
+
+
+
+exp to s x = case to == 0 of
+	{ True -> s
+	; False -> exp (to - 1) (s * x) x
+	};
+
+{-
+exp to x = case to == 0 of
+    { True  -> 1
+    ; False -> (exp (to - 1) x) * x
+    };
+-}  

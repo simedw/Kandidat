@@ -117,7 +117,7 @@ step :: (Ord t, Data t, Show t) => StgState t -> StgM t (Maybe (Rule, StgState t
 step st@(OmegaState {..}) = omega stack heap code settings
 step st@(IrrState {..})   = irr stack heap code settings
 step st@(PsiState {..})   = case code of
-    EAtom (AVar code) -> psi stack heap code settings
+    EAtom (AVar code) -> psi stack heap code letBinds settings
 step st@(StgState {..})   = step' $ st{stack = decTop stack}
   where
    step' st'@(StgState {..}) = case code of
@@ -144,7 +144,7 @@ step st@(StgState {..})   = step' $ st{stack = decTop stack}
            Nothing  -> return Nothing
            Just obj -> case obj of
                OThunk expr       -> rthunk st expr var
-               _ | topIsO stack  -> psi stack heap var settings
+               _ | topIsO stack  -> psi stack heap var [] settings
                OOpt alpha sets   -> roptimise st alpha sets var
                _ | topUpd  stack -> rupdate st obj
                _ | topCase stack -> rret st
