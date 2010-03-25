@@ -40,8 +40,7 @@ substList :: (Data t, Eq t) => [t] -> [Atom t] -> Expr t -> Expr t
 substList []     []     = id
 substList (x:xs) (y:ys) = substList xs ys . subst x y
 
-
-
+   
 -- I can't get this to work with just t
 
 removeOPT :: Function String -> Function String 

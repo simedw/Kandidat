@@ -15,12 +15,12 @@ data Expr t   = EAtom (Atom t)
               | ELet (Bind t) (Expr t)
               | ECase (Expr t) [Branch t]
               | ESVal (SValue t)
-  deriving (Data, Eq, Show, Typeable)
+  deriving (Data, Eq, Ord, Show, Typeable)
 
 data Bind t
     = NonRec t (Obj t)
     | Rec [(t, Obj t)]
-    deriving (Data, Eq, Show, Typeable)
+    deriving (Data, Eq, Ord, Show, Typeable)
 
 isRecursive :: Bind t -> Bool
 isRecursive (Rec _) = True
@@ -56,6 +56,11 @@ instance Eq t => Eq (Pop t) where
   PBinBool op1 _ _ == PBinBool op2 _ _ = op1 == op2
   _ == _ = False
 
+instance Ord t => Ord (Pop t) where
+  PBinOp op1 _ _   `compare` PBinOp op2 _ _   = op1 `compare` op2
+  PUnOp  op1 _ _   `compare` PUnOp op2 _ _    = op1 `compare` op2
+  PBinBool op1 _ _ `compare` PBinBool op2 _ _ = op1 `compare` op2
+
 isAtom (EAtom _) = True
 isAtom _         = False
 
@@ -63,14 +68,14 @@ data Atom t   = AVar t
               | ANum Integer
               | ADec Double
               | AChr Char
-  deriving (Data, Eq, Show, Typeable)
+  deriving (Data, Eq, Ord, Show, Typeable)
 
 isVar (AVar _) = True
 isVar _        = False
 
 data Branch t = BCon t [t] (Expr t)
               | BDef t (Expr t)
-  deriving (Data, Eq, Show, Typeable)
+  deriving (Data, Eq, Ord, Show, Typeable)
 
 data Obj t    = OFun [t] (Expr t)
               | OPap t [Atom t]   
@@ -78,15 +83,15 @@ data Obj t    = OFun [t] (Expr t)
               | OThunk (Expr t)
               | OBlackhole
               | OOpt (Atom t) [Setting t]
-  deriving (Data, Eq, Show, Typeable)
+  deriving (Data, Eq, Ord, Show, Typeable)
 
 data Setting t = Inlinings (Atom t)
                | Inline t (Atom t)
                | CaseBranches
-  deriving (Data, Eq, Show, Typeable)
+  deriving (Data, Eq, Ord, Show, Typeable)
 
 data SValue t 
   = SAtom (Atom t) -- invariant, this is not an variable
   | SCon t [SValue t]
   | SFun
-  deriving (Data, Eq, Show, Typeable)
+  deriving (Data, Eq, Ord, Show, Typeable)

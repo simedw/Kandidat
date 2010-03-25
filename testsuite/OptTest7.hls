@@ -1,4 +1,4 @@
-main = listSeq (map (optimise (exp getInt)) getIntList);
+main = listSeq (map (optimise (exp getInt) with { inlinings 10; casebranches } ) getIntList);
 
 
 
