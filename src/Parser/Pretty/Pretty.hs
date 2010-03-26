@@ -97,7 +97,7 @@ mkPretty (Syntax {..})  = PPrinters {..}
         ELet binds e -> (key $ case isRecursive binds of
             True  -> "letrec"
             False -> "let" ) <$>  indent 4 (ppLetBind binds) 
-                               <+> key "in" <+> ppExpr e
+                               <+> key "in" <+> hang 1 (ppExpr e)
         ECase scrut binds -> key "case" <+> ppExpr scrut <+> key "of"
             <$> indent 4 (mkBrace $ map ppBranch binds)
         EPop op as -> operator (show op) <> operator "#" 

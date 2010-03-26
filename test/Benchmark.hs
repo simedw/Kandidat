@@ -41,13 +41,14 @@ defaultSettings = Settings {
 
 benchmarklist :: [(String, [(Integer,[Integer])])]
 benchmarklist = 
-    [ "OptTest9.hls" --> [(0,list)] 
-    , "OptTest1.hls" --> [(0,[])]
+    [ "Shapes.hls"   --> [(0,[1])]
+    , "OptTest7.hls" --> [(5,list)] 
+{-    , "OptTest1.hls" --> [(0,[])]
     , "OptTest2.hls" -->  [(0,list)]
     , "OptTest3.hls" -->  [(0,list)]
   --  , "OptTest4.hls" --> [(0,list)]   -- matrix 4 x 4
     ,"OptTest6.hls" -->   [(0,list)]
-    , "RSA.hls"      -->  [(0,list)]
+    , "RSA.hls"      -->  [(0,list)] -}
     ]
  where
    list  = [1..20]
@@ -69,7 +70,7 @@ main = do
         [ bgroup name  [bench 
             (show (i,length li) ++ "[Optimise: " ++ show optimise++"]") $ 
             nf (force (settingsWith input optimise))  (opt optimise code)
-            | input@(i,li) <- allinput , optimise <- [False,True] ] 
+            | input@(i,li) <- allinput , optimise <- [True, False] ] 
           | (name,allinput,code) <- indata]
   
   where

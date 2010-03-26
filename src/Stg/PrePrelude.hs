@@ -57,8 +57,8 @@ alias name = Function name . OThunk . EAtom . AVar
 unOp :: Bool -> String -> Pop String -> Function String
 unOp box name op = Function name $ OFun ["x"] $
     ECase (EAtom (AVar "x"))
-        [ branch numCon
-        , branch decCon
+        [  branch numCon
+        -- branch decCon
         ]
   where
     branch c = BCon c ["x'"] $
@@ -75,7 +75,7 @@ binOp :: Bool -> String -> Pop String -> Function String
 binOp box name op = Function name $ OFun ["x", "y"] $
     ECase (EAtom (AVar "x")) 
         [ branch numCon
-        , branch decCon
+         -- branch decCon
         ]
   where
     branch c = BCon c ["x'"] 

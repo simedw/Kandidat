@@ -51,6 +51,7 @@ data StgState t
       { code  :: Expr  t
       , stack :: Stack t
       , heap  :: Heap  t
+      , letBinds :: [t]
       , settings :: [StgSettings t]
       }
   | IrrState

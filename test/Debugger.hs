@@ -139,8 +139,8 @@ loop originalState  = do
             ":v" : xs    -> loopView st xs
             ":view" : xs -> loopView st xs
             ":bp"  : xs -> addbp xs >> loop st
-            [":bpo"] -> addbp ["rule", "ROptimise"] >> loop st
-            [":bpd"] -> addbp ["rule", "ROpt", "ORDone"] >> loop st
+            [":bpo"] -> addbp ["rule", "ROptimise"] >> evalStep 1000000000 st
+            [":bpd"] -> addbp ["rule", "ROpt", "ORDone"] >> evalStep 100000000 st
             [":back", num] -> case reads num of
                 ((x, "") : _) -> evalStep (negate x) st
                 _ -> loop st
