@@ -1,9 +1,10 @@
 {-# LANGUAGE PackageImports #-}
 module Parser.Diabetes where
 
-import Parser.Pretty.Pretty
+-- import Parser.Pretty.Pretty
 import Control.Applicative
 import Control.Monad
+import Control.Arrow
 import "mtl" Control.Monad.State
 import Data.Either
 
@@ -16,8 +17,6 @@ import qualified Stg.PrePrelude   as PP
 import qualified Stg.GC           as GC
 
 import Parser.SugarParser
-
-
 
 type Dia a = State (DiaState a) 
 
@@ -92,12 +91,32 @@ desugarE (ST.ECall t exprs) = do
     []    -> return $ AST.ECall t atoms
     binds -> return $ AST.mkELet False binds
                                (AST.ECall t atoms)
-desugarE (ST.EOpt expr) = do
+desugarE (ST.EOpt expr with) = do
     ([atom], binds) <- magic [expr] -- hackity hack
-    var <- newVar
-    let opt = AST.OOpt atom
-    return $ AST.mkELet False (binds ++ [(var, opt)])
-                            (AST.EAtom (AST.AVar var))
+    dummy <- newVar
+    varOpt <- newVar
+    varThunk <- newVar
+    (settings,sbinds) <- second concat <$> mapAndUnzipM desugarS with
+    let opt = AST.OOpt atom settings
+    -- Need to force optimising of all numbers, as in inline map (length xs),
+    -- this is done via standard case-seq
+    let thunk = AST.OThunk $ foldr    
+            (\atom e -> AST.ECase (AST.EAtom (AST.AVar atom)) [AST.BDef dummy e])
+            (AST.EAtom (AST.AVar varOpt))
+            (map fst sbinds)
+    return $ AST.mkELet False 
+                        (binds ++ sbinds ++ [(varOpt, opt),(varThunk, thunk)])
+                        (AST.EAtom (AST.AVar varThunk))
+  where
+    desugarS :: Ord t => ST.Setting t -> Dia t (AST.Setting t, [(t, AST.Obj t)])
+    desugarS (ST.Inlinings expr) = do
+        ([atom],binds) <- magic [expr]
+        return (AST.Inlinings atom,binds)
+    desugarS (ST.Inline f expr)  = do
+        ([atom],binds) <- magic [expr]
+        return (AST.Inline f atom,binds)
+    desugarS ST.CaseBranches  = return (AST.CaseBranches, [])
+ 
 desugarE (ST.ECon t exprs) | null exprs = do
     st <- get
     put $ st { emptyCons = S.insert t (emptyCons st) }
@@ -202,7 +221,7 @@ lliftObj dt obj = case obj of
         (e', fs) <- lliftExpr dt expr
         return (AST.OThunk e', fs)
     AST.OBlackhole -> return (obj, [])
-    AST.OOpt atom  -> return (obj, [])
+    AST.OOpt _ _   -> return (obj, [])
 
 lliftExpr :: Ord a => Set a -> AST.Expr a -> Dia a (AST.Expr a, [AST.Function a])
 lliftExpr dt expr = case expr of

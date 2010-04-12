@@ -97,7 +97,7 @@ mkPretty (Syntax {..})  = PPrinters {..}
         ELet binds e -> (key $ case isRecursive binds of
             True  -> "letrec"
             False -> "let" ) <$>  indent 4 (ppLetBind binds) 
-                               <+> key "in" <+> ppExpr e
+                               <+> key "in" <+> hang 1 (ppExpr e)
         ECase scrut binds -> key "case" <+> ppExpr scrut <+> key "of"
             <$> indent 4 (mkBrace $ map ppBranch binds)
         EPop op as -> operator (show op) <> operator "#" 
@@ -146,7 +146,7 @@ mkPretty (Syntax {..})  = PPrinters {..}
         OCon name args -> object "CON" <+> mparens (conVar name 
                                                  <+> hsep (map ppAtom args))
         OThunk e -> object "THUNK" <+> mparens (ppExpr e)
-        OOpt   a -> object "OPT" <+> mparens (ppAtom a)
+        OOpt   a set -> object "OPT" <+> mparens (ppAtom a) <+> text (show set)
         OBlackhole -> object "BLACKHOLE"
 
     ppSVal :: SValue t -> Doc
@@ -172,9 +172,9 @@ mkPretty (Syntax {..})  = PPrinters {..}
                        <+> mparens (hsep (map ppAtom ne)) 
         CtOFun xs a -> key "OFun" <+> bindVar a 
                        <+> mparens (hsep (map bindVar xs) <+> operator "->" <+> ppHole)
+        CtOApp app  -> key "OApp" <+> ppHole <+> hsep (map ppAtom app)
         CtOCase brs -> key "OCase" <+> ppCont (CtCase brs)
-        CtOLetObj a obj -> key "Olet" <+> bindVar a <+> operator "=" <+> ppObj obj <+> key "in" <+> ppHole 
-        CtOLetThunk a e -> key "Olet" <+> bindVar a <+> operator "=" <+> object "THUNK" <+> ppHole <+> key "in" <+> ppExpr e 
+        CtOLet x -> key "Olet" <+> bindVar x <+> operator "=" <+> operator "?" <+> key "in" <+> ppHole 
         CtOBranch e brdone brleft ->
             key "OBranch" <+> key "case" <+> ppExpr e <+> key "of"
             <$> indent 4 (mkBrace $ map ppBranch brdone ++ 
@@ -187,6 +187,7 @@ mkPretty (Syntax {..})  = PPrinters {..}
                                            map ppBranch left
                                        [] ->
                                            [ppHole])
+        CtOUpd t     -> key "OUpd" <+> var t
         CtOInstant n -> key "OInstant" <+> ppAtom (ANum $ toInteger n)
         -- x -> text (show (unsafeCoerce x :: Cont String))
 

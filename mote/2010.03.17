@@ -1,0 +1,105 @@
+BrainStorming:
+    - Innantill
+    - Fokusera på vår optimering (bättre att poängtera den då den är viktig)
+    * Startexempel mer som problem-lösning
+    * inte förklara allt infererar
+        + kul för publik
+        - kan missa det
+    - Historia innan problembeskrivning
+    - Iterera saker (DB: vi har en vänster ram, en mittram...)
+    * kamera: csi-bilder
+        + kul
+        - missade vad det sa
+    - Tråkig
+    * Rfid
+        + Inte scriptat
+        + Lugn
+    + Vara spontant rolig (musikgenerator)
+    * Vattenballonger
+    + Trådlös byta slide
+    - Inte stå på samma sida
+    ** KUL: Någon från gruppen ändrar slide som inte presenterar (knäpper med fingrarna a la Dr. Who för att byta slide)
+    + Snygga slides
+    * vi:
+        - inte ha fotnötter om vilket universitet vi är ifrån
+        - Ser lite tråkigt ut (visual boring)
+            - folk inställda på att det skulle vara svårt (trots våra försök att göra det enkelt)
+        * visa map (power 4) [1,2,3] == [1^4, 2^4, 3^4]
+
+Enskilt möte:
+    Ja
+
+Engelsk rapport?:
+    Mål med engelska, kunna använda cv, söka phd
+    * Litet paper på engelska om viktiga, rapport på svenska
+    * Rapport på engelska om produkt, generella kompetenser på svenska
+        * Diskutera med Koen
+    ** Svenska med engelska låneord
+    * Helt på engelska
+
+Ansvarig:
+    Olle Fredriksson
+    kollar igenom vad Chalmers kräver
+    vad vill vi ha med
+
+Vad att göra:
+    * Substitution
+    * Related works
+        * Kolla hur man kan göra detta i en kompilator
+        * Jämför med statisk optimering
+    * Rapport
+    * Optimise (med konfiguring, är mer lazy)
+    * Exempel
+        * Bra för demo: Raytracer
+            * Kanske shape
+        * RSA: kryptografiskt säkert?
+
+    * En kortare rapport som vi lämnar (fackspråk, Koen)
+        * alpha post påsk
+
+
+
+Planering
+===========
+
+1:
+    Planerat klart
+    Skeletton för rapport
+    Optimise inline setting
+    Analysera varför shape inte går snabbare :p
+
+2):
+    Optimise thunkar korrekt
+    Callstack
+    Rapport:
+        * kortare texter
+        * punkt lista
+        * kommentarer om vad som skall skrivas
+
+3):
+    Alfa rapport (nästan G)
+    merge branchs
+
+4):
+    Shapes, Grep klara för demo
+
+5):
+    Beta rapport
+
+6):
+
+7):
+    Rapport klar!
+
+8):
+    Öva presentation
+
+9):
+    Skriflig opponering
+
+10):
+    Presentation
+
+-----
+Dan uppskattar Olles vits om platsbrist på platsbristarna
+Olle: Har haft den i ungefär en stund.

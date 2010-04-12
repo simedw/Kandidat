@@ -13,7 +13,7 @@ import Data.List
 import Test.QuickCheck
 
 import Types 
-import Interpreter hiding (main)
+import Debugger hiding (main)
 import Stg.Input
 import qualified Stg.PrePrelude as PP
 
@@ -85,7 +85,8 @@ testsuiteStatic = [
                             in (reverse (take 2 list) 
                                 == drop 3 (reverse list))
   , "PrimeTest1.hls"  ---> True
---  , "OptTest1.hls"    ---> length (take 3 (repeat 4))
+  , "OptTest1.hls"    ---> length (take 3 (repeat 4))
+  , "OptWithTest1.hls" ---> map (\x -> x*x) [1,2,3,4 :: Integer]
   , "ListTest6.hls"   ---> sort (reverse (take 3 [(0 :: Integer)..]))
   , "NegTest1.hls"    ---> (-1) - (-1 :: Integer)
   , "StringTest1.hls" ---> True
@@ -129,8 +130,8 @@ interpreter = map toTestStatic testsuiteStatic ++ map toTestDyn testsuiteDyn
                   v = unsafePerformIO $ forceInterpreter setting file 
                                  in v == fun x' y
                }
-    abs' True  x | x < 0     = -x
-    abs' True  x | otherwise = x
+    abs' True  x | x < 0 = -x
+    abs' True  x         = x
     abs' False x = x 
     cap y x | x > y     = y
     cap y x | otherwise = x

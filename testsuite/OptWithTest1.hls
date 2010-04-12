@@ -1,0 +1,6 @@
+
+main = applyOnList (1:2:3:4:Nil) (\x . x * x);
+
+applyOnList xs = optimise \f . map f xs with { inline map (length xs); inlinings (100 + 200) } ;
+
+
