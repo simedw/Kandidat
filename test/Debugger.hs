@@ -103,7 +103,7 @@ forceInterpreter settings file = do
                       lc  = code . snd . last $ res
                    in  case lc of
                         (ESVal x) -> return $ show $ prExprN PP.text lc
-                        x       -> putStrLn ("fail: Didn't end with ESVal") 
+                        x         -> putStrLn ("fail: Didn't end with ESVal ") 
                                    >> return "Fail"
       Left  r  -> putStrLn ("fail: " ++ show r) 
                   >> return "Fail"
