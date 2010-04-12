@@ -72,7 +72,8 @@ screen szX szY = let { xs = fromTo -1.0 (2.0 / (szX - 1.0)) 1.0
                      } 
                  in map (\x . map (\y . Pos x y) ys) xs;
 
-program1 = Tuple (scale (Pos 0.6 0.8) circle) 'X' : Tuple (scale (Pos 1.3 1.3) $ translate (Pos 0.5 0.5) circle) 'O' : Nil;
+program1 = Tuple (optimise (scale (Pos 0.6 0.8) circle)) 'X' : 
+           Tuple (optimise (scale (Pos 1.3 1.3) $ translate (Pos 0.5 0.5) circle)) 'O' : Nil;
 
 program2 = Tuple (scale (Pos 0.6 0.6) $ rotate (pi / 7.0) square) 'X' : Nil;
 

@@ -2,7 +2,7 @@
 {-# LANGUAGE PackageImports #-}
 {-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE RecordWildCards #-}
-module Interpreter where
+module Debugger where
 
 import "mtl" Control.Monad.State
 import Data.Function
@@ -31,11 +31,12 @@ import Stg.Rules
 import Stg.Types hiding (settings)
 import qualified Stg.Types as ST
 
+import Stg.Heap (Heap,Location(..))
+import qualified Stg.Heap as H
+
 data Settings = Settings
   { steping      :: Bool
   , prelude      :: String
-  , showStgState :: (StgState String -> String)
-  , showStgRule  :: (Rule -> String)
   , input        :: Input
   , quiet        :: Bool
   , forceStg     :: Bool
@@ -50,36 +51,38 @@ data BreakPoint
     deriving (Eq, Show)
 
 evalBP :: BreakPoint -> Result -> Bool
-evalBP bp (rule, StgState {..}) = case bp of
+evalBP bp (rule, _) = case bp of
     AtRule r -> r == rule
-    AtCall id -> case code of 
-        ECall fid _ -> id == fid
+    --AtCall id -> case code of 
+        --ECall fid _ -> id == fid
 
+{-
 stgState :: Bool -> Bool -> Bool -> StgState String -> String
 stgState sc ss sh st@(StgState {code, stack, heap}) = 
        showi sc "code" (show (prExpr PP.text code))
     ++ showi ss ("stack(" ++ show (length stack) ++ ")") (show stack) 
-    ++ showi sh ("heap("++ show (M.size heap) ++")") (concat [ show (id, prObj PP.text obj) ++ "\n\t"
-                             | (id, obj) <- M.toList heap])
+    ++ showi sh ("heap("++ show (H.size heap) ++")") (concat [ show (id, prObj PP.text obj) ++ "\n\t"
+                             | (id, obj) <- H.toList heap])
   where
     showi :: Bool -> String -> String -> String
     showi True s d  = s ++ ": " ++ d ++ "\n"
     showi False s _ = s ++ "\n"
 
-
+-}
 
 defaultSettings = Settings {
     steping      = True
   , prelude      = "Prelude.hls"
-  , showStgState = stgState True True True
-  , showStgRule  = show 
   , input        = defaultInput
   , quiet        = False
   , forceStg     = False
   , toGC         = True
   }
 
-noheapSettings = defaultSettings { showStgState = stgState True True False }
+
+
+--noheapSettings = defaultSettings { showStgState = stgState True True False }
+
 
 
 data InterpreterState = IS
@@ -88,7 +91,6 @@ data InterpreterState = IS
     , history  :: [Result]
     , breakPoints  :: [BreakPoint]
     }
-
 
 -- note that PrintCt must be the first thing on the stack
 forceInterpreter :: Settings -> FilePath -> IO String
@@ -128,7 +130,7 @@ loop :: StgState String -> InputT (StateT InterpreterState IO) ()
 loop originalState  = do
     minput <- getInputLine "% " 
     set <- lift $ gets settings
-    let st@(StgState {..}) = (if toGC set then gc else id) originalState
+    let st = (if toGC set then gc else id) originalState
     case minput of
         Nothing -> return ()
         Just xs -> case words xs of
@@ -137,14 +139,16 @@ loop originalState  = do
             ":v" : xs    -> loopView st xs
             ":view" : xs -> loopView st xs
             ":bp"  : xs -> addbp xs >> loop st
+            [":bpo"] -> addbp ["rule", "ROptimise"] >> evalStep 1000000000 st
+            [":bpd"] -> addbp ["rule", "ROpt", "ORDone"] >> evalStep 100000000 st
             [":back", num] -> case reads num of
                 ((x, "") : _) -> evalStep (negate x) st
                 _ -> loop st
             [":step", num] -> case reads num of
                 ((x, "") : _) -> evalStep x st
                 _ -> loop st
-            [":force!"] -> forcing st >> loop st
-            [":force", var] -> forceit st var >> loop st
+  --          [":force!"] -> forcing st >> loop st
+  --          [":force", var] -> forceit st var >> loop st
             [":h"] -> printHelp >> loop st
             [":help"] -> printHelp >> loop st
             input -> do
@@ -157,7 +161,7 @@ loop originalState  = do
     bp [] _ = Nothing
     bp (b : bs) r | evalBP b r = Just b
                   | otherwise  = bp bs r
-    
+    {-
     forcing st = do
         stg <- lift $ gets stgm
         outputStrLn . fst $ runState (force st) stg
@@ -171,11 +175,7 @@ loop originalState  = do
                 case s of
                     Nothing -> outputStrLn "Something bad has happend"
                     Just x  -> outputStrLn x
-            {- do (s,state') <- liftIO $ catch 
- (return $ runState (force $ st {code = (EAtom x)} ) stg)) 
- (\e -> putStrLn "Bla... ") (undefined)
-                outputStrLn s
-            -}
+    -}
     evalStep n s | n == 0 = printSummary s
                  | n < 0  = do
         hist <- lift . gets $ history
@@ -187,7 +187,7 @@ loop originalState  = do
                  | otherwise = do
         stg <- lift $ gets stgm
         bps <- lift . gets $ breakPoints
-        case runState (step s) stg of
+        case runStgM (step s) stg of
             (Nothing, stg') -> do
                 outputStrLn "No Rule applied"
                 loop s
@@ -214,35 +214,40 @@ loop originalState  = do
             lift . modify $ \set -> set { breakPoints = AtCall f : breakPoints set }
         _ -> outputStrLn "Sirisly u want m3 too parse that?"
 
-    printSummary st@(StgState {..}) = do
+    printSummary st = do
         hist <- lift (gets history)
+        case st of
+            StgState {}   -> return ()
+            OmegaState {} -> outputStrLn "Omega:"
+            PsiState {}   -> outputStrLn "Psi:"
+            IrrState {}   -> outputStrLn "Irr:"
         case hist of
             [] -> do
                 outputStrLn $ "Rule: " ++ show RInitial
-                printCode code
-                printStack stack
-                outputStrLn $ "heap("  ++ show (M.size heap) ++ ")"
+                printCode  $ code  st
+                printStack $ stack st
+                outputStrLn $ "heap("  ++ show (M.size $ heap st) ++ ")"
                 loop st
-            (rule, StgState {..}) : _ -> do
+            (rule, st) : _ -> do
                 outputStrLn $ "Rule: " ++ show rule
-                printCode code
-                printStack stack
-                outputStrLn $ "heap("  ++ show (M.size heap) ++ ")"
+                printCode   $ code  st
+                printStack  $ stack st
+                outputStrLn $ "heap("  ++ show (M.size $ heap st) ++ ")"
                 loop st
                 
 
-    loopView st@(StgState code stack heap set) xs = do
+    loopView st xs = do
         case xs of
-            ["h"]    -> printHeap heap
-            ["heap"] -> printHeap heap
-            "heap":fs -> mapM_ (printHeapLookup heap) fs
-            "h":fs -> mapM_ (printHeapLookup heap) fs
+            ["h"]    -> printHeap (heap st)
+            ["heap"] -> printHeap (heap st)
+            "heap":fs -> mapM_ (printHeapLookup (heap st)) fs
+            "h":fs -> mapM_ (printHeapLookup (heap st)) fs
             ["set"]  -> printSetting =<< lift (gets settings)
             ["settings"] -> printSetting =<< lift (gets settings)
-            ["s"]     -> printStack stack
-            ["stack"] -> printStack stack
-            ["c"]     -> printCode code
-            ["code"]  -> printCode code
+            ["s"]     -> printStack (stack st)
+            ["stack"] -> printStack (stack st)
+            ["c"]     -> printCode (code st)
+            ["code"]  -> printCode (code st)
             ["rules"] -> printRules
             ["sum"]   -> printSummary st
             ["bp"]    -> do
@@ -273,8 +278,10 @@ loop originalState  = do
                                 ++ printHeapFunctions heap
 
     printHeapFunctions :: Heap String -> String
-    printHeapFunctions heap = concat [ padFunction (id, show $ prObj PP.text obj)
-                                     | (id, obj) <- M.toList heap]
+    printHeapFunctions heap = concat 
+        [ padFunction (id ++ if loc == OnAbyss then "!" else ""
+                      , show $ prObj PP.text obj)
+        | (id, (obj, loc)) <- H.toList heap]
       where
         padFunction :: (String, String) -> String
         padFunction (id, obj) = unlines . map ("  " ++) $ case lines obj of
@@ -332,7 +339,7 @@ options :: [OptDescr (Settings -> IO Settings)]
 options = 
     [ Option ['S'] ["step"] (ReqArg setSteping "BOOL") "step through"
     , Option ['F'] ["force"] (ReqArg setForce "Bool") "force evaluation"
-    , Option ['V'] ["visible"] (ReqArg setVisible "\"BOOL BOOL BOOL\"") "show code stack heap"
+--    , Option ['V'] ["visible"] (ReqArg setVisible "\"BOOL BOOL BOOL\"") "show code stack heap"
     , Option ['I'] ["integerinput"] 
         (ReqArg setInputInteger "Integer") 
         "single integer input"
@@ -345,13 +352,14 @@ options =
 setSteping :: String -> Settings -> IO Settings
 setSteping arg s = return $ s { steping = read arg }
 
+{-
 setVisible :: String-> Settings -> IO Settings
 setVisible ind set = let (arg: arg2: arg3:_) = words ind
                          h = read arg3
                          s = read arg2
                          c = read arg
                      in return $ set {  showStgState =  stgState c s h }
-
+-}
 setForce :: String -> Settings -> IO Settings
 setForce arg set = return $ set { forceStg = read arg }
 

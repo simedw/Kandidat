@@ -1,6 +1,6 @@
 main = listSeq $ case getIntList of
     { Cons x xs -> case xs of
-        { Cons y ys -> map (optimise (foo x y)) ys }
+        { Cons y ys -> map (optimise foo x y with { casebranches } ) ys }
     };
     
 foo x y z = case z > 0 of

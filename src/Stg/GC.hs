@@ -22,8 +22,11 @@ import Data.Maybe
 import Data.Set (Set)
 import qualified Data.Set as S
 
-import Data.Map(Map)
+import Data.Map (Map)
 import qualified Data.Map as M
+
+import Stg.Heap (Heap)
+import qualified Stg.Heap as H
 
 
 var = EAtom . AVar
@@ -39,8 +42,8 @@ test = ECase (var "xs")
              ]
 
 mkGC :: forall t . Ord t => [t] -> StgState t -> StgState t
-mkGC untouchable st@(StgState {..}) = 
-    let initial = freeVars code `S.union` freeVarsList stack
+mkGC untouchable st = 
+    let initial = freeVars (code st) `S.union` freeVarsList (stack st)
     in  st{ heap = heapify $ gcStep (initial`S.union` S.fromList untouchable) initial}
   where
     gcStep :: Set t -> Set t -> Set t
@@ -49,13 +52,13 @@ mkGC untouchable st@(StgState {..}) =
                     let acc' = ( S.unions 
                               $ map (\x -> freeVars 
                                     $ fel x 
-                                    $ M.lookup x heap) 
+                                    $ H.lookupAnywhere x (heap st)) 
                               $ S.toList s
                               ) 
                     in  gcStep (acc' `S.union` acc) (acc' `S.difference` acc)
 
     heapify :: Set t -> Heap t
-    heapify s = M.filterWithKey (\k a -> S.member k s) heap
+    heapify s = M.filterWithKey (\k a -> S.member k s) (heap st)
 
     fel :: t -> Maybe (Obj t) -> Obj t
     fel x t = maybe (trace ("GC: couldn't find: " ++ unsafeCoerce x) OBlackhole) id t
@@ -95,11 +98,17 @@ instance FV Obj where
     freeVars (OCon c as)     = freeVarsList as
     freeVars (OThunk e)      = freeVars e
     freeVars (OBlackhole)    = S.empty
-    freeVars (OOpt a)        = freeVars a
+    freeVars (OOpt a set)    = freeVars a `S.union` freeVarsList set 
+
+instance FV Setting where
+    freeVars (Inlinings a) = freeVars a
+    freeVars (Inline t a)  = freeVars a
+    freeVars CaseBranches  = S.empty
 
 instance FV Cont where
     freeVars (CtCase brs)           = freeVarsList brs
     freeVars (CtUpd i)              = S.singleton i
+    freeVars (CtOUpd i)             = S.singleton i
     freeVars (CtArg a)              = freeVars a
     freeVars (CtOpt i)              = S.singleton i
     freeVars (CtPrint)              = S.empty
@@ -107,8 +116,8 @@ instance FV Cont where
     freeVars (CtOFun args alpha)    = S.singleton alpha
     freeVars (CtOCase brs)          = freeVarsList brs
     freeVars (CtOBranch e brs brs') = freeVars e `S.union` freeVarsList brs `S.union` freeVarsList brs'
-    freeVars (CtOLetObj x obj)      = freeVars obj 
-    freeVars (CtOLetThunk t expr)   = freeVars expr `S.difference` S.singleton t
+    freeVars (CtOLet v)             = S.singleton v 
     freeVars (CtOInstant _)         = S.empty
+    freeVars (CtOApp as)            = freeVarsList as
     
 
