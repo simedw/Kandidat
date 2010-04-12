@@ -41,8 +41,8 @@ defaultSettings = Settings {
 
 benchmarklist :: [(String, [(Integer,[Integer])])]
 benchmarklist = 
-    [ "Shapes.hls"   --> [(0,[1])]
-    , "OptTest7.hls" --> [(5,list)] 
+    [ --"Shapes.hls"   --> [(0,[1])]
+     "OptTest7.hls" --> [(100,list)] 
 {-    , "OptTest1.hls" --> [(0,[])]
     , "OptTest2.hls" -->  [(0,list)]
     , "OptTest3.hls" -->  [(0,list)]
