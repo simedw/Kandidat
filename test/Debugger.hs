@@ -19,6 +19,7 @@ import qualified System.Console.Haskeline as Hl
 
 import Text.ParserCombinators.Parsec
 import Parser.Diabetes
+import qualified Parser.Locals as Locals
 import Parser.Pretty.Pretty
 import Parser.SugarParser
 import Parser.STGParser
@@ -103,7 +104,7 @@ forceInterpreter settings file = do
                       lc  = code . snd . last $ res
                    in  case lc of
                         (ESVal x) -> return $ show $ prExprN PP.text lc
-                        x         -> putStrLn ("fail: Didn't end with ESVal ") 
+                        x       -> putStrLn ("fail: Didn't end with ESVal") 
                                    >> return "Fail"
       Left  r  -> putStrLn ("fail: " ++ show r) 
                   >> return "Fail"
@@ -116,7 +117,7 @@ testInterpreter set file = do
     -- prelude must be last, otherwise parse error messages get wrong line numbers!
     case parseSugar (res ++ "\n" ++ prelude) of  
       Right fs -> do
-        let st = initialState (run (createGetFuns (input set)
+        let st = initialState (Locals.localise $ run (createGetFuns (input set)
                               ++ prePrelude) fs)
         evalStateT (Hl.runInputT Hl.defaultSettings (loop st)) IS
             { settings = set
@@ -225,13 +226,13 @@ loop originalState  = do
             [] -> do
                 outputStrLn $ "Rule: " ++ show RInitial
                 printCode  $ code  st
-                printStack $ stack st
+                printCStack $ cstack st
                 outputStrLn $ "heap("  ++ show (M.size $ heap st) ++ ")"
                 loop st
             (rule, st) : _ -> do
                 outputStrLn $ "Rule: " ++ show rule
                 printCode   $ code  st
-                printStack  $ stack st
+                printCStack  $ cstack st
                 outputStrLn $ "heap("  ++ show (M.size $ heap st) ++ ")"
                 loop st
                 
@@ -244,8 +245,8 @@ loop originalState  = do
             "h":fs -> mapM_ (printHeapLookup (heap st)) fs
             ["set"]  -> printSetting =<< lift (gets settings)
             ["settings"] -> printSetting =<< lift (gets settings)
-            ["s"]     -> printStack (stack st)
-            ["stack"] -> printStack (stack st)
+            ["s"]     -> printCStack (cstack st)
+            ["stack"] -> printCStack (cstack st)
             ["c"]     -> printCode (code st)
             ["code"]  -> printCode (code st)
             ["rules"] -> printRules
@@ -269,8 +270,8 @@ loop originalState  = do
 
     printCode code = outputStrLn $ "code: " ++ show (prExpr PP.text code)
 
-    printStack stack = outputStrLn $ "stack(" ++ show (length stack) ++ "):\n" 
-                                  ++ show (prStack PP.text stack) 
+    printCStack cstack = outputStrLn $ "stack(" ++ show (length cstack) ++ "):\n" 
+                                  ++ show (prCStack PP.text cstack) 
 
     printHeapLookup heap f = outputStrLn $ printHeapFunctions $ M.filterWithKey (\k _ -> k == f) heap
 

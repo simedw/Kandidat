@@ -11,6 +11,8 @@ import Data.Char
 
 import Stg.AST
 
+import Util.Util
+
 numCon, decCon, chrCon, consCon, nilCon :: String
 numCon = "I#"
 decCon = "D#"
@@ -47,46 +49,45 @@ prePrelude =
              ++ show op 
              ++ " not supported on arguments of the given type " 
              ++ "(" ++ show args ++ ")"
-    dot = (.) . (.)
 
 -- Create a function alias
 alias :: String -> String -> Function String
-alias name = Function name . OThunk . EAtom . AVar
+alias name = Function name . OThunk [] 0 . EAtom . AVar . Heap
 
 -- Create the function for a primitive unary operation
 unOp :: Bool -> String -> Pop String -> Function String
-unOp box name op = Function name $ OFun ["x"] $
-    ECase (EAtom (AVar "x"))
+unOp box name op = Function name $ OFun ["x"] 1 $
+    ECase (EAtom (AVar $ Heap "x"))
         [  branch numCon
-        -- branch decCon
+          -- branch decCon
         ]
   where
     branch c = BCon c ["x'"] $
              case box of
-                 True -> ECase (EPop op [AVar "x'"])
+                 True -> ECase (EPop op [AVar $ Heap "x'"])
                      [ BDef "r" 
-                         $ ELet (NonRec "r'"  (OCon c [AVar "r"])) 
-                         $ EAtom $ AVar "r'" 
+                         $ ELet (NonRec "r'"  (OCon c [AVar $ Heap "r"])) 
+                         $ EAtom $ AVar $ Heap "r'" 
                      ]
-                 False -> EPop op [AVar "x'"]
+                 False -> EPop op [AVar $ Heap "x'"]
 
 -- Create the function for a primitive binary operation
 binOp :: Bool -> String -> Pop String -> Function String
-binOp box name op = Function name $ OFun ["x", "y"] $
-    ECase (EAtom (AVar "x")) 
+binOp box name op = Function name $ OFun ["x", "y"] 2 $
+    ECase (EAtom (AVar $ Heap "x")) 
         [ branch numCon
          -- branch decCon
         ]
   where
     branch c = BCon c ["x'"] 
-             (ECase (EAtom (AVar "y"))
+             (ECase (EAtom (AVar $ Heap "y"))
                  [ BCon c ["y'"] $ 
                      case box of
-                         True  -> ECase (EPop op [AVar "x'", AVar "y'"]) 
+                         True  -> ECase (EPop op [AVar $ Heap "x'", AVar $ Heap "y'"]) 
                              [ BDef "r" 
-                                 $ ELet (NonRec "r'" (OCon c [AVar "r"])) 
-                                 $ EAtom $ AVar "r'" 
+                                 $ ELet (NonRec "r'" (OCon c [AVar $ Heap "r"])) 
+                                 $ EAtom $ AVar $ Heap "r'" 
                              ]
-                         False -> EPop op [AVar "x'", AVar "y'"]
+                         False -> EPop op [AVar $ Heap "x'", AVar $ Heap "y'"]
                  ]
              )

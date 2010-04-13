@@ -12,6 +12,8 @@ import qualified Data.Map as M
 import Stg.AST
 import Stg.Rules
 
+import Stg.Stack
+
 import Stg.Heap
 import qualified Stg.Heap as H
 
@@ -31,40 +33,43 @@ data Cont t
   | CtOInstant Int
  deriving Show
 
-type Stack t = [Cont t]
-
+type ContStack t = [Cont t]
 
 data StgState t 
   = StgState
-      { code  :: Expr  t
-      , stack :: Stack t
-      , heap  :: Heap  t
+      { code     :: Expr  t
+      , cstack   :: ContStack t
+      , astack   :: ArgStack t 
+      , heap     :: Heap  t
       , settings :: [StgSettings t]
       }
   | OmegaState
-      { code  :: Expr  t
-      , stack :: Stack t
-      , heap  :: Heap  t
+      { code     :: Expr  t
+      , cstack   :: ContStack t
+      , astack   :: ArgStack t
+      , heap     :: Heap  t
       , settings :: [StgSettings t]
       }
   | PsiState
-      { code  :: Expr  t
-      , stack :: Stack t
-      , heap  :: Heap  t
+      { code     :: Expr  t
+      , cstack   :: ContStack t
+      , astack   :: ArgStack t
+      , heap     :: Heap  t
       , letBinds :: [t]
       , settings :: [StgSettings t]
       }
   | IrrState
-      { code  :: Expr  t
-      , stack :: Stack t
-      , heap  :: Heap  t
+      { code     :: Expr  t
+      , cstack   :: ContStack t
+      , astack   :: ArgStack t
+      , heap     :: Heap  t
       , settings :: [StgSettings t]
       }
   
 
 data StgSettings t = StgSettings
   { globalInline :: Integer
-  , inlines  :: Map t Integer
+  , inlines      :: Map t Integer
   , caseBranches :: Bool
   }
 
@@ -100,13 +105,14 @@ makeSettings h = foldr
     defaultOptSettings
   where
     lookupInteger (ANum x) = x
-    lookupInteger (AVar v) = case H.lookup v h of
+    lookupInteger (AVar (Heap v)) = case H.lookup v h of
         Just (OCon _ [ANum x]) -> x
         Nothing -> error "makeSettings, invalid arguments to optimise with"
+    lookupInteger (AVar (Local i v)) = error "måste ta in callstacken också, TODO :)"
 
 data StgMState t = StgMState
     { nameSupply :: [t]
-    , mkCons     :: String -> t
+    , mkCons     :: t -> t
     }
 
 type StgM t a = State (StgMState t) a

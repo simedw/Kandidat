@@ -80,7 +80,7 @@ expr = buildExpressionParser table expr'
         reservedOp tok s 
         return $ \e1 e2 ->
             case (e1,e2) of
-                (EAtom a1,EAtom a2) -> ECall s [a1,a2]
+                (EAtom a1,EAtom a2) -> ECall (Heap s) [a1,a2]
                 -- This is very unfortunate that this function is not in the
                 -- monad. I have to use the IO errors instead.
                 _ -> error $ "expected atoms on both sides of " ++ s
@@ -93,7 +93,7 @@ expr2 = parens tok expr <|> EAtom `fmap` atom
 
 -- Atoms, identifiers or integers. Extensible!
 atom :: P (Atom String)
-atom = AVar `fmap` ident 
+atom = (AVar . Heap) `fmap` ident 
    <|> numOrDec
    <|> ADec `fmap` float tok
 -- <|> AChr `fmap` charLiteral tok
@@ -111,7 +111,7 @@ numOrDec = do
 -- without:    f a1 .. an
 app :: P (Expr String)
 app = do
-    name <- ident 
+    name <- fmap Heap ident 
     args <- many atom
     case args of
         [] -> return (EAtom (AVar name))
@@ -174,7 +174,7 @@ object = choice [fun, pap, con, thunk, opt, blackhole]
             args <- many1 ident
             reservedOp tok "->"
             e <- expr
-            return $ OFun args e
+            return $ OFun args 0 e
 
     pap = do
         reserved tok "PAP"
@@ -192,7 +192,7 @@ object = choice [fun, pap, con, thunk, opt, blackhole]
 
     thunk = do
         reserved tok "THUNK"
-        OThunk `fmap` expr
+        OThunk [] 0 `fmap` expr
 
     opt = do
         reserved tok "OPT"

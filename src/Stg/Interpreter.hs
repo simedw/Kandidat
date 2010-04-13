@@ -10,7 +10,7 @@ import Control.Monad
 import "mtl" Control.Monad.State
 
 import Data.Char
-import Data.Generics
+import "syb" Data.Generics
 import Data.Maybe
 
 {-
@@ -21,7 +21,9 @@ import qualified Data.Map as M
 import Stg.AST
 import Stg.GC
 import Stg.Input
-import Stg.Optimise
+import Stg.Variable
+import Stg.Stack
+-- import Stg.Optimise
 import Stg.Rules
 import Stg.Substitution
 import Stg.Types
@@ -29,32 +31,32 @@ import Stg.Branch
 import Stg.Heap (Heap, Location(..))
 import qualified Stg.Heap as H
  
-topCase :: Stack t -> Bool
+topCase :: ContStack t -> Bool
 topCase (CtCase _ : _) = True
 topCase _              = False  
 
-topArg :: Stack t -> Bool
+topArg :: ContStack t -> Bool
 topArg (CtArg _ : _) = True
 topArg _             = False
 
-topUpd :: Stack t -> Bool
+topUpd :: ContStack t -> Bool
 topUpd (CtUpd _ : _) = True
 topUpd (CtOUpd _ : _) = True
 topUpd _             = False
 
-topOpt :: Stack t -> Bool
+topOpt :: ContStack t -> Bool
 topOpt (CtOpt _ : _) = True
 topOpt _             = False
 
-topPrint :: Stack t -> Bool
+topPrint :: ContStack t -> Bool
 topPrint (CtPrint : _) = True
 topPrint _             = False
 
-topPrintCon :: Stack t -> Bool
+topPrintCon :: ContStack t -> Bool
 topPrintCon (CtPrintCon _ _ _ : _) = True
 topPrintCon _                      = False
 
-topIsO :: Stack t -> Bool
+topIsO :: ContStack t -> Bool
 topIsO (cont : _) = case cont of
     CtOFun  _ _     -> True
     CtOCase _       -> True
@@ -64,16 +66,15 @@ topIsO (cont : _) = case cont of
     _               -> False
 topIsO _          = False
 
-
-topOInstant :: Stack t -> Bool
+topOInstant :: ContStack t -> Bool
 topOInstant (CtOInstant n: _) = n <= 0
 topOInstant _                = False
 
-decTop :: Stack t -> Stack t
+decTop :: ContStack t -> ContStack t
 decTop (CtOInstant n : xs) = CtOInstant (n-1) : xs
 decTop xs = xs 
 
-numArgs :: Stack t -> Int
+numArgs :: ContStack t -> Int
 numArgs = length . takeWhile isArg
   where 
     isArg (CtArg _) = True
@@ -84,181 +85,227 @@ unArg (CtArg a) = a
 unArg o = error $ "unArg: not an arg: " ++ show o 
 
 
-initialState :: [Function String] -> StgState String
-initialState funs = gc StgState
-  { code  = getMain funs
-  , stack = [CtPrint]
-  , heap  = initialHeap funs
+initialState :: Variable t => [Function t] -> StgState t
+initialState funs = StgState
+  { code     = mainF
+  , cstack   = [CtPrint]
+  , astack   = newStackFrame size []
+  , heap     = initialHeap funs
   , settings = []
-  }
-     where gc = id
+  } where
+        (mainF, size) = getMain funs
 
-initialNames :: [String]
-initialNames = map ("i." ++) $ [1..] >>= flip replicateM ['a'..'z']
+--initialNames :: [String]
+--initialNames = map ("i." ++) $ [1..] >>= flip replicateM ['a'..'z']
 
-initialStgMState :: StgMState String
+initialStgMState :: Variable t => StgMState t
 initialStgMState = StgMState
-    { nameSupply = initialNames
-    , mkCons     = ('$' :)
+    { nameSupply = namesupply
+    , mkCons     = mkcons            --- is this really needed?
     }
 
-getMain = getFunction "main"
+getMain :: Variable t => [Function t] -> (Expr t, Int)
+getMain = getFunction mainFunction
 
-getFunction :: (Show t, Eq t)  => t -> [Function t] -> Expr t
-getFunction s ((Function name o):xs) | s == name = let OThunk c = o in c
+getFunction :: Variable t => t -> [Function t] -> (Expr t, Int)
+getFunction s ((Function name o):xs) | s == name = let OThunk [] size c = o in (c, size)
                                      | otherwise = getFunction s xs 
 getFunction s [] = error $ "No \"" ++ show s  ++ "\" function"
 
-initialHeap :: Ord t => [Function t] -> Heap t
+initialHeap :: Variable t => [Function t] -> Heap t
 initialHeap = H.fromList . map (\(Function name obj) -> (name, obj))
 
-
-step :: (Ord t, Data t, Show t) => StgState t -> StgM t (Maybe (Rule, StgState t))
+step :: Variable t => StgState t -> StgM t (Maybe (Rule, StgState t))
+{-
 step st@(OmegaState {..}) = omega stack heap code settings
 step st@(IrrState {..})   = irr stack heap code settings
 step st@(PsiState {..})   = case code of
     EAtom (AVar code) -> psi stack heap code letBinds settings
-step st@(StgState {..})   = step' $ st{stack = decTop stack}
+-}
+step st@(StgState {..})   = step' $ st {cstack = decTop cstack}
   where
-   step' st'@(StgState {..}) = case code of
-       _ | topOInstant stack -> omega' (ROmega "from machine after OInstant") 
+    step' st'@(StgState {..}) = case code of
+     {-  _ | topOInstant stack -> omega' (ROmega "from machine after OInstant") 
                                        (drop 1 stack) heap code settings -- for inlining
+     -}
        ECase expr branch     -> case expr of
-           EAtom (AVar var)  ->
-               case H.lookup var heap of
+           EAtom a -> case lookupAtom a of
+               a'@(AVar (Heap var)) -> case H.lookup var heap of
                    Nothing             -> error "var not in heap" -- return Nothing
-                   Just (OThunk _)     -> rcase expr branch
+                   Just (OThunk _ _ _)   -> rcase expr branch
                    Just (OCon c atoms) -> case instantiateBranch c atoms branch of
-                       Nothing   -> rany expr branch
-                       Just expr -> rcasecon st expr 
-                   _                   -> rany expr branch
-           EAtom a          -> rany  expr branch
-           _                -> rcase expr branch
-       ELet defs _  -> rlet st defs 
+                       Nothing   -> rany expr a' branch
+                       Just expr -> -- lagg till atoms pa arg-stacken
+                                    rcasecon st atoms expr 
+                   _             -> rany expr a' branch
+               _ -> rany expr a branch
+           _ -> rcase expr branch
+                      
+       ELet defs exp  -> rlet st defs exp
        EPop  op args     -> rprimop st op args 
        ECall ident args  -> rpush st ident args 
-       EAtom a | not (isVar a) && topUpd stack  -> rupdate st (OThunk code)
-               | not (isVar a) && topCase stack -> rret st
-               | not (isVar a) && topPrint stack -> rprintval st a
-       EAtom (AVar var) -> case H.lookup var heap of  
+       EAtom a
+            -- Top is a I# 2, but we should save it in a thunk 
+            | not (isVar a) && topUpd cstack   -> rupdate st (OThunk [] 0 code)
+            | not (isVar a) && topCase cstack  -> rret st
+            | not (isVar a) && topPrint cstack -> rprintval st a
+       EAtom a -> case lookupAtom a of
+         (AVar (Heap var)) -> case H.lookup var heap of  
            Nothing  -> return Nothing
            Just obj -> case obj of
-               OThunk expr       -> rthunk st expr var
-               _ | topIsO stack  -> psi stack heap var [] settings
-               OOpt alpha sets   -> roptimise st alpha sets var
-               _ | topUpd  stack -> rupdate st obj
-               _ | topCase stack -> rret st
+               OThunk fv size expr       -> rthunk st (map lookupAtom fv) size expr var
+      --         _ | topIsO stack  -> psi stack heap var [] settings
+      --         OOpt alpha sets   -> roptimise st alpha sets var
+      --         _ | topUpd  stack -> rupdate st obj
+               _ | topCase cstack -> rret st
 --               _ | topContOpt stack -> rcontopt st
-               OCon t atoms | topPrint stack -> rprintcon st t atoms
-               _            | topPrintCon stack -> rprintfun st
-               OPap ident atoms | topArg stack -> rpenter st ident atoms
-                                | topOpt stack -> roptpap st ident atoms
-               OFun args expr   | topOpt stack -> roptfun st args expr
+               OCon t atoms | topPrint cstack -> rprintcon st t atoms
+               _            | topPrintCon cstack -> rprintfun st
+               OPap ident atoms | topArg cstack -> rpenter st ident atoms
+       --                         | topOpt stack -> roptpap st ident atoms
+               OFun args size expr
+       --                       | topOpt stack -> roptfun st args expr
                                 | otherwise    -> 
                    let lenArgs = length args
-                       stackArgs = numArgs stack 
+                       stackArgs = numArgs cstack 
                    -- depending on the number of arguments the function is either
                    -- saturated or not 
                    in case lenArgs <= stackArgs of
-                       True  -> rfenter st args lenArgs expr
+                       True  -> rfenter st args lenArgs size expr
                        False -> rpap st stackArgs var 
-               _ | topOpt stack  -> rupdateopt st obj var
+        --       _ | topOpt stack  -> rupdateopt st obj var
                _                               -> return Nothing
-       ESVal sval | topPrintCon stack -> rprintcont st sval
+       ESVal sval | topPrintCon cstack -> rprintcont st sval
        -- if there is no rule to apply, do nothing
        _              -> return Nothing
-    where
-      st = st' { stack = stack}
+     where
+      lookupAtom (AVar v) = case v of
+          Heap x    -> AVar v
+          Local x _ -> lookupStackFrame x astack
+      lookupAtom a        = a
+      st = st' { cstack = cstack }
+      
+      {-
       rlet st@(StgState {..}) defs = do
           vars <- replicateM (length (getBinds defs)) newVar
           let ids  = map fst (getBinds defs)
               code'@(ELet defs' e') = substList ids (map AVar vars) code
               objs = map snd $ (getBinds defs')
-              heap' = foldr (\(v,o) h ->  H.insert v o h) heap (zip vars objs)
+              heap' = foldr (\(v,o) h -> H.insert v o h) heap (zip vars objs)
           returnJust (RLet, st { code = e'
                                , heap = heap' })
+      -}
+      rlet st@(StgState {..}) (NonRec t obj) e = do
+          var <- newVar 
+          let astack' = pushArgs [AVar $ Heap var] astack
+              heap'   = H.insert var obj heap
+          returnJust (RLet, st { code = e
+                               , heap = heap' 
+                               , astack = astack'})
+        
                             
+      -- fixed
       rcase expr branch = returnJust 
             (RCaseCon
-            , st { code  = expr
-                 , stack = CtCase branch : stack
+            , st { code   = expr
+                 , cstack = CtCase branch : cstack
+                 , astack = incrLock astack
                  }
             )
-      rany (EAtom var) branch = case findDefaultBranch var branch of
+      -- fixed
+      rany (EAtom var) defvar branch = case findDefaultBranch (lookupAtom var) branch of
                   Nothing     -> return Nothing
                   Just expr'  -> returnJust
                       ( RCaseAny
-                      , st { code = expr' }
+                      , st { code = expr' 
+                           , astack = pushArgs [defvar] astack
+                           }
                       )
-      rcasecon st@(StgState {..}) expr = returnJust
+
+      -- fixed
+      rcasecon st@(StgState {..}) atoms expr = returnJust
           ( RCaseCon
-          , st { code = expr}
+          , st { code   = expr 
+               , astack = pushArgs atoms astack
+               }
           )
 
+      -- fixed
       rprimop st op args = do
-          mkConFun <- gets mkCons
           returnJust 
               ( RPrimOP
-              , st { code = applyPrimOp mkConFun op args }
+              , st { code = applyPrimOp op args }
               )
       
+      -- fixed
       rpush st@(StgState {..}) ident args = returnJust 
           (RPush
           , st { code = EAtom (AVar ident)
-               , stack = map CtArg args ++ stack})
+               , cstack = map CtArg args ++ cstack})
 
+
+      -- fixed
       rret st@(StgState {..}) =
-          let CtCase bs : rest = stack
+          let CtCase bs : rest = cstack
           in returnJust
             ( RRet
             , st { code = ECase code bs
-                 , stack = rest})
-      rthunk st@(StgState {..}) e v = returnJust      
+                 , cstack = rest
+                 , astack = decrLock astack})
+                 
+      -- intressant, dessutom fixad
+      rthunk st@(StgState {..}) as size e v = returnJust      
           ( RThunk
           , st { code  = e
-          , stack = CtUpd v : stack
-          , heap  = H.insert v OBlackhole heap})
-      rupdate st@(StgState {..}) obj = case stack of
+               , cstack = CtUpd v : cstack
+               , astack = pushArgs as $ newStackFrame size astack
+               , heap   = H.insert v OBlackhole heap})
+          
+      -- fixad
+      rupdate st@(StgState {..}) obj = case cstack of
             CtUpd  x : res -> returnJust 
-                ( RUpdate
-                , st { stack = res
-                , heap = H.insert x obj heap})
+                                 ( RUpdate
+                                 , st { cstack = res
+                                      , heap = H.insert x obj heap})
             CtOUpd x : res -> returnJust 
-                ( RUpdate
-                , st { stack = res
-                , heap = H.insertAbyss x obj heap})
-      {-      
-          let CtUpd x : rest = stack -- the object is a value, update memory
-          in  returnJust ( RUpdate
-                         , st { stack = rest
-                         , heap  = H.insert x obj heap})
-      -}
-      rfenter st@(StgState {..}) args lenArgs e = do
-          let args' = map unArg $ take lenArgs stack 
-          args'' <- replicateM lenArgs newVar
+                                 ( RUpdate
+                                 , st { cstack = res
+                                      , heap = H.insertAbyss x obj heap})
+
+
+      -- fixed
+      rfenter st@(StgState {..}) args lenArgs size e = do
+          let args' = map (lookupAtom . unArg) $ take lenArgs cstack 
+          -- args'' <- replicateM lenArgs newVar
           {- okey this is the thing...
              if we just subst names can clash => bad :/
              please if you can read this, save us callstack, you are our last hope
           -}
           returnJust
-                         ( RFEnter
-                         , st { code  = substList args'' args' (substList args (map AVar args'') e)  
-                              , stack = drop lenArgs stack })
+            ( RFEnter
+            , st { code   = e  
+                 , cstack = drop lenArgs cstack 
+                 , astack = pushArgs args' (newStackFrame size astack) })
 
+      -- fixed
       rpap st@(StgState {..}) stackArgs var = do
           p <- newVar
-          let args' = map unArg $ take stackArgs stack
+          let args' = map (lookupAtom . unArg) $ take stackArgs cstack
               pap   = OPap var args'
           returnJust ( RPap1
-                     , st { code  = EAtom (AVar p)
-                          , stack = drop stackArgs stack
-                          , heap  = H.insert p pap heap }
+                     , st { code   = EAtom (AVar (Heap p))
+                          , cstack = drop stackArgs cstack
+                          , heap   = H.insert p pap heap }
                      )
+               
+      -- fixed      
       rpenter st@(StgState {..}) var atoms = returnJust
           ( RPEnter
-          , st { code  = EAtom (AVar var)
-          , stack = map CtArg atoms ++ stack
-          , heap  = heap })
+          , st { code   = EAtom (AVar (Heap var))
+               , cstack = map CtArg atoms ++ cstack
+               })
+      
+      {-
       roptimise st@(StgState {..}) omeg sets alpha = 
           returnJust
               ( ROptimise
@@ -281,6 +328,8 @@ step st@(StgState {..})   = step' $ st{stack = decTop stack}
       roptfun st@(StgState {..}) args expr = do
           let CtOpt alpha : stack' = stack
           omega' (ROmega "from machine found fun to optimise") (CtOFun args alpha : stack') heap expr settings
+      -}
+      
 {-  
       rcontopt st@(StgState {..}) = do
           let CtContOpt alpha : stack' = stack
@@ -288,6 +337,8 @@ step st@(StgState {..})   = step' $ st{stack = decTop stack}
               Nothing -> error $ "ContOpt rule: alpha not in heap buh huh: " ++ show alpha
               Just obj -> omega alpha stack' heap obj 
 -}  
+
+      {-
       rupdateopt st@(StgState {..}) obj var = do
           let CtOpt alpha : stack' = stack
           returnJust
@@ -297,57 +348,59 @@ step st@(StgState {..})   = step' $ st{stack = decTop stack}
                   , stack = stack'
                   , heap  = H.insert alpha obj heap
                   }
-              ) 
+              )
+      -}
+               
       rprintcon st@(StgState {..}) c atoms = do
-          let CtPrint : stack' = stack
+          let CtPrint : cstack' = cstack
           case null atoms of
               True -> returnJust
                   ( RPrintCon
                   , st
                       { code = ESVal (SCon c [])
-                      , stack = stack'})
+                      , cstack = cstack'})
               False -> returnJust
                   ( RPrintCon
                   , st
                       { code = EAtom (head atoms)
-                      , stack = CtPrint : CtPrintCon c [] (tail atoms) : stack'}) 
+                      , cstack = CtPrint : CtPrintCon c [] (tail atoms) : cstack'}) 
       rprintval st@(StgState {..}) atom = do
-          let CtPrint : stack' = stack
+          let CtPrint : cstack' = cstack
           returnJust
               ( RPrintVal
               , st 
                   { code  = ESVal (SAtom atom)
-                  , stack = stack'})
+                  , cstack = cstack'})
       rprintfun st@(StgState {..}) = do
-          let CtPrint : stack' = stack
+          let CtPrint : cstack' = cstack
           returnJust
               ( RPrintFun
               , st
                   { code = ESVal SFun
-                  , stack = stack'})
+                  , cstack = cstack'})
       rprintcont st@(StgState {..}) sval = do
-          let CtPrintCon c ps ns : stack' = stack
+          let CtPrintCon c ps ns : cstack' = cstack
           case ns of 
               [] -> returnJust
                   ( RPrintCont
                   , st
                       { code = ESVal (SCon c (reverse (sval:ps)))
-                      , stack = stack'})
+                      , cstack = cstack'})
               n : ns -> returnJust
                   ( RPrintCont
                   , st 
                       { code = EAtom n
-                      , stack = CtPrint : CtPrintCon c (sval:ps) ns : stack'})
+                      , cstack = CtPrint : CtPrintCon c (sval:ps) ns : cstack'})
 
 
-
+{-
 -- if we find anything that is point to a OThunk
 -- we try to evalutate it
 force st@(StgState {..}) = do 
   res <- step st 
   case res of
     Nothing -> case code of
-        (EAtom (AVar v)) -> case H.lookup v heap of
+        (EAtom var) | AVar (Heap v) <- lookupAtom var -> case H.lookup v heap of
             Nothing -> return $ show v
             Just (OThunk expr) -> force (st {code = expr}) 
             Just (OCon t []) -> return t 
@@ -363,22 +416,22 @@ force st@(StgState {..}) = do
 
 -- start the force evaluation
 -- actually quite ugly
-runForce :: Input -> [Function String] -> String
+runForce :: Variable t => Input -> [Function t] -> t
 runForce inp funs = evalStgM (go st) initialStgMState
   where
-    gc = mkGC ["$True", "$False"]
+    gc = mkGC $ map mkcons $ [trueCon, falseCon]
     st = gc $ initialState (createGetFuns inp ++ funs)
     go st = do
         res <- step st
         case res of
             Nothing       -> force st
             Just (r, st') -> go st'
- 
+-}
 
-eval :: Input -> [Function String] -> [(Rule, StgState String)]
+eval :: Variable t => Input -> [Function t] -> [(Rule, StgState t)]
 eval inp funs = (RInitial, st) : evalStgM (go st) initialStgMState
   where
-    gc = mkGC ["$True", "$False"]
+    gc = mkGC $ map mkcons $ [trueCon, falseCon]
     st = gc $ initialState (createGetFuns inp ++ funs)
     go st = do
         res <- step st
@@ -387,18 +440,18 @@ eval inp funs = (RInitial, st) : evalStgM (go st) initialStgMState
             Just (r, st') -> ((r, st') :) `fmap` go (gc st')
       
 
-applyPrimOp :: Show t => (String -> t) -> Pop t -> [Atom t] -> Expr t
-applyPrimOp mkCons op = case op of 
+applyPrimOp :: Variable t => Pop t -> [Atom t] -> Expr t
+applyPrimOp op = case op of 
     PBinOp   _ nop dop -> applyBinOp ANum ADec nop dop
     PUnOp    _ nop dop -> applyUnOp  ANum ADec nop dop
-    PBinBool _ nop dop -> applyBinOp mkConFun mkConFun nop dop
+    PBinBool _ nop dop -> applyBinOp avar avar nop dop
   where
+    avar = AVar . Heap . boolToCon
     applyBinOp nf _  nop _   [ANum x, ANum y] = EAtom . nf $ x `nop` y
     applyBinOp _  df _   dop [ADec x, ADec y] = EAtom . df $ x `dop` y
     applyBinOp _ _ _ _ args = err args
     applyUnOp nf _  nop _   [ANum x] = EAtom . nf $ nop x
     applyUnOp _  df _   dop [ADec x] = EAtom . df $ dop x
-    mkConFun = AVar . mkCons . show
     err args = 
         error $ "applyPrimOp: Primitive operation (" 
              ++ show op 

@@ -1,3 +1,4 @@
+{-# LANGUAGE PackageImports #-}
 module Stg.Optimise where
 
 import Control.Monad
@@ -5,7 +6,7 @@ import Control.Applicative
 
 import Unsafe.Coerce
 
-import Data.Generics
+import "syb" Data.Generics
 import Data.Generics.PlateData
 
 {- ta bort -}
@@ -227,7 +228,11 @@ irr (CtOCase brs     : ss) h e  set =
             _   -> irr' (RIrr "case continuation") ss h (ECase e2 brs) set
       
 irr (CtOLet t        : ss) h e set = case H.lookupAnywhere t h of
-    Just o  -> irr' (RIrr "let continuation") ss h (mkExpr h e [t]) set -- ELet (NonRec t o) e) set
+    Just o  -> case mkExpr h e [t] of
+     {-   ELet (NonRec v (OThunk e')) (ECase (EAtom (AVar v')) brs) | v == v'
+     --       -> omega' (RIrr "?") (CtOLet t : ss) h (ECase e' brs) set 
+     -}
+        exp -> irr' (RIrr "let continuation") ss h exp set -- ELet (NonRec t o) e) set
     Nothing -> error "irr on CtOLet, variable not in abyss!"
   
 
