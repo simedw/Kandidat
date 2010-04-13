@@ -234,6 +234,7 @@ loop originalState  = do
                 printCode   $ code  st
                 printCStack  $ cstack st
                 outputStrLn $ "heap("  ++ show (M.size $ heap st) ++ ")"
+                outputStrLn $ "astack" ++ show (astack st)
                 loop st
                 
 

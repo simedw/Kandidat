@@ -14,7 +14,7 @@ lookupStackFrame :: Int -> ArgStack t -> Atom t
 lookupStackFrame x (a:_) = args a !! x
 
 newStackFrame :: Variable t => Int -> ArgStack t -> ArgStack t
-newStackFrame size as = StackFrame 0 0 (replicate size (error "nullpointer : ⊥")) : remove as
+newStackFrame size as = StackFrame 0 0 (replicate size (ANum 0) {-(error "nullpointer : ⊥")-}) : remove as
   where
     remove (StackFrame 0 _ _ : as) = as
     remove s                       = s 

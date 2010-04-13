@@ -115,6 +115,11 @@ getFunction s [] = error $ "No \"" ++ show s  ++ "\" function"
 initialHeap :: Variable t => [Function t] -> Heap t
 initialHeap = H.fromList . map (\(Function name obj) -> (name, obj))
 
+lookupAtomStack astack (AVar v) = case v of
+    Heap x    -> AVar v
+    Local x _ -> lookupStackFrame x astack
+lookupAtomStack astack    a     = a
+
 step :: Variable t => StgState t -> StgM t (Maybe (Rule, StgState t))
 {-
 step st@(OmegaState {..}) = omega stack heap code settings
@@ -147,8 +152,8 @@ step st@(StgState {..})   = step' $ st {cstack = decTop cstack}
        EAtom a
             -- Top is a I# 2, but we should save it in a thunk 
             | not (isVar a) && topUpd cstack   -> rupdate st (OThunk [] 0 code)
-            | not (isVar a) && topCase cstack  -> rret st
-            | not (isVar a) && topPrint cstack -> rprintval st a
+            | not (isVar (lookupAtom a)) && topCase cstack  -> rret st
+            | not (isVar (lookupAtom a)) && topPrint cstack -> rprintval st a
        EAtom a -> case lookupAtom a of
          (AVar (Heap var)) -> case H.lookup var heap of  
            Nothing  -> return Nothing
@@ -156,7 +161,7 @@ step st@(StgState {..})   = step' $ st {cstack = decTop cstack}
                OThunk fv size expr       -> rthunk st (map lookupAtom fv) size expr var
       --         _ | topIsO stack  -> psi stack heap var [] settings
       --         OOpt alpha sets   -> roptimise st alpha sets var
-      --         _ | topUpd  stack -> rupdate st obj
+               _ | topUpd  cstack -> rupdate st obj
                _ | topCase cstack -> rret st
 --               _ | topContOpt stack -> rcontopt st
                OCon t atoms | topPrint cstack -> rprintcon st t atoms
@@ -175,14 +180,18 @@ step st@(StgState {..})   = step' $ st {cstack = decTop cstack}
                        False -> rpap st stackArgs var 
         --       _ | topOpt stack  -> rupdateopt st obj var
                _                               -> return Nothing
+         s -> error $ show s
        ESVal sval | topPrintCon cstack -> rprintcont st sval
        -- if there is no rule to apply, do nothing
        _              -> return Nothing
      where
-      lookupAtom (AVar v) = case v of
-          Heap x    -> AVar v
-          Local x _ -> lookupStackFrame x astack
-      lookupAtom a        = a
+      lookupAtom = lookupAtomStack astack
+      allocObj o = case o of
+        OCon c atoms    -> OCon c (map lookupAtom atoms)
+        OThunk fv s exp -> OThunk (map lookupAtom fv) s exp
+        OPap   t atoms  -> OPap t (map lookupAtom atoms)
+        _               -> o
+      
       st = st' { cstack = cstack }
       
       {-
@@ -198,7 +207,7 @@ step st@(StgState {..})   = step' $ st {cstack = decTop cstack}
       rlet st@(StgState {..}) (NonRec t obj) e = do
           var <- newVar 
           let astack' = pushArgs [AVar $ Heap var] astack
-              heap'   = H.insert var obj heap
+              heap'   = H.insert var (allocObj obj) heap
           returnJust (RLet, st { code = e
                                , heap = heap' 
                                , astack = astack'})
@@ -234,7 +243,7 @@ step st@(StgState {..})   = step' $ st {cstack = decTop cstack}
       rprimop st op args = do
           returnJust 
               ( RPrimOP
-              , st { code = applyPrimOp op args }
+              , st { code = applyPrimOp op (map lookupAtom args) }
               )
       
       -- fixed
@@ -369,7 +378,7 @@ step st@(StgState {..})   = step' $ st {cstack = decTop cstack}
           returnJust
               ( RPrintVal
               , st 
-                  { code  = ESVal (SAtom atom)
+                  { code  = ESVal (SAtom (lookupAtom atom))
                   , cstack = cstack'})
       rprintfun st@(StgState {..}) = do
           let CtPrint : cstack' = cstack
