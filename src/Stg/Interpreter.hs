@@ -89,7 +89,7 @@ initialState :: Variable t => [Function t] -> StgState t
 initialState funs = StgState
   { code     = mainF
   , cstack   = [CtPrint]
-  , astack   = newStackFrame size []
+  , astack   = newFrame []
   , heap     = initialHeap funs
   , settings = []
   } where
@@ -211,14 +211,27 @@ step st@(StgState {..})   = step' $ st {cstack = decTop cstack}
           returnJust (RLet, st { code = e
                                , heap = heap' 
                                , astack = astack'})
-        
+            
+      rlet st@(StgState {..}) (Rec list) e = do
+          vars <- replicateM (length list) newVar 
+          let astack' = pushArgs (map (AVar . Heap) vars) astack
+              objs    = map (allocObjRec vars . snd) list
+              heap'   = foldr (\(var,obj) heap -> H.insert var obj heap) heap (zip vars objs) 
+          returnJust (RLet, st { code = e
+                               , heap = heap' 
+                               , astack = astack'})         
+        where
+            allocObjRec v o = case o of
+                OThunk fv s exp -> OThunk (map (AVar . Heap) v 
+                                   ++ map lookupAtom (drop (length v) fv)) s exp 
+                _               -> o
                             
       -- fixed
       rcase expr branch = returnJust 
             (RCaseCon
             , st { code   = expr
                  , cstack = CtCase branch : cstack
-                 , astack = incrLock astack
+                 , astack = duplicateFrame astack
                  }
             )
       -- fixed
@@ -250,24 +263,25 @@ step st@(StgState {..})   = step' $ st {cstack = decTop cstack}
       rpush st@(StgState {..}) ident args = returnJust 
           (RPush
           , st { code = EAtom (AVar ident)
-               , cstack = map CtArg args ++ cstack})
+               , cstack = map (CtArg . lookupAtom) args ++ cstack})
 
 
       -- fixed
       rret st@(StgState {..}) =
           let CtCase bs : rest = cstack
+              EAtom a          = code
           in returnJust
             ( RRet
-            , st { code = ECase code bs
+            , st { code = ECase (EAtom $ lookupAtom a) bs
                  , cstack = rest
-                 , astack = decrLock astack})
+                 , astack = popFrame astack})
                  
       -- intressant, dessutom fixad
       rthunk st@(StgState {..}) as size e v = returnJust      
           ( RThunk
           , st { code  = e
                , cstack = CtUpd v : cstack
-               , astack = pushArgs as $ newStackFrame size astack
+               , astack = pushArgs as $ callFrame astack
                , heap   = H.insert v OBlackhole heap})
           
       -- fixad
@@ -284,7 +298,7 @@ step st@(StgState {..})   = step' $ st {cstack = decTop cstack}
 
       -- fixed
       rfenter st@(StgState {..}) args lenArgs size e = do
-          let args' = map (lookupAtom . unArg) $ take lenArgs cstack 
+          let args' = map unArg $ take lenArgs cstack 
           -- args'' <- replicateM lenArgs newVar
           {- okey this is the thing...
              if we just subst names can clash => bad :/
@@ -294,7 +308,7 @@ step st@(StgState {..})   = step' $ st {cstack = decTop cstack}
             ( RFEnter
             , st { code   = e  
                  , cstack = drop lenArgs cstack 
-                 , astack = pushArgs args' (newStackFrame size astack) })
+                 , astack = pushArgs args' (callFrame astack) })
 
       -- fixed
       rpap st@(StgState {..}) stackArgs var = do
@@ -437,16 +451,16 @@ runForce inp funs = evalStgM (go st) initialStgMState
             Just (r, st') -> go st'
 -}
 
-eval :: Variable t => Input -> [Function t] -> [(Rule, StgState t)]
-eval inp funs = (RInitial, st) : evalStgM (go st) initialStgMState
+eval :: Variable t => [Function t] -> [(Rule, StgState t)]
+eval funs = (RInitial, st) : evalStgM (go st) initialStgMState
   where
     gc = mkGC $ map mkcons $ [trueCon, falseCon]
-    st = gc $ initialState (createGetFuns inp ++ funs)
+    st = gc $ initialState funs
     go st = do
         res <- step st
         case res of
             Nothing    -> return []
-            Just (r, st') -> ((r, st') :) `fmap` go (gc st')
+            Just (r, st') -> ((r, st') :) `fmap` go ({-gc-} st')
       
 
 applyPrimOp :: Variable t => Pop t -> [Atom t] -> Expr t

@@ -1,0 +1,3 @@
+
+main = letrec {even x = if (x == 0) True  (odd  (x - 1))
+              ;odd  x = if (x == 0) False (even (x - 1))} in even getInt;

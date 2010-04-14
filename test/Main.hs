@@ -2,7 +2,7 @@
 module Main where
 
 import Parser.SugarParser
-import Parser.Pretty.Test
+--import Parser.Pretty.Test
 
 import System.Directory
 import System.FilePath
@@ -19,10 +19,10 @@ import qualified Stg.PrePrelude as PP
 
 main :: IO ()
 main = runTests $ 
-    [ testParser
+    {-[ testParser
     , QCTest { name = "parse . pretty ~= id", qc = prop_Pretty_Parse}
-    ] ++ interpreter
-
+    ] ++-} interpreter
+{-
 testParser :: Test
 testParser = PassFail
     { name = "Parser Sugar"
@@ -40,7 +40,7 @@ testParser = PassFail
             Left r  -> do putStrLn $ file ++ " fail: " ++ show r 
                           return False
     }
-
+-}
 
 -- Show the results from the test results like the results from the programs
 class Show a => ShowResult a where
@@ -80,13 +80,13 @@ testsuiteStatic = [
   , "FunTest2.hls"    ---> (2 :: Integer)
   , "FunTest3.hls"    ---> (2 :: Integer)
   , "FunTest4.hls"    ---> (2 :: Integer)
---  , "FunTest6.hls"    ---> "(S (S Z))" -- depend on how we render results
+  --, "FunTest6.hls"    ---> "(S (S Z))" -- depend on how we render results
   , "ListTest3.hls"   ---> let list = [5,3,1,8,2]
                             in (reverse (take 2 list) 
                                 == drop 3 (reverse list))
   , "PrimeTest1.hls"  ---> True
-  , "OptTest1.hls"    ---> length (take 3 (repeat 4))
-  , "OptWithTest1.hls" ---> map (\x -> x*x) [1,2,3,4 :: Integer]
+  --, "OptTest1.hls"    ---> length (take 3 (repeat 4))
+  --, "OptWithTest1.hls" ---> map (\x -> x*x) [1,2,3,4 :: Integer]
   , "ListTest6.hls"   ---> sort (reverse (take 3 [(0 :: Integer)..]))
   , "NegTest1.hls"    ---> (-1) - (-1 :: Integer)
   , "StringTest1.hls" ---> True
@@ -109,7 +109,7 @@ testsuiteDyn =
                                 else isprime (t+1) n
                in all (isprime 2) xs
   , "ListTest7.hls"   |-> \x _ -> sort [0,-1.. -x+1] -- A little slow :)
-          
+  , "LetRecTest1.hls" |-> \x _ -> even x
   ]
 
 

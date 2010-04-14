@@ -93,39 +93,41 @@ data InterpreterState = IS
     , breakPoints  :: [BreakPoint]
     }
 
--- note that PrintCt must be the first thing on the stack
-forceInterpreter :: Settings -> FilePath -> IO String
-forceInterpreter settings file = do
+loadFile :: Settings -> FilePath -> IO [Function String]
+loadFile settings file = do
     dir     <- getCurrentDirectory
     prelude <- readFile (dir </>  "prelude" </> prelude settings)
     res     <- readFile (dir </>  "testsuite" </> file)
     case parseSugar (res ++ "\n" ++ prelude) of
-      Right fs -> let res = eval (input settings) (run prePrelude fs)
-                      lc  = code . snd . last $ res
-                   in  case lc of
-                        (ESVal x) -> return $ show $ prExprN PP.text lc
-                        x       -> putStrLn ("fail: Didn't end with ESVal") 
-                                   >> return "Fail"
-      Left  r  -> putStrLn ("fail: " ++ show r) 
-                  >> return "Fail"
+        Right fs -> return  (Locals.localise $ run (createGetFuns (input settings)
+                              ++ prePrelude) fs)
+        Left  r  -> putStrLn ("fail: " ++ show r) >> return []
+
+
+-- note that PrintCt must be the first thing on the stack
+forceInterpreter :: Settings -> FilePath -> IO String
+forceInterpreter settings file = do
+    fs <- loadFile settings file
+    let res = eval fs
+        lc  = code . snd . last $ res
+    case lc of
+        ESVal x -> return $ show $ prExprN PP.text lc
+        x       -> do
+            putStrLn ("fail: Didn't end with ESVal ended with:" ++ show (prExpr PP.text x)) 
+            return "Fail"
+
 
 testInterpreter :: Settings -> FilePath -> IO ()
 testInterpreter set file = do
-    dir     <- getCurrentDirectory
-    prelude <- readFile (dir </> "prelude" </> prelude set)
-    res     <- readFile (dir </> "testsuite" </> file)
-    -- prelude must be last, otherwise parse error messages get wrong line numbers!
-    case parseSugar (res ++ "\n" ++ prelude) of  
-      Right fs -> do
-        let st = initialState (Locals.localise $ run (createGetFuns (input set)
-                              ++ prePrelude) fs)
-        evalStateT (Hl.runInputT Hl.defaultSettings (loop st)) IS
+    fs <- loadFile set file 
+    let st = initialState fs
+    evalStateT (Hl.runInputT Hl.defaultSettings (loop st)) IS
             { settings = set
             , stgm     = initialStgMState
             , history  = []
             , breakPoints = []
             } 
-      Left  r  -> do putStrLn $ "fail: " ++ show r
+
 
 loop :: StgState String -> InputT (StateT InterpreterState IO) ()
 loop originalState  = do
@@ -234,7 +236,7 @@ loop originalState  = do
                 printCode   $ code  st
                 printCStack  $ cstack st
                 outputStrLn $ "heap("  ++ show (M.size $ heap st) ++ ")"
-                outputStrLn $ "astack" ++ show (astack st)
+                outputStrLn $ "astack\n" ++ show (prAStack PP.text $ astack st)
                 loop st
                 
 

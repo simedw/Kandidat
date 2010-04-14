@@ -4,6 +4,27 @@ import Stg.AST
 import Stg.Variable
 type ArgStack t = [StackFrame t] 
 
+type StackFrame t = [Atom t]
+
+lookupStackFrame :: Int -> ArgStack t -> Atom t
+lookupStackFrame x (a:_) = a !! x
+
+duplicateFrame :: ArgStack t -> ArgStack t
+duplicateFrame (f : as) = f : f : as
+
+callFrame :: ArgStack t -> ArgStack t
+callFrame = newFrame . popFrame
+
+newFrame :: ArgStack t -> ArgStack t
+newFrame as = [] : as
+
+popFrame :: ArgStack t -> ArgStack t
+popFrame = drop 1
+
+pushArgs :: [Atom t] -> ArgStack t -> ArgStack t
+pushArgs args (f : as) = (f ++ args) : as
+
+{-
 data StackFrame t = StackFrame 
     { lock :: Int
     , spointer :: Int -- Wohoo this is hmm
@@ -33,10 +54,11 @@ incrLock (a:as) = a { lock = lock a + 1 } : as
 decrLock :: ArgStack t -> ArgStack t
 decrLock (a:as) = 
     let lock' = lock a - 1
-    in a { lock = max 0 lock' } : as
+    in if lock' == -1 then decrLock as else a { lock = lock' } : as
 
 getSPointer :: ArgStack t -> Int
 getSPointer (StackFrame _ sp _ : _) = sp
 
 incrSPointer :: ArgStack t -> ArgStack t
 incrSPointer (StackFrame lock sp as :as') = StackFrame lock (sp + 1) as : as'
+-}

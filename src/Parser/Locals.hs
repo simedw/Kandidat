@@ -10,7 +10,8 @@ import "mtl" Control.Monad.State
 import Data.Map (Map)
 import qualified Data.Map as M
 
-import Data.Set (toList)
+import Data.Set (Set)
+import qualified Data.Set as S 
 
 import Stg.AST
 import qualified Parser.SugarTree as ST
@@ -50,6 +51,10 @@ getName :: Variable t => Var t -> t
 getName (Heap n)    = n
 getName (Local _ n) = n
 
+getNameAtom :: Variable t => Atom t -> t
+getNameAtom (AVar v) = getName v
+getNameAtom x        = error $ "getNameAtom run on a non-var: " ++ show x
+
 localMax :: Variable t => (Int -> Int) -> Local t a -> Local t a
 localMax f l = do
     m <- get
@@ -79,11 +84,12 @@ localiseO o = case o of
         return $ OFun vs s' e'
     OPap v as   -> OPap v <$> mapM localiseA as
     OCon c as   -> OCon c <$> mapM localiseA as 
-    OThunk _ _ e -> do
+    OThunk fv _ e -> do
 --        e' <- localiseE e
 --        i  <- gets index
         localMax (const 0) $ do
-            vars <- mapM lookupLocal (toList $ freeVars e)
+            let names = map getNameAtom fv
+            vars <- mapM lookupLocal (names ++ S.toList (freeVars e S.\\ S.fromList names))
             let list = filter isLocal vars
             exp <- local (const M.empty) $ fst <$> addLocals (map getName list) (localiseE e)
             s <- get
@@ -103,8 +109,20 @@ localiseE e = case e of
     ELet bind expr -> case bind of
         NonRec t obj -> do (bi, ex) <- fst <$> addLocal t (liftM2 (,) (localiseO obj) (localiseE expr))
                            return $ ELet (NonRec t bi) ex
+        Rec pars ->  do
+            let (vs, os) = unzip pars
+            (bi, ex) <- fst <$> addLocals vs (do
+                os'  <- mapM (dependOn vs) os
+                liftM2 (,) (mapM localiseO os') (localiseE expr))
+            return $ ELet (Rec (zip vs bi)) ex
+
     ECase expr brs -> ECase <$> localiseE expr <*> mapM localiseBranch brs
     ESVal s        -> return $ ESVal s -- under the invariant that Atom is not a var
+  where
+    dependOn vs (OThunk _ c e) = do
+        vs' <- mapM lookupLocal vs
+        return $ OThunk (map (AVar) vs') c e
+    dependOn _  x              = error $ "DependOn in Localise got: " ++ show x
 
 localiseA :: Variable t => Atom t -> Local t (Atom t)
 localiseA a = case a of
@@ -118,12 +136,6 @@ localiseV v = case v of
     _      -> return v 
 
 
-localiseBind :: Variable t => Bind t -> Local t (Bind t)
-localiseBind b = case b of
-    NonRec t obj -> NonRec t <$> (fst <$> addLocal t (localiseO obj))
-    Rec pars ->  do
-        let (vs, os) = unzip pars
-        Rec <$> (zip vs <$> fst <$> addLocals vs (mapM localiseO os))
 
 {-
 localiseBind :: Variable t => Bind t -> Local t (Bind t)

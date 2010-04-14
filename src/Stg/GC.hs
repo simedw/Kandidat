@@ -46,7 +46,7 @@ test = ECase (var "xs")
 
 mkGC :: forall t . Variable t => [t] -> StgState t -> StgState t
 mkGC untouchable st = 
-    let initial = freeVars (code st) `S.union` freeVarsList (cstack st) `S.union` freeVarsList (astack st)
+    let initial = freeVars (code st) `S.union` freeVarsList (cstack st) `S.union` freeVarsList (concat $ astack st)
     in  st{ heap = heapify $ gcStep (initial`S.union` S.fromList untouchable) initial}
   where
     gcStep :: Set t -> Set t -> Set t
@@ -103,7 +103,7 @@ instance FV Obj where
     freeVars (OFun as _ e)   = freeVars e `S.difference` S.fromList as
     freeVars (OPap f as)     = S.insert f (freeVarsList as)
     freeVars (OCon c as)     = freeVarsList as
-    freeVars (OThunk _ _ e)      = freeVars e
+    freeVars (OThunk fv _ e) = freeVarsList fv `S.union` freeVars e
     freeVars (OBlackhole)    = S.empty
     freeVars (OOpt a set)    = freeVars a `S.union` freeVarsList set 
 
@@ -126,6 +126,7 @@ instance FV Cont where
     freeVars (CtOLet v)             = S.singleton v 
     freeVars (CtOInstant _)         = S.empty
     freeVars (CtOApp as)            = freeVarsList as
-    
+{-    
 instance FV StackFrame where
     freeVars (StackFrame _ p args)  = freeVarsList (take p args) -- ... bad ...
+-}

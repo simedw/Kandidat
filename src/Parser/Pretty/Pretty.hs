@@ -7,6 +7,7 @@ import Unsafe.Coerce
 
 import Stg.AST
 import Stg.Types
+import Stg.Stack
 
 import Text.PrettyPrint.ANSI.Leijen
 
@@ -57,6 +58,7 @@ data PPrinters t = PPrinters
     , ppObj   :: Obj t      -> Doc
     , ppAtom  :: Atom t     -> Doc
     , ppCStack :: ContStack t    -> Doc
+    , ppAStack :: ArgStack t    -> Doc
     }
 
 mkC = mkPretty . syntaxColour
@@ -81,6 +83,9 @@ prAtom  = ppAtom . mkC
 
 prCStackN = ppCStack . mkN
 prCStack  = ppCStack . mkC
+
+prAStackN = ppAStack . mkN
+prAStack  = ppAStack . mkC
 
 seppis syn = vcat . punctuate (text "" <$> symbol syn semi <+> text "")
 
@@ -161,6 +166,17 @@ mkPretty (Syntax {..})  = PPrinters {..}
         SFun    -> key "<FUN>"
         SCon c sval | null sval -> conVar c
                     | otherwise -> mparens $ conVar c <+> hsep (map ppSVal sval)
+
+    ppAStack :: ArgStack t -> Doc
+    ppAStack = vsep . map ppStackFrame
+
+    ppStackFrame :: StackFrame t -> Doc
+    ppStackFrame as = list (map ppAtom as) {-(StackFrame {..}) = (mparens (int lock)) 
+        <+> semiBraces [ if p == spointer 
+                           then mbrackets (ppAtom a) 
+                           else ppAtom a 
+                       | (p, a) <- zip [0..] args
+                       ] -}
 
     ppCStack :: ContStack t -> Doc
     ppCStack = vsep . map ppCont

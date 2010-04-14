@@ -30,7 +30,7 @@ createGetFuns inp =
                  (mkELet False ((nil, OCon nilCon []) : lets conVarNums nil)
                     (EAtom $ AVar $ Heap $ fst $ last conVarNums)) ]
           where
-            (nil : vars)       =  namesupply -- [1..] >>= flip replicateM ['a'..'z'] 
+            (nil : vars)       = namesupply -- [1..] >>= flip replicateM ['a'..'z'] 
             varNums    = zip vars $ reverse nums
             conVars    = drop (length nums) vars
             conVarNums = zip conVars varNums
