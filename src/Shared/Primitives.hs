@@ -64,6 +64,11 @@ isUnary :: Primitive t -> Bool
 isUnary (MathFun{}) = True
 isUnary _           = False
 
+isCmp   :: Primitive t -> Bool
+isCmp (IntCmp{}) = True
+isCmp (DblCmp{}) = True
+isCmp _          = False
+
 mathFunctions :: [Primitive String]
 mathFunctions = 
     [ MathFun "sin" sin

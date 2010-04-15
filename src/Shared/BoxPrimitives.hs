@@ -27,8 +27,11 @@ boxPrimFun prim
         ECase (EAtom $ aHeap x) 
             [ BCon c [x'] $ ECase (EAtom $ aHeap y) 
                 [ BCon c [y'] $ ECase (EPop prim [aHeap x', aHeap y'])
-                    [ BDef r $ ELet (NonRec r' $ OCon c [aHeap r])
-                             $ EAtom $ aHeap r'  
+                    [ BDef r $ 
+                        if isCmp prim 
+                            then EAtom $ aHeap r
+                            else ELet (NonRec r' $ OCon c [aHeap r])
+                               $ EAtom $ aHeap r'  
                     ] 
                 ]
             ]
