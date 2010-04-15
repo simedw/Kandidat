@@ -43,7 +43,7 @@ benchmarklist =
     , "RSA.hls"      -->  [(0,list)] -}
     ]
  where
-   list  = [1..20]
+   list  = [1..200]
    (-->) = (,)
 
 {- We load and parse all test before invoking the actual benchmark.

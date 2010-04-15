@@ -19,7 +19,7 @@ import Stg.Input
 import Stg.Interpreter
 import Stg.Types
 import Stg.Substitution
-import Stg.PrePrelude
+import Shared.BoxPrimitives
 import qualified Stg.Types as ST
 
 import Stg.Heap (Heap,Location(..))

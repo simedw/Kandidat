@@ -85,7 +85,9 @@ scdef = do
 expr :: P (Expr String)
 expr = buildExpressionParser table expr'
   where
-    table = [ map (op AssocRight) [".",".."] ]
+    table = [ map (op AssocRight) [".",".."]
+            , map (op AssocRight) [":","++"]
+            ]
          ++ map 
                 (map (\prim -> op (toParsecAssoc prim) (opDesc prim))) 
                 priorities

@@ -14,7 +14,6 @@ import Test.QuickCheck
 
 import Types 
 import Stg.Input
-import qualified Stg.PrePrelude as PP
 import Stg.AST (SValue(..), Atom(..))
 import Util
 

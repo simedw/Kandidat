@@ -9,7 +9,7 @@ import Data.Maybe
 import Control.Monad
 
 import Stg.AST
-
+import Shared.Primitives
 
 -- The reserved operators
 operators :: [String]
@@ -73,7 +73,7 @@ expr = buildExpressionParser table expr'
   where
     table = map 
                 (map (\prim -> op (toParsecAssoc prim) (opDesc prim))) 
-            priorites
+            priorities
 
     op assoc s = flip Infix assoc $ do
         reservedOp tok s 

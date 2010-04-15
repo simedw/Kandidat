@@ -1,4 +1,4 @@
-main = listSeq (map ((optimise (exp getInt))) getIntList);
+main = listSeq (map (((exp getInt))) getIntList);
 
 
 -- exp to x = if (to == 0) 1 ((exp (to - 1) x) * x);

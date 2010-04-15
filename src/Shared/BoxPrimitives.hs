@@ -4,7 +4,7 @@ import Shared.Primitives
 import Stg.AST
 import Stg.Variable
 
-prePrelude :: Variable t => [Function t]
+prePrelude :: [Function String]
 prePrelude = map boxPrimFun $ primitives ++ mathFunctions
 
 relatedBox :: Variable t => Primitive t -> t  
