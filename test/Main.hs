@@ -13,9 +13,12 @@ import Data.List
 import Test.QuickCheck
 
 import Types 
-import Debugger hiding (main)
 import Stg.Input
 import qualified Stg.PrePrelude as PP
+import Stg.AST (SValue(..), Atom(..))
+import Util
+
+
 
 main :: IO ()
 main = runTests $ 
@@ -42,35 +45,41 @@ testParser = PassFail
     }
 -}
 
--- Show the results from the test results like the results from the programs
-class Show a => ShowResult a where
-  showResult :: a -> String
-  showResult = show
+class BuildSValue a where
+    build :: a -> SValue String
 
-instance ShowResult Integer where
-  showResult n = "(" ++ PP.numCon ++ " " ++ show n ++ ")"
-instance ShowResult Int where
-  showResult n = "(" ++ PP.numCon ++ " " ++ show n ++ ")"
-instance ShowResult Double where
-  showResult d = "(" ++ PP.decCon ++ " " ++ show d ++ ")"
-instance ShowResult Bool where
-instance ShowResult a => ShowResult [a] where
-  showResult []     = "Nil"
-  showResult (x:xs) = "(" ++ "Cons " ++ showResult x ++ " " ++ showResult xs ++ ")"
+instance BuildSValue Integer where
+    build x = SCon "I#" [SAtom . ANum $ x]
+instance BuildSValue Double where
+    build x = SCon "D#" [SAtom . ADec $ x]
+instance BuildSValue Char where
+    build x = SCon "C#" [SAtom . AChr $ x]
+instance BuildSValue Int where
+    build = build . toInteger  
 
-(--->) :: ShowResult a => String -> a -> 
-        (String, String)
-file ---> fun = (file, showResult fun)
+instance BuildSValue Bool where
+    build True  = SCon "True"  []
+    build False = SCon "False" []
+
+
+instance BuildSValue a => BuildSValue [a] where
+    build []     = SCon "Nil" []
+    build (x:xs) = SCon "Cons" [build x, build xs]
+
+(--->) :: BuildSValue a => String -> a -> 
+        (String, SValue String)
+file ---> fun = (file, build fun)
+
 
 infix 0 --->
 infix 0 -->
 infix 0 |->
 
 -- |-> for working with lists
-(-->), (|->) :: ShowResult a => String -> (Integer -> [Integer] -> a) -> 
-                (String, Integer -> [Integer] -> String, Bool)
-file --> fun = (file, \x y -> showResult $ fun x y, False)
-file |-> fun = (file, \x y -> showResult $ fun x y, True)
+(-->), (|->) :: BuildSValue a => String -> (Integer -> [Integer] -> a) -> 
+                (String, Integer -> [Integer] -> SValue String, Bool)
+file --> fun = (file, \x y -> build $ fun x y, False)
+file |-> fun = (file, \x y -> build $ fun x y, True)
 
 -- a map between testfunctions and our semantic excepted functions
 -- lets make these test only run once! 
@@ -125,27 +134,38 @@ interpreter = map toTestStatic testsuiteStatic ++ map toTestDyn testsuiteDyn
                   input = defaultInput { inputInteger  = Just x'
                                        , inputIntegers = Just y
                                        }
-                  setting = defaultSettings {input = input}
+                  setting = LSettings { input   = input
+                                      , prelude = "Prelude.hls"
+                                      , disableOptimise = False
+                                      }
                   -- can we lift IO in some better way?
-                  v = unsafePerformIO $ forceInterpreter setting file 
-                                 in v == fun x' y
+                  v = unsafePerformIO (loadFile setting file)
+                in case forceInterpreter v of 
+                    Left err  -> error $ err 
+                    Right res -> res == fun x' y
                }
     abs' True  x | x < 0 = -x
     abs' True  x         = x
     abs' False x = x 
     cap y x | x > y     = y
     cap y x | otherwise = x
-   
+    
+    -- no point in runing static test twice
     toTestStatic (file, value) = 
         I'make'my'own'test { name = file
              , action   = do 
-               let setting = defaultSettings
-               v <- forceInterpreter setting file 
-               let res = v == value
-               case res of
-                    True  -> putStrLn "Pass"
-                    False -> putStrLn $ "Failed "
+               let setting = LSettings { input = Input Nothing Nothing
+                                       , prelude = "Prelude.hls"
+                                       , disableOptimise = False
+                                       }
+               v <- loadFile setting file 
+               case forceInterpreter v of 
+                    Left err -> error $ err 
+                    Right res -> do 
+                     case res == value of
+                        True  -> putStrLn "Pass"
+                        False -> putStrLn $ "Failed "
                                      ++ "\nExpected: " ++ show value
-                                     ++ "\nGot: "      ++ show v 
-               return res
+                                     ++ "\nGot: "      ++ show res 
+                     return (res == value)
                }

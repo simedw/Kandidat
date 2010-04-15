@@ -35,10 +35,11 @@ import qualified Stg.Types as ST
 import Stg.Heap (Heap,Location(..))
 import qualified Stg.Heap as H
 
+import Util
+
 data Settings = Settings
   { steping      :: Bool
-  , prelude      :: String
-  , input        :: Input
+  , lset         :: LoadSettings
   , quiet        :: Bool
   , forceStg     :: Bool
   , toGC         :: Bool
@@ -73,8 +74,7 @@ stgState sc ss sh st@(StgState {code, stack, heap}) =
 
 defaultSettings = Settings {
     steping      = True
-  , prelude      = "Prelude.hls"
-  , input        = defaultInput
+  , lset         = LSettings "Prelude.hls" defaultInput False
   , quiet        = False
   , forceStg     = False
   , toGC         = True
@@ -93,33 +93,10 @@ data InterpreterState = IS
     , breakPoints  :: [BreakPoint]
     }
 
-loadFile :: Settings -> FilePath -> IO [Function String]
-loadFile settings file = do
-    dir     <- getCurrentDirectory
-    prelude <- readFile (dir </>  "prelude" </> prelude settings)
-    res     <- readFile (dir </>  "testsuite" </> file)
-    case parseSugar (res ++ "\n" ++ prelude) of
-        Right fs -> return  (Locals.localise $ run (createGetFuns (input settings)
-                              ++ prePrelude) fs)
-        Left  r  -> putStrLn ("fail: " ++ show r) >> return []
-
-
--- note that PrintCt must be the first thing on the stack
-forceInterpreter :: Settings -> FilePath -> IO String
-forceInterpreter settings file = do
-    fs <- loadFile settings file
-    let res = eval fs
-        lc  = code . snd . last $ res
-    case lc of
-        ESVal x -> return $ show $ prExprN PP.text lc
-        x       -> do
-            putStrLn ("fail: Didn't end with ESVal ended with:" ++ show (prExpr PP.text x)) 
-            return "Fail"
-
 
 testInterpreter :: Settings -> FilePath -> IO ()
 testInterpreter set file = do
-    fs <- loadFile set file 
+    fs <- loadFile (lset set) file 
     let st = initialState fs
     evalStateT (Hl.runInputT Hl.defaultSettings (loop st)) IS
             { settings = set
@@ -331,9 +308,10 @@ main = do
     case getOpt RequireOrder options args of
         (flags, [],      [])     -> do
              opts <- foldl (>>=) (return defaultSettings) flags
-             if forceStg opts 
-                then forceInterpreter opts file >> return ()
-                else testInterpreter opts file
+--             if forceStg opts 
+--                then loadFile opts file >>= forceInterpreter >> return ()
+--                else testInterpreter opts file
+             testInterpreter opts file
         (_,     nonOpts, [])     -> error $ "unrecognized arguments: " ++ unwords nonOpts
         (_,     _,       msgs)   -> error $ concat msgs ++ usageInfo header options
 
@@ -370,11 +348,11 @@ setForce arg set = return $ set { forceStg = read arg }
 
 setInputInteger :: String -> Settings -> IO Settings
 setInputInteger arg s = 
-    return $ s { input = (input s) { inputInteger = Just (read arg) }}
+    return $ s { lset = (lset s) {input = (input (lset s)) { inputInteger = Just (read arg) }}}
 
 setInputIntegers :: String -> Settings -> IO Settings
 setInputIntegers arg s = 
-    return $ s { input = (input s) { inputIntegers = Just (read arg) }}
+    return $ s { lset = (lset s) { input = (input (lset s)) { inputIntegers = Just (read arg) }}}
 
 
 header = "Usage: main [OPTION...]"
