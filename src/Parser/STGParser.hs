@@ -71,10 +71,9 @@ scdef = do
 expr :: P (Expr String)
 expr = buildExpressionParser table expr' 
   where
-    table = [ map (op AssocLeft) ["*","/","%"]
-            , map (op AssocLeft) ["+","-"]
-            , map (op AssocNone) ["<","==",">"]
-            ]
+    table = map 
+                (map (\prim -> op (toParsecAssoc prim) (opDesc prim))) 
+            priorites
 
     op assoc s = flip Infix assoc $ do
         reservedOp tok s 

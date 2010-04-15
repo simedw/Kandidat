@@ -27,7 +27,7 @@ import Stg.AST
 import Stg.GC
 import Stg.Input
 import Stg.Interpreter
-import Stg.PrePrelude
+import Shared.BoxPrimitives
 import Stg.Rules
 import Stg.Types hiding (settings)
 import qualified Stg.Types as ST

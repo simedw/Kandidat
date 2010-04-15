@@ -6,13 +6,15 @@ module Stg.AST where
 
 import "syb" Data.Generics
 import Data.Generics.PlateData
+import Data.Function
+import Shared.Primitives
 
 data Function t = Function t (Obj t)
   deriving (Data, Eq, Show, Typeable)
 
 data Expr t   = EAtom (Atom t)
               | ECall (Var t) [Atom t]
-              | EPop (Pop t) [Atom t]
+              | EPop (Primitive t) [Atom t]
               | ELet (Bind t) (Expr t)
               | ECase (Expr t) [Branch t]
               | ESVal (SValue t)
@@ -34,6 +36,9 @@ getBinds (Rec binds)    = binds
 mkELet :: Bool -> [(t, Obj t)] -> Expr t -> Expr t
 mkELet True  = ELet . Rec
 mkELet False = flip $ foldr (ELet . uncurry NonRec)
+ 
+
+{-
 
 data Pop t    = PBinOp t
                   (Integer -> Integer -> Integer)
@@ -65,6 +70,8 @@ instance Ord t => Ord (Pop t) where
   PBinOp op1 _ _   `compare` PBinOp op2 _ _   = op1 `compare` op2
   PUnOp  op1 _ _   `compare` PUnOp op2 _ _    = op1 `compare` op2
   PBinBool op1 _ _ `compare` PBinBool op2 _ _ = op1 `compare` op2
+  
+  -}
 
 data Var t = Heap t
            | Local Int t

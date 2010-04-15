@@ -29,6 +29,7 @@ import Stg.Substitution
 import Stg.Types
 import Stg.Branch
 import Stg.Heap (Heap, Location(..))
+import Shared.Primitives
 import qualified Stg.Heap as H
  
 topCase :: ContStack t -> Bool
@@ -463,19 +464,17 @@ eval funs = (RInitial, st) : evalStgM (go st) initialStgMState
             Just (r, st') -> ((r, st') :) `fmap` go ({-gc-} st')
       
 
-applyPrimOp :: Variable t => Pop t -> [Atom t] -> Expr t
-applyPrimOp op = case op of 
-    PBinOp   _ nop dop -> applyBinOp ANum ADec nop dop
-    PUnOp    _ nop dop -> applyUnOp  ANum ADec nop dop
-    PBinBool _ nop dop -> applyBinOp avar avar nop dop
-  where
+applyPrimOp :: Variable t => Primitive t -> [Atom t] -> Expr t
+applyPrimOp op args = case (op,args) of 
+    (IntOp {intOp  = (+)}, [ANum x,ANum y]) -> EAtom $ ANum $ x + y
+    (IntCmp{intCmp = (+)}, [ANum x,ANum y]) -> EAtom $ avar $ x + y
+    (DblOp {dblOp  = (+)}, [ADec x,ADec y]) -> EAtom $ ADec $ x + y
+    (DblCmp{dblCmp = (+)}, [ADec x,ADec y]) -> EAtom $ avar $ x + y
+    (MathFun{mathFun = f}, [ADec x])        -> EAtom $ ADec $ f x
+    _                                       -> err
+  where 
     avar = AVar . Heap . boolToCon
-    applyBinOp nf _  nop _   [ANum x, ANum y] = EAtom . nf $ x `nop` y
-    applyBinOp _  df _   dop [ADec x, ADec y] = EAtom . df $ x `dop` y
-    applyBinOp _ _ _ _ args = err args
-    applyUnOp nf _  nop _   [ANum x] = EAtom . nf $ nop x
-    applyUnOp _  df _   dop [ADec x] = EAtom . df $ dop x
-    err args = 
+    err = 
         error $ "applyPrimOp: Primitive operation (" 
              ++ show op 
              ++ ") applied to arguments of the wrong type " 

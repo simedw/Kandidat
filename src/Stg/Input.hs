@@ -3,7 +3,6 @@ module Stg.Input where
 import Control.Monad
 import Stg.AST
 import Stg.Variable
-import qualified Stg.PrePrelude as PP
 
 data Input = Input
   { inputInteger  :: Maybe Integer

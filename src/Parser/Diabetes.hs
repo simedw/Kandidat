@@ -16,7 +16,6 @@ import qualified Data.Map as M
 
 import qualified Parser.SugarTree as ST
 import qualified Stg.AST          as AST
-import qualified Stg.PrePrelude   as PP
 import qualified Stg.GC           as GC
 
 import Parser.SugarParser
@@ -65,11 +64,11 @@ run prelude fs = conses ++ funs
         { nameSupply = map ("t." ++) $ [1..] >>= flip replicateM ['a'..'z']
         , emptyCons  = S.empty
         , mkEmptyCon = toCons
-        , numCon     = PP.numCon
-        , decCon     = PP.decCon
-        , chrCon     = PP.chrCon
-        , consCon    = PP.consCon
-        , nilCon     = PP.nilCon
+        , numCon     = numCon
+        , decCon     = decCon
+        , chrCon     = chrCon
+        , consCon    = consCon
+        , nilCon     = nilCon
         }
 
 desugar :: Ord a => ST.Function a -> Dia a (AST.Function a)
