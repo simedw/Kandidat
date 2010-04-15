@@ -99,8 +99,8 @@ localiseO o = case o of
         -- kolla upp freevars, om de ar lokala ska de sparas. Annars ska de inte med
         -- den listan ar den nya env som vi ska kora exp pa
     OBlackhole  -> return OBlackhole
---    OOpt a sets -> OOpt <$> localiseA a <*> mapM localiseSetting sets
-    
+    OOpt a sets -> OOpt <$> localiseA a <*> mapM localiseSetting sets
+ 
 localiseE :: Variable t => Expr t -> Local t (Expr t) 
 localiseE e = case e of
     EAtom atom     -> EAtom <$> localiseA atom
