@@ -322,12 +322,21 @@ options =
     [ Option ['S'] ["step"] (ReqArg setSteping "BOOL") "step through"
     , Option ['F'] ["force"] (ReqArg setForce "Bool") "force evaluation"
 --    , Option ['V'] ["visible"] (ReqArg setVisible "\"BOOL BOOL BOOL\"") "show code stack heap"
-    , Option ['I'] ["integerinput"] 
+    , Option ['i'] ["integer-input"] 
         (ReqArg setInputInteger "Integer") 
         "single integer input"
-    , Option ['L'] ["listinput"] 
+    , Option ['d'] ["double-input"] 
+        (ReqArg setInputDouble "Double") 
+        "single double input"
+    , Option ['I'] ["list-integer-input"] 
         (ReqArg setInputIntegers "[Integer]") 
         "integer list input"
+    , Option ['D'] ["list-double-input"]
+         (ReqArg setInputDoubles "[Double]") 
+        "double list input"
+    , Option ['s'] ["string-input"]
+          (ReqArg setInputString "String") 
+        "string input"       
     ]
 
 
@@ -353,6 +362,18 @@ setInputInteger arg s =
 setInputIntegers :: String -> Settings -> IO Settings
 setInputIntegers arg s = 
     return $ s { lset = (lset s) { input = (input (lset s)) { inputIntegers = Just (read arg) }}}
+
+setInputDouble :: String -> Settings -> IO Settings
+setInputDouble arg s = 
+    return $ s { lset = (lset s) {input = (input (lset s)) { inputDouble = Just (read arg) }}}
+
+setInputDoubles :: String -> Settings -> IO Settings
+setInputDoubles arg s = 
+    return $ s { lset = (lset s) { input = (input (lset s)) { inputDoubles = Just (read arg) }}}
+
+setInputString :: String -> Settings -> IO Settings
+setInputString arg s = 
+    return $ s { lset = (lset s) { input = (input (lset s)) { inputString = Just (read arg) }}}
 
 
 header = "Usage: main [OPTION...]"

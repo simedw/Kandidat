@@ -11,7 +11,8 @@ class (Show t, Eq t, Ord t, Data t, Typeable t) => Variable t where
     namesupply   :: [t]
     mainFunction :: t
     mkcons       :: t -> t 
-    trueCon, falseCon, nilCon, consCon, getIntList, getInt , numCon, decCon, chrCon :: t
+    trueCon, falseCon, nilCon, consCon, getIntList, getInt, getDouble, getDoubleList, getString,
+     numCon, decCon, chrCon :: t
 
 instance Variable String where
     namesupply   = map ("i." ++) $ [1..] >>= flip replicateM ['a'..'z']
@@ -23,6 +24,9 @@ instance Variable String where
     consCon      = "Cons"
     getIntList   = "getIntList"
     getInt       = "getInt"
+    getDouble     = "getDouble"
+    getDoubleList = "getDoubleList"
+    getString     = "getString"
     numCon       = "I#"
     decCon       = "D#"
     chrCon       = "C#"

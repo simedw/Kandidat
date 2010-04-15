@@ -13,6 +13,7 @@ module Shared.Primitives
     , toParsecAssoc
     , Primitive(..)
     , isUnary
+    , isCmp
     ) where
 
 import Text.ParserCombinators.Parsec.Expr hiding (Assoc,Infix)

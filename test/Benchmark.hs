@@ -12,7 +12,6 @@ import System.Exit
 --import Debugger hiding (main)
 import qualified Parser.Locals as Locals
 import Stg.Interpreter
-import Stg.PrePrelude
 import Stg.Input
 import Stg.AST
 import Stg.Types
@@ -70,7 +69,11 @@ main = do
     loadFiles [] _ = return []
     loadFiles ((name, (i,l)):xs) prelude = do
         files <- sequence [ do 
-            f <- loadFile (LSettings prelude (Input (Just i) (Just l)) opt) name
+            f <- loadFile (LSettings prelude (defaultInput
+                        { inputInteger = Just i
+                        , inputIntegers = Just l
+                        }) opt) name
+
             return (f, "Input: " ++ show (i,length l) ++ " Optimise: " ++ show (not opt))  
                           | opt <- [True, False]]
         rest <- loadFiles xs prelude

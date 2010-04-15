@@ -153,7 +153,7 @@ interpreter = map toTestStatic testsuiteStatic ++ map toTestDyn testsuiteDyn
     toTestStatic (file, value) = 
         I'make'my'own'test { name = file
              , action   = do 
-               let setting = LSettings { input = Input Nothing Nothing
+               let setting = LSettings { input = defaultInput
                                        , prelude = "Prelude.hls"
                                        , disableOptimise = False
                                        }
