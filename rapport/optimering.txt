@@ -1,0 +1,397 @@
+
+Vi börjar med att återigen betrakta power funktions exemplet från introduktionen.
+
+-----------------------
+power n x = let t1 = Thunk (n==0)
+                      in case t1 of
+                            True -> 1
+                            False -> let t2 = n - 1 
+                                               t3 = power t2 x
+                                               t4 = x * t3
+                                                in t4
+-----------------------
+Vi ser att power 3 5 kommer upphöja 5 till 3, dvs 5 * 5 * 5
+
+Om vi känner till exponenten men inte basen kan vi göra en optimerade version av power
+specialicerad för just den exponenten, hur detta går till ska vi nu försöka visa på ett 
+informellt sätt. Misströsta ej alla detaljer ges senare.
+
+------------
+optimise (power 3)
+------------
+
+Vi börjar med att byta ut alla n mot 3 i power. Ingeting kan göras med x då 
+den är helt okänd. Vi "döper" också om power för att inte förstöra orginalet.
+-----------------------
+power_3 x = let t1 = Thunk (3==0)
+                      in case t1 of
+                            True -> 1
+                            False -> let t2 = 3 - 1 
+                                               t3 = power t2 x
+                                               t4 = x * t3
+                                                in t4
+-----------------------
+
+Vi börjar nu gå igenom trädet. Vi möter först let t1 = ... in exp vilket vi spara undan och 
+gå vidare in i exp som är en case. Case:en kan forcera fram värdet oss t1 då t1 är fri 
+från fria variabler. Då 3 inte är lika med 0 fås nu
+
+-----------------------
+power_3 x = case False of
+                            True -> 1
+                            False -> let t2 = 3 - 1 
+                                               t3 = power t2 x
+                                               t4 = x * t3
+                                                in t4
+-----------------------
+
+Vi kan nu välja False branchen, vi sparar sedan undan let:arna och går in i t4. Vi inlinar det hela
+(Egentligen allokeras 3-1 på heapen och forceras fram senare)
+
+-----------------------
+power_3 x = x * power (3-1) x
+-----------------------
+
+Vi forstätter med att inline power (3-1) x på samma sätt.
+
+-----------------------
+power_3 x = x * x * x * 1
+-----------------------
+
+Vilket är en mycket mindre och snabbare funktion.
+Egentlingen boxas varje heltal i vårt språk (står säkert någon annanstans).
+----------
+a * b
+----------
+case a of
+    I# a' -> case b of
+        I# b' -> case  a' #* b' of
+            r' -> let r = I# r'
+                      in r
+-----------
+
+vilket får våran power_3 funktion att bli:
+
+-----------------------
+power_3 x = case (
+                     case (
+                     case x of
+                        I# a -> case x of
+                            I# b -> case a #* b of
+                                  r' -> let r = I# r'
+                                   in r
+                        )
+                          of
+                        I# c -> case x of
+                            I# d -> case c #* d of
+                                  r' -> let r = I# r'
+                                   in r
+                   case x of
+                        I# a -> case x of
+                            I# b -> case a #* b of
+                                  r' -> let r = I# r'
+                                   in r
+                        )
+                          of
+                        I# c -> case c #* 1 of
+                                  r' -> let r = I# r'
+                                   in r                                                         
+-----------------------
+
+Vi case:ar flera gånger på x och bygger upp I# för att direkt ta bort de senare. Detta
+kan naturligtvis också optimeras.
+
+power_3 x = case x of
+                        I# x' -> case x' #* x' of
+                                a -> case x' #* a of
+                                   b -> case x' #* b of
+                                      c -> case x' #* 1 of
+                                        r' -> let r = I# r'
+                                          in r
+
+
+
+stg kommer före - stg och vart sockerspråk har förklarats. 
+läsaren har har en god forståelse om stg.
+
+
+== Optimise ==
+
+Introducera optimering under körningstid igen
+  exempel (hur det ser ut i vårt språk)
+
+Bilden jag målade en gang
+    maskinen <-> optimering
+    
+  vissa saker vill vi att maskinen ska utföra, vi har tex utnyttjat
+    * inlining
+    * evaluering av primitiva funktioner
+    * evaluering av funktioner med bara kanda argument
+    * val av casebranch (senare utbytt)
+    
+  Förklara varför maskinen inte kan göra allt själv.
+    * fria variabler!!! "det stora"
+        namedroppa "evaluera under lambdat"
+        hur hanteras de (allocering etc)
+        
+  Optimeringen ar "rekursiv" i sin natur - det räcker inte med att kolla
+  hur funktionen ser ut "överst" utan traversera förbi let-uttryck.
+    * Termineringsvilkor
+    * * Inte gå in i thunks, branches
+    * * Räknare
+  Optimera i case-brancher. Bryter semantiken.
+  
+  Rekursivitet av optimering - hur går vi vidare? Traverserar träd?
+    
+    Omega( let t1 = THUNK ( e1 ) in e2 ) = gor nagonting med t1/e1 och sen
+                                           Omega( e2 )
+                                           
+    Omega( case f x y z of ... ) = om x, y, z är här kända så kan vi evaluera
+                                   det på maskinen och sen köra Omega på rätt
+                                   branch.
+                                   
+    Omega( f x y z ) = om någon av x, y, z är en fri variabel inlinar vi
+                       här funktionen och utför Omega på funktionskroppen.  
+  
+
+  Evaluera thunkar bryter semantiken, men det vill man ju göra ibland.
+    Som bekant forceras evalueringen endast i case-granskaren. Så om funktionen
+    vi optimerar skulle ha forcerat en thunk får vi också göra det under 
+    optimering.
+    
+    * Var forsta (cbv-liknande) optimeringsemantik brot stg-semantiken, tex
+      med if (exempel) :::
+      -----------------------------------  
+        take n list = if (n == 0) Nil (head list : take (n-1) (tail list))
+      -----------------------------------
+      Här vill man först evaluera n == 0 innan någon av argumenten till if.
+      If är defienierad med en case sats på det första argumentet. Även om
+      if inlinas så ligger inte casen-först i funktionen. Varför? Pga thunkar!
+
+      ------------------------------
+        take n list = let t1 = THUNK (n == 0)
+                          t2 = THUNK (head list)
+                          t3 = THUNK (n - 1)
+                          t4 = THUNK (tail list)
+                          t5 = THUNK (take t3 t4)
+                      in  if t1 Nil t5
+      ------------------------------
+      
+      Vi började evaluera alla thunkar vi passerade, och då hamnar vi här i en
+      loop. "Speciellt" då vi går in i t5 vilket gör ett rekursivt anrop utan att reducera 
+      argumenten då vårt språk är lat, t3 och t4 forceras aldrig fram innan vi försöker 
+      evaluerar t1. 
+      Definierades take på det här sättet fungerade det:
+      
+      ------------------------------
+        take n list = case n == 0 of
+                          True -> Nil
+                          False -> let t2 = THUNK (head list)
+                                       t3 = THUNK (n - 1)
+                                       t4 = THUNK (tail list)
+                                   in  take t3 t4
+      ------------------------------
+        Och det är oeftersträvansvärt att tvinga användarna att skriva all funktioner
+        de vill optimera med detta i åtanke. Det förstör också all form av abstraktion, då
+        användaren krävs ha koll på hur alla funktioner är implementerade i alla lager av 
+        abstraktion vilket känns orimligt. Detta leder oss in på vår strävan
+        efter en lat optimeringssemantik.
+      
+ 
+   * Vår andra (cbn-liknande) semantik följer stg-semantiken mycket närmare, 
+      (resperkterar inte ännu sharing)
+      
+     Det som den förra semantiken misslyckades på var att den utan att tveka
+     alltid evaluerade alla thunkar den passerade. Vi införde ett nytt koncept
+     Abyss - en avgrundsheap med fria variabler.
+     
+     Principen är att allting som binds med let räknas som en fri variabel
+     och allokeras alltså på avgrunden. är det en thunk räknas det inte som en
+     beräkning som kan evalueras senare utan snarare en optimering som kan 
+     utföras senare, vid behov. När optimeringen är klar (når ett irreducibelt
+     uttryck) läggs alla relevanta abyss-thunkar på uttrycket i nya let-satser.
+     Vilka som ska läggas till fås från stacken. Här kan man också ta bort 
+     allokeringar till saker som numera är död kod.
+     
+          Omega( v )
+            | v -> THUNK ( e ) onHeap
+            = evaluera e på maskinen
+            , lägg till CtUpd v på stacken
+            
+          Omega( v )
+            | v -> THUNK ( e ) onAbyss
+            = Omega( e )
+            , lägg till CtOUpd v på stacken
+            
+          Omega( v )
+            | v -> CON( C a1 .. an ) 
+            = Psi( v )
+            
+          Omega( let x = CON ( C a1 .. an ) in r ) 
+            | a1 .. an kända på heapen
+            = Omega( r[x'/x] )
+            , allokera x' -> C a1 .. an på heapen
+            
+          Omega( let x = obj in r ) 
+            = Omega( r )
+            , allokera x -> obj onAbyss
+            , lägg till en CtOLet x' på stacken
+          
+     Psi har en lista på alla letbundna variabler
+      
+          Psi[ CtOLet x : s ] lbs ( v ) 
+            | v onHeap
+            = Psi[ s ] lbs ( v )
+            
+          Psi[ CtOLet x : s ] lbs ( v )
+            | v inte onHeap
+            = Psi[ s ] (x:lbs) ( v )
+            
+          Psi[ CtOCase brs : s ] lbs ( v )
+            = Omega( rätt branch av brs instantierad med v )
+            eller
+            = Irr[ s ] ( makeLets lbs v )
+          
+          Psi[ CtOFun args alpha : s ] lbs ( v )
+            = Irr[ CtOFun args alpha s ] ( makeLets lbs v )
+            
+     makeLets( x : xs ) e = let x = (lookup x onAbyss ) in [| makeLets xs e |]
+          ( om x finns i uttrycket e, annars är let x = .. död kod. ? ) 
+     makeLets []  e =  e
+
+   * Användning av välkänd caselag.
+     
+      case (case x of
+              A a -> x'
+              B b -> y'
+           )
+        X -> r
+        Y -> y
+  
+  
+      <=>
+  
+      case x of
+          A a -> case x' of
+                   X -> r
+                   Y -> y
+          B b -> case y' of
+                   X -> r
+                   Y -> y
+
+        
+   * Respekterar inte sharing. 
+      ex = let v = dyrUträkning in v + v
+     Hur löste vi det här? Varför fick vi det inte "gratis" från början?
+      
+      det tänker jag mig att vi kommer fixa :)
+      
+      
+  * Utökningar
+  Det är finns allitd corner-cases där man gärna hade brutit mot semantiken. Dock är
+  sådana fall ytterst svåra att idenfiera maskinellt (automatiskt..) därför låter vi användaren
+  ge ytterligare argument till optimeringsfunktionen.
+  
+  
+  * Casebranchoptimering
+      Ibland finns det möjlighet att optimera i en casebranch. Detta bryter semantiken
+      eftersom det kan forcera evaluering av uttryck som inte vanligtvis skulle beräknats.
+      
+      ------------------
+        f x y z = case g z of
+                A -> case h x y of
+                      R -> t1 z
+                      S -> t2 z
+                B -> case h y x of
+                      R -> t3 z
+                      S -> t4 z
+      ------------------
+      
+      Om vi nu använder optimise( f 1 2 ), så är z okänd, men i brancherna så
+      finns det casesastser som bara beror på x och y och rätt branch kan alltså
+      där väljas. Vi har stöd för att optimera i sådana här casegrenar.
+          Detta kan bryta semantiken, tex om
+          f x z = case z of
+              True  -> error -- tex en oändlig loop
+              False -> x
+      Om vi här försöker optimera i brancherna då z är okänd kommer optimeringen
+      att loopa, och det skulle programmet inte gjort och f alltid får False som
+      argument.
+       
+  
+  * Inline-räknare
+     När man valt en utökning som bryter mot semantiken kan man inte alltid vara säker på
+     att den terminerar, därför kan inline-räknaren användas för att garantera det det högst
+     ser ett visst antal inlines.
+     
+     Det går att både begränsa det globala antalet inlines och inlines för olika funktioner.
+     
+     -------------
+     f z = case g z of
+        A -> repeat 1
+        B -> Nil
+    -------------
+    
+    Här hade det varit otrevligt att försöka inlina repeat då den aldrig terminerar.
+
+== Optimering ==  
+  Dödkodseliminering
+  Case branch stuff
+  Unboxning (fusion)
+  Inline
+  Superoptimering <-- vad är det här
+	
+
+== Optimise ==?
+  Vad har vi fatt ideerna ifran
+  Vad har vi kommit pa sjalva
+  	Välkänd case-lag
+  Semantik
+  	forsta cbv-semantik
+  	mot en cbn-semantik med Abyss
+  	SHARING "delning" 
+  Substituering
+  Traversering av tradet
+  
+
+
+
+Optimisekomplexitet - i tid, men ocksa i heapandvandande (slash abyss)
+
+  Vi behöver en rigoröst nedskriven semantik.
+  
+  VAD OPTIMISE BEHöVER
+  
+    * sharing
+    * fungera utan för mycket magi
+        - tex dödkod på ett rimligt sätt. traversering efter traversering
+          är inte rimligt
+        - case-afterburner tar bort så att man inte casar på samma uttryck
+          flera gånger. är detta rimligt?
+        - case-reshuffling. Hur dyrt är det här? Hur dyrt är det med att beräkna
+          olika callstack-offsets? Hur ofta körs detta? 
+
+
+== Resultat ==
+
+vi tester med olika stora indata
+    tex listlangd pa x-axeln,
+        procentuell okning pa y-axeln,
+        upphojttill-inten pa z-axeln (kan använda färg för värde)
+        
+    nog intressant att ha 2 st av dem, tex optfunktionens storlek mot tid
+                                      samt inputstorlekens storlek mot tid
+                                      
+
+
+Benchmarks
+    program var for sig
+    scratterplot - koen gillar det (och satter högt betyg pa oss)
+
+jfr kod fore och efter
+
+
+== Olika saker ==
+http://community.haskell.org/~ndm/downloads/slides-supercompilation_for_haskell-03_mar_2009.pdf
+jfr tid med och utan callstack
+ det har borde namnas nar callstacken introduceras)
