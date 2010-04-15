@@ -24,7 +24,7 @@ data Cont t
   | CtPrint
   | CtPrintCon t [SValue t] [Atom t]
   | CtOpt t
-  | CtOFun  [t] t
+  | CtOFun [t] Int t
   | CtOApp [Atom t]
   | CtOCase [Branch t]
   | CtOLet t

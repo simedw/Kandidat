@@ -120,7 +120,7 @@ instance FV Cont where
     freeVars (CtOpt i)              = S.singleton i
     freeVars (CtPrint)              = S.empty
     freeVars (CtPrintCon _ _ as)    = freeVarsList as
-    freeVars (CtOFun args alpha)    = S.singleton alpha
+    freeVars (CtOFun args _ alpha)  = S.singleton alpha
     freeVars (CtOCase brs)          = freeVarsList brs
     freeVars (CtOBranch e brs brs') = freeVars e `S.union` freeVarsList brs `S.union` freeVarsList brs'
     freeVars (CtOLet v)             = S.singleton v 
