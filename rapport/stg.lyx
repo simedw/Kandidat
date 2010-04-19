@@ -43,7 +43,7 @@
 
 \begin_layout Standard
 \begin_inset FormulaMacro
-\renewcommand{\range}[1][]{#1_{1}\,\ldots\,#1_{n}}
+\newcommand{\range}[1][]{#1_{1}\,\ldots\,#1_{n}}
 \end_inset
 
 
@@ -51,7 +51,7 @@
 
 \begin_layout Standard
 \begin_inset FormulaMacro
-\renewcommand{\CON}[2]{CON(#1\;#2)}
+\newcommand{\rangem}[1][]{#1_{1}\,\ldots\,#1_{m}}
 \end_inset
 
 
@@ -59,7 +59,7 @@
 
 \begin_layout Standard
 \begin_inset FormulaMacro
-\renewcommand{\FUN}[2]{FUN(#1\rightarrow#2)}
+\newcommand{\CON}[2]{CON(#1\;#2)}
 \end_inset
 
 
@@ -67,7 +67,23 @@
 
 \begin_layout Standard
 \begin_inset FormulaMacro
-\renewcommand{\THUNK}[1]{THUNK(#1)}
+\newcommand{\FUN}[2]{FUN(#1\rightarrow#2)}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\PAP}[2]{PAP(#1\;#2)}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\THUNK}[1]{THUNK(#1)}
 \end_inset
 
 
@@ -846,6 +862,183 @@ let { a = THUNK (cube 2)
 Maskinen kommer stega igenom let-uttrycket och allokera objekten.
  Därefter returneras en variabel som pekar på en konstruktor i heapen som
  är en Cons, skapad enligt ovan.
+ När man retunerar något som är en konstruktor sägs den vara i weak head
+ normal form (WHNF).
+ Denna behöver inte vara helt evaluerad, som exempel har vi vårt fall där
+ den innehåller två pekare till olika thunkar.
+ Eftersom STG är ett lat språk så är det upp till koden som kallade på map
+ att fortsätta evaluera dessa thunkar ifall de behövs eller inte.
+ I vårt fall är det main som har kallat på map och då main skriver ut det
+ den har binds till kommer den att evaluera thunkarna.
+ Vi tänker oss fallet då den börjar evaluera variabeln a.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+x\,;\, Stack\,;\, Heap[x\mapsto\THUNK e]\Rightarrow e\,;\, Upd\, x\,\bullet\,:\, Stack\,;\, Heap[x\mapsto BLACKHOLE]\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Evalueringen av en thunk kommer då att flytta uttrycket till den nya koden
+ för evaluering.
+ Den kommer också lägga ut en Upd continuation, detta återigen för att STG
+ är lat.
+ Lathet kräver att utryck bara evalueras en gång, däför kommer vi när e
+ har evaluerats till ett värde att spara det så att x pekar på det nya värdet
+ och om x's värde skulle behövas igen kan man returnera det direkt.
+ Under evalueringen av x sätter vi även x till ett BLACKHOLE, detta sker
+ av två anledningar.
+ 
+\end_layout
+
+\begin_layout Enumerate
+Om x beror på sig själv, eller flera variabler beror på varandra utan att
+ producera värden.
+ Om man evaluerade utan att sätta till BLACKHOLE skulle vår maskin komma
+ in i en oändlig loop.
+ Detta är ett sätt att upptäcka det och vi kan berätta för programmeraren
+ att det har blivit ett fel.
+\end_layout
+
+\begin_layout Enumerate
+Garbage Collection, gcn kommer gå igenom alla heap och stack objekt samt
+ koden efter vilka värden som fortfarande kan nås via den nuvarande koden
+ samt stacken.
+ Thunken kan referera till objekt, som inte längre behövs för evalueringen,
+ men gc kommer inte se att dessa objekt skulle kunna garbage collectas.
+ Om man istället sätter det till ett BLACKHOLE kommer gc veta att den inte
+ behöver söka efter vilka objekt som den behöver, då alla som behövs för
+ den finns redan på koden samt stacken.
+\end_layout
+
+\begin_layout Standard
+Det som saknas för thunkar är nu regeln som uppdaterar dem när de är klara,
+ det sker via denna regel.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+v\,;\, Upd\, x\,\bullet:Stack\,;\, Heap\Rightarrow v\,;\, Stack\,;\, Heap[x\mapsto Heap[v]]\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Om 
+\begin_inset Formula $v$
+\end_inset
+
+ är ett värde så uppdateras 
+\begin_inset Formula $x$
+\end_inset
+
+ med vad 
+\begin_inset Formula $v$
+\end_inset
+
+ pekar på.
+\end_layout
+
+\begin_layout Standard
+Det saknas nu bara en feature innan vår beskrivning av STG är komplett.
+ Vad gör vi med funktioner som inte fått alla sina argument? 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Box Shadowbox
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "100col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+max m n = case m < n of
+\end_layout
+
+\begin_layout Plain Layout
+
+    { True  -> n
+\end_layout
+
+\begin_layout Plain Layout
+
+    ; False -> m
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Om man nu skriver 
+\begin_inset Formula $\mathtt{max\,100}$
+\end_inset
+
+ så är det en ny funktion som retunerar det maximala talet mellan dess input
+ och 100.
+ För detta kommer ett nytt heap objekt att skapas vid namn PAP som står
+ för partial application.
+ Denna kommer innehålla argumenten samt en pekare till funkitonen.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+f\,;\, Arg\, a_{1}:\ldots:Arg\, a_{m}:Stack\,;\, Heap[f\mapsto\FUN{\range[x]}e\Rightarrow p\,;\, Stack\,;\, Heap[x\mapsto\PAP f{\rangem[a]}]\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Där m < n, alltså är det en sparad funktionsapplikation som kommer utföras
+ när resterande argument har kommit.
+ Så för att avsluta så kommer regeln som verkligen gör applikationen av
+ dessa partiellt applicerade objekt.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+p\,;\, Arg\, a_{n+1}:Stack\,;\, Heap[p\mapsto\PAP f{\range[a]}\Rightarrow f\,;\, Arg\, a_{1}:\ldots:Arg\, a_{n}:Arg\, a_{n+1}:Stack\,;\, Heap\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Denna regel kommer återigen försöka göra applikationen, antigen lyckas den,
+ eller så kommer den skapa ett nytt PAP objekt med ytterligare argument.
 \end_layout
 
 \end_body
