@@ -3,12 +3,14 @@ module Stg.Substitution
   ( subst
   , substList
   , removeOPT
+  , subtractLocal
   ) where
 
 import "syb" Data.Generics
 import Data.Generics.Biplate
 import Data.Generics.Uniplate
 import Stg.AST
+import Stg.Variable
 
 {-
 var = EAtom . AVar
@@ -27,6 +29,7 @@ test = ECase (var "xs")
 
 substAtom :: Eq t => t -> Atom t -> Atom t -> Atom t
 substAtom x x' (AVar (Heap v)) | {-# SCC "substAtomEq" #-} x == v = x'
+substAtom x x' (AVar (Local _ v)) | x == v = x'
 substAtom _ _ a = a
 
 
@@ -55,3 +58,10 @@ removeOPT = transformBi f
     f x          = x
 
 
+subtractLocal :: Variable t => t -> Int -> Expr t -> Expr t
+subtractLocal v n = transformBi (subtractLocalAtom v n) -- v not used :)
+
+subtractLocalAtom :: Variable t => t -> Int -> Atom t -> Atom t
+subtractLocalAtom _ n a = case a of
+    AVar (Local i v) -> AVar (Local (i - n) v)
+    _                -> a
