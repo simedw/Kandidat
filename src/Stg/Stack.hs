@@ -24,6 +24,9 @@ popFrame = drop 1
 pushArgs :: [Atom t] -> ArgStack t -> ArgStack t
 pushArgs args (f : as) = (f ++ args) : as
 
+popArg :: ArgStack t -> ArgStack t
+popArg (f : as) = (: as) . reverse . drop 1 . reverse $ f
+
 {-
 data StackFrame t = StackFrame 
     { lock :: Int

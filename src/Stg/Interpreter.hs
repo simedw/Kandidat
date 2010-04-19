@@ -342,12 +342,14 @@ step st@(StgState {..})   = step' $ st {cstack = decTop cstack}
               Just (OFun args i e) ->
                   let (argsA, argsL) = splitAt (length atoms) args
                       CtOpt alpha : stack' = cstack
-                      e' = subtractLocal var (length atoms) $ substList argsA (map lookupAtom atoms) e
-                  in omega' ROptPap (CtOFun argsL (i - length atoms) alpha:stack') astack heap e' settings
+                      astack' = pushArgs (atoms ++ map AUnknown argsL) (newFrame astack) 
+                      --e' = subtractLocal var (length atoms) $ substList argsA (map lookupAtom atoms) e
+                  in omega' ROptPap (CtOFun argsL (i - length atoms) alpha:stack') astack' heap e settings
               _ -> error "OPTPAP: pap doesn't point to FUN"
       roptfun st@(StgState {..}) args i expr = do
           let CtOpt alpha : cstack' = cstack
-          omega' (ROmega "from machine found fun to optimise") (CtOFun args i alpha : cstack') astack heap expr settings
+              astack'               = pushArgs (map AUnknown args) (newFrame astack)
+          omega' (ROmega "from machine found fun to optimise") (CtOFun args i alpha : cstack') astack' heap expr settings
       
       
 

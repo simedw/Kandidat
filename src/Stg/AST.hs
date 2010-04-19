@@ -84,6 +84,7 @@ data Atom t   = AVar (Var t)
               | ANum Integer
               | ADec Double
               | AChr Char
+              | AUnknown t
   deriving (Data, Eq, Ord, Show, Typeable)
 
 
