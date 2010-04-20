@@ -1,0 +1,305 @@
+#LyX 1.6.5 created this file. For more info see http://www.lyx.org/
+\lyxformat 345
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\language english
+\inputencoding auto
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize a4paper
+\use_geometry true
+\use_amsmath 1
+\use_esint 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\leftmargin 0cm
+\topmargin 0cm
+\rightmargin 0cm
+\bottommargin 0cm
+\headheight 0cm
+\headsep 0cm
+\footskip 0cm
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\author "" 
+\author "" 
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\mc}[4]{#1;#2;#3;#4}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\OMEGA}[4]{\Omega_{#1;#2;#3}(#4)}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\PSI}[4]{\Psi_{#1;#2;#3}(#4)}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\IRR}[4]{\Phi_{#1;#2;#3}(#4)}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\red}[2]{#1\Rightarrow#2}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\lred}[2]{\begin{array}{c}
+ #1\\
+\Rightarrow#2\end{array}}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\heap}[2]{H[#1\mapsto#2]}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\abyss}[2]{A[#1\mapsto#2]}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\nheap}[2]{H[#1\nrightarrow#2]}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\heapp}[4]{H[#1\mapsto#2\,;\,#3\mapsto#4]}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\OPT}[1]{OPT(#1)}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\PAP}[2]{PAP(#1\,#2)}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\FUN}[2]{FUN(#1\to#2)}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\THUNK}[1]{THUNK\,#1}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\cUpd}[2]{Upd\,#1\,:\,#2}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\cOUpd}[2]{OUpd\,#1\,:\,#2}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\cOPT}[2]{OPT\,#1\,:\,#2}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\cOFUN}[3]{OFUN\,(#1\to\bullet)_{#2}\,:\,#3}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\oCase}[2]{O\mathtt{case}\,\bullet\,\mathtt{of}\,#1\,:\,#2}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\oLet}[2]{O\mathtt{let\,}#1\,:\,#2}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\oLetObj}[3]{O\mathtt{let\,}#1=#2\,\mathtt{in}\,\bullet\,:\,#3}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\oFun}[3]{OFUN\,#1\,#2\,:\,#3}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\oInline}[1]{OInlining\,:\,#1}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\BH}{BLACKHOLE}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\eCase}[2]{\mathtt{case}\,#1\,\mathtt{of}\,#2}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\eLet}[3]{\mathtt{let}\,#1=#2\,\mathtt{in}\,#3}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\renewcommand{\objCon}[1]{CON(#1)}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\renewcommand{\subst}[3]{#1[#2/#3]}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Omega:
+\end_layout
+
+\begin_layout Standard
+\align left
+\begin_inset Formula \begin{align*}
+\OMEGA s{\heap v{\THUNK e}}Av & \Rightarrow & \mc e{\cUpd vs}HA\\
+\OMEGA sH{\abyss v{\THUNK e}}v & \Rightarrow & \OMEGA{\cOUpd vs}HAe\\
+\OMEGA s{\heap v{\objCon{C\, a_{1}\cdots a_{n}}}}Av & \Rightarrow & \PSI sHAv\\
+\OMEGA sH{\abyss v{CON(C\, a_{1}\cdots a_{n})}}v & \Rightarrow & \PSI sHAv\\
+\OMEGA sHA{\eCase e{brs}} & \Rightarrow & \OMEGA{\oCase{brs}s}HAe\\
+\OMEGA s{\heap{f\mapsto g,\, a_{1}\cdots a_{n}}{h_{1}\cdots h_{n}}}A{f\, a_{1}\cdots a_{n}} & \Rightarrow & \mc{f\, a_{1}\cdots a_{n}}sHA\\
+funktionsapplikation\\
+\OMEGA s{\heap{a_{1}\cdots a_{n}}{h_{1}\cdots h_{n}}}A{\eLet x{\objCon{C\, a_{1}\cdots a_{n}}}r} & \Rightarrow & \OMEGA s{\heap{x'}{C\, a_{1}\cdots a_{n}}}A{\subst r{x'}x}\\
+ &  & x'\mbox{ fresh}\\
+\OMEGA sHA{\eLet x{obj}r} & \Rightarrow & \OMEGA{\oLet{x'}s}H{\abyss{x'}{obj}}{\subst r{x'}x}\\
+ &  & x'\mbox{ fresh}\\
+Poppar\\
+\OMEGA sHAe & \Rightarrow & \IRR sHAe\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document
