@@ -1,5 +1,5 @@
 
-Vi börjar med att återigen betrakta power funktions exemplet från introduktionen.
+Vi börjar med att återigen betrakta powerfunktionsexemplet från introduktionen.
 
 -----------------------
 power n x = let t1 = Thunk (n==0)
@@ -12,7 +12,7 @@ power n x = let t1 = Thunk (n==0)
 -----------------------
 Vi ser att power 3 5 kommer upphöja 5 till 3, dvs 5 * 5 * 5
 
-Om vi känner till exponenten men inte basen kan vi göra en optimerade version av power
+Om vi känner till exponenten men inte basen kan vi göra en optimerad version av power
 specialicerad för just den exponenten, hur detta går till ska vi nu försöka visa på ett 
 informellt sätt. Misströsta ej alla detaljer ges senare.
 
@@ -59,9 +59,14 @@ power_3 x = x * x * x * 1
 -----------------------
 
 Vilket är en mycket mindre och snabbare funktion.
-Egentlingen boxas varje heltal i vårt språk (står säkert någon annanstans).
+Men det här är inte hela sanningen, egentlingen boxas varje heltal i vårt språk 
+(står säkert någon annanstans). Och + är som bekant bara socker för att case 
+fram värdet i av intarna och sedan addera det med en primitiv plus operator #+
+
 ----------
 a * b
+----------
+blir efter inlining
 ----------
 case a of
     I# a' -> case b of
@@ -70,8 +75,7 @@ case a of
                       in r
 -----------
 
-vilket får våran power_3 funktion att bli:
-
+Och om vi då inlinarna alla multiplicationer i power_3 får vi följande kod:
 -----------------------
 power_3 x = case (
                      case (
@@ -98,8 +102,8 @@ power_3 x = case (
                                    in r                                                         
 -----------------------
 
-Vi case:ar flera gånger på x och bygger upp I# för att direkt ta bort de senare. Detta
-kan naturligtvis också optimeras.
+Vi case:ar flera gånger på x och bygger upp I# för att direkt ta bort de senare.
+ Detta kan naturligtvis också optimeras.
 
 power_3 x = case x of
                         I# x' -> case x' #* x' of
@@ -109,10 +113,16 @@ power_3 x = case x of
                                         r' -> let r = I# r'
                                           in r
 
+Detta är hur långt vår optimise funktionalitet kommer. x * 1 skulle naturligtvis
+kunna optimeras till x, men vi har inte fokuserat på dessa corner cases.
+I resten av det här avsnittet kommer vi i detalj förklara vart och ett av dessa 
+steg och varför det fungerar som det gör.
 
 
 stg kommer före - stg och vart sockerspråk har förklarats. 
 läsaren har har en god forståelse om stg.
+Även continuations i stg borde ha kommit före så de behöver ingen introduktion här.
+
 
 
 == Optimise ==
@@ -288,7 +298,7 @@ Bilden jag målade en gang
       
       
   * Utökningar
-  Det är finns allitd corner-cases där man gärna hade brutit mot semantiken. Dock är
+  Det är finns alltid corner-cases där man gärna hade brutit mot semantiken. Dock är
   sådana fall ytterst svåra att idenfiera maskinellt (automatiskt..) därför låter vi användaren
   ge ytterligare argument till optimeringsfunktionen.
   
@@ -395,3 +405,120 @@ jfr kod fore och efter
 http://community.haskell.org/~ndm/downloads/slides-supercompilation_for_haskell-03_mar_2009.pdf
 jfr tid med och utan callstack
  det har borde namnas nar callstacken introduceras)
+ 
+ 
+ 
+ 
+= Continuations =
+
+Vi antar att detta är förklarat i Stg, så läsaren inte chockeras när han trillar
+över det här avsnittet. 
+
+Tänk er att vi vill optimera följande exempel:
+
+main = let x = o in e
+
+Låt o vara något objekt som inte är känt när optimeringen körs, och e använder sig
+av x (o indirekt). Då vill vi ändå kunna gå vidare ner i e och optimera det som är möjligt.
+Men om vi gjorde det genom att bara säga att koden som maskinen ska fortsätta köra på
+ska vara e' skulle vi glömma bort vår letkonstruktion. Därför måste vi använda
+continuations. När vi ska gå ner i e lägger vi först CtOLet x', där x' är ett nytt variabelnamn 
+som vi låter peka på o, på stacken, byter ut alla x i e mot x', och fortsätter optimera e.
+
+När optimeringen av e sedan är klar ligger CtOLet x' kvar på stacken, och let-konstruktionen
+kan åter byggas upp.
+
+För att kunna optimera på djupet i funktioner krävs det alltså att man måste kunna gå
+ner i koden och ändra saker, men samtidigt kunna bygga upp koden igen.
+Detta görs med hjälp av continuations (introducerade i kapitlet om STG, förhoppningsvis).
+Eftersom optimisefunktionen till skillnad från stg-maskinens vanliga körningsfunktion
+går ner "under" (förklara bättre!) alla kodkonstruktioner krävs det continuationar
+för var och en av dessa. Det är psifunktionens jobb att sedan bygga upp koden utifrån
+continuationsarna.
+
+= Dödkodseliminering =
+
+När dvs optimeringar har körts och det är dags att bygga upp träded igen kommer 
+så kallad "död kod" att förekomma. Det vill säga, kod som inte längre behövs eftersom
+den inte kan nås. 
+
+-----------
+main = let t = getValue() in 
+            case True of
+               True  -> 15
+               False -> t
+-----------
+
+Detta exemplet är trivialt att optimera då värdet i casen är känd. Vi kan därför
+initisera den korrekta branchen.
+-----------
+main = let t = getValue() in 15
+-----------
+ Vi ser nu att t inte längre är bunded i uttrycket (15) och därför kan vi 
+ betrakta let t = getValue som "död kod". Död kod tar inte bara onödig plats 
+ vilket i sig är ett stort problem, kod ligger på flera pages i minnet och 
+ access tiden blir otroligt mycket högre, det tar även längre tid att traversera
+ träded i interperten eller i andra optimeringar. Därför är det viktigt att 
+ eftersträva en så kort kod som möjligt.
+-----------
+main = 15
+-----------
+
+Mer formellt kan vi säga
+
+t not in freevars(e2)
+++++++++++++++++++++++++++
+let t = e1 in e2 => e2
+
+Detta är en kontroll vi utför varje gång vi bygger upp en let i Irr och Psi. 
+Dock är freevars ganska kostsam (bör stå om det här någon annanstans).
+
+
+= After burner =
+Alla optimeringar som vi gått hitills har bekantat oss med arbetar tillsammans,
+dvs att de traverserar trädet endast engång och följer en gemensam semantik för
+att nå det önskade resultatet. Detta är önskvärt ut tidssynpunkt fast gör det 
+ibland svårt att byta ut enskilda delar utan att behöva ändra på många smådelar.
+
+Det finns även en del optimeringar som behöver se större delar av träded
+samtidigt för att kunna vara verksamma. Dessa high-level (vad ska vi kalla det här?) 
+optimeringar är oftast mycket långsamare att utföra.
+
+Vi har valt att utföra ett antal sådana optimeringar efter de vanliga 
+optimeringana är körda, därifrån namnet "after burner". 
+
+== Gemensam case ganskare ==
+
+Att case:a på samma uttryck två gånger kommer alltid i ett funktionellt språk ge
+samma resultat då alla variabler egentligen är konstanter. För varje casebranch 
+vi går in i vet vi att alla nästlade case på samma uttryck måste initiera samma 
+branch.
+
+----------
+test x = x * x
+----------
+Blir efter vanlig optimering
+
+test x = case x of
+            I# a -> case x of
+                I# b -> case a #* b of
+                    r' -> let r = I# r'
+                            in r
+
+och efter afterburner
+
+test x = case x of
+            I# a -> case a #* b of
+                r' -> let r = I# r'
+                    in r
+
+
+Generellt om 
+case x of 
+    C a b -> e1
+    D a b -> e2
+
+så söker vi upp case x i e1 och initiera C branchen med a b som värden.
+i e2 initierar vi D branchen i e2. 
+
+== We should have more things in the after burner ==
