@@ -1,0 +1,168 @@
+
+
+== STG - och vidare! ==
+
+-- Avsockrare --
+
+
+
+-- Lambdalyftare --
+I tolkandet av koden underlättar det om man inte har några let-bundna funktioner.
+Dessa behöver lyftas ut till toppnivå. I sockret kan dessa uppstå antingen
+av att man skriver lambdafunktioner eller let-bundna funktioner. Ett exempel
+från quicksort:
+
+  Cons x xs ->
+      let { lesser y = y < x
+          ; listLess = filter lesser xs
+          ; listMore = filter (\y . y >= x) xs
+          }
+      in  qsort listLess ++ x : qsort ListMore
+
+Först översätts let-satsen med hjälp av avsockraren
+
+  .. let { lesser = FUN (y -> let t = THUNK (y < x) in t)
+         ; listLess = THUNK (filter lesser xs)
+         ; lambda0 = FUN (y -> let t = THUNK (y >= x) in t)
+         ; listMore = THUNK (filter lambda 0 xs)
+         } ..
+      
+När dessa funktioner, lesser och lambda0, lambdalyfts, skapas nya funktioner
+på toppnivå. En sak att ha i åtanke då är att de fria variablerna i funktions-
+kroppen nödvändigtvis kommer från ursprungsfunktionen. Dessa måste skickas med
+som extra parametrar. I det här fallet rör det sig om variabeln x i båda fall.
+Dessa parametrar måste också skickas med när de anropas.
+
+-- på toppnivå
+lesserLifted = FUN(x y -> let t = THUNK (y < x) in t)
+lambda0Lifted = FUN(x y -> let t = THUNK (y >= x) in t)
+
+-- nya letsatsen:
+    .. let { lesser = THUNK (lesserLifted x)
+           ; listLess = THUNK (filter lesser xs)
+           ; lambda0 = THUNK (lambda0Lifted x)
+           ; listMore = THUNK (filter lambda0 xs)
+           } ..
+           
+En sak att poängtera är att listLess och listMore inte behövs ändras för
+att de lyftna funktionerna partialevalueras med samma namn. Här lesser som
+blir lesserLifted partiellt applicerat på x.
+
+-- Boxing --
+För att få en uniform representation av användardefinierade datatyper, skapade
+med en konstruktor, och primitiva datatyper som Int, Double och Char, ges även 
+de sistanämnda konstruktorer. I# för Int, D# för Double, C# för Char. De har
+invarianten, till skillnad från egna datatyper, att de inte pekar på en thunk
+utan är fullt evaluerade. Detta kallas att boxa primitiven.
+    För att utföra addition skapas den här funktionen som avboxar primitiven,
+forcerar och utför primitiv addition och sen boxar igen:
+
+x + y = case x of 
+            I# x' -> case  y of
+                I# y' -> case x' +# y' of
+                    r -> let r' = CON (I# r)
+                         in  r'
+
+Så + är additionen som användaren av vårt språk får använda och +# är den
+primitiva additionen som inte exporteras för användaren. Notera att x' +# y'
+forceras med hjälp av case för att den ska vara fullt evaluerad.
+
+
+
+-- Corespråk --
+
+(Daniel)
+
+
+
+-- Tolkens IO --
+Tolken har en primitiv form av IO: den har konstant indata vid körning och
+skriver ut det main returnerar, som behöver vara en konstruktor. Dessutom
+forceras hela konstruktorn till reducerad normalform.
+
+- Input -
+Funktionerna getInt, getIntList, getDouble, getDoubleList och getString finns
+till hands under körning om användaren har angett någon eller några av dessa
+i anropet till tolken. Dessa är konstanta under körningstid och gör det
+lättare att testa programmen genom att ändra deras indata utan att modifiera
+källkoden.
+
+- Print -
+Utdata fås genom att main evalueras fullt. Två till continuations behövs - 
+Print och PrintCont. Uttrycksdatatypen utökas med en ny typ av värden, sk
+s-värden, som antingen är en evaluerad primitiv, tex en int, eller en
+konstruktor. Om någon som ska skrivas ut evalueras till en (partiellt evaluerad)
+funktion så skrivs <FUN> istället ut. Detta är också ett s-värde.
+  
+sval ::= n num
+       | K C [sval]
+       | <FUN>
+
+nya Cont:
+
+* Print
+* PrintCont C [sval] [atom]
+
+Print betyder att det som evalueras ska skrivas ut. PrintCont består av ett
+konstruktorsnamn C, och först en lista på färdiga s-värden och en lista med
+atomer som maskinen har kvar att evaluera.
+
+nya regler:
+
+(1)
+x ; Print : s ; H[x -> Con( C a1 .. an)]
+=> K C [] ; s ; H                                , n = 0
+=> a1 ; Print : PrintCon C [] [a2 .. an] : s ; H , n > 0
+
+Om x har evaluerats till en konstruktor C så finns två fall. Antingen att C är
+en nullär konstruktor och i det fallet är vi klara och ger s-värdet bestående
+av konstruktorn C.
+    är det inte en nullär konstruktor behövs alla dess konstruerande atomer
+evalueras, med start på a1. Den läggs ut på maskinen med en print-continuation
+och under denna en contiunation som säger att de andra atomerna också ska
+evalueras.
+ 
+(2)
+x ; Print : s ; H , x value other than sval
+=> n x ; s ; H
+
+Om x är en primitiv datatyp, tex en int eller double, så skapa detta s-värde.
+
+(3)
+x ; Print : s ; H[x -> FUN / PAP]
+=> <FUN> ; s ; H
+
+Om x pekar på en funktion skapa s-värdet <FUN>.
+
+(4)
+sv ; PrintCon C ps (n : ns) : s ; H
+=> n ; Print : PrintCon C (ps ++ sv) ns : s ; H
+
+Ett s-värde är fullt evaluerat och då kan nästa atom i konstruktorn evalueras.  
+
+(5)
+sv ; PrintCon C ps [] : s ; H
+=> K C (ps ++ sv) ; s ; H
+
+Konstruktorn är helt evaluerad när den kommit till sista konstruerande atomen.
+
+
+
+
+-- Subst/Call stack --
+
+Förklara call-stack!!
+
+Local-steget? Det är ändå något vi har lagt ner tid på och borde skrivas om.
+
+kanske är det så här:
+
+RET - rem
+
+CASE - dup
+
+FENTER - new
+
+
+
+
