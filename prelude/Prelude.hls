@@ -40,6 +40,11 @@ length li = case li of
     ; Cons x xs -> 1 + length xs
     };
 
+null li = case li of
+	{ Nil -> True
+	; x   -> False
+	};
+
 replicate n x = if (n == 0) 
                    Nil 
                    (Cons x (replicate (n - 1) x));

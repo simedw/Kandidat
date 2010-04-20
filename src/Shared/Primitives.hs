@@ -50,6 +50,11 @@ data Primitive t
            , assoc  :: Assoc
            , prio   :: Int
            }
+  | ChrCmp { opDesc :: t
+           , chrCmp :: Char -> Char -> Bool
+           , assoc  :: Assoc
+           , prio   :: Int
+           }
   | MathFun { opDesc :: t 
             , mathFun :: Double -> Double 
             }
@@ -68,6 +73,7 @@ isUnary _           = False
 isCmp   :: Primitive t -> Bool
 isCmp (IntCmp{}) = True
 isCmp (DblCmp{}) = True
+isCmp (ChrCmp{}) = True
 isCmp _          = False
 
 mathFunctions :: [Primitive String]
@@ -101,7 +107,10 @@ primitives =
    
     intDblCmp :: String -> (forall a. Ord a => a -> a -> Bool) 
               -> Assoc -> Int -> [Primitive String]
-    intDblCmp s op a p = [ IntCmp s op a p , DblCmp (s++".") op a p ]
+    intDblCmp s op a p = [ IntCmp s op a p 
+                         , DblCmp (s++".") op a p
+                         , ChrCmp (s++":") op a p
+                         ]
                         
 priorities :: [[Primitive String]]
 priorities = groupBy ((==) `on` prio) 

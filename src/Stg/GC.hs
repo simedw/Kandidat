@@ -67,7 +67,7 @@ mkGC untouchable st =
     fel x t = maybe (trace ("GC: couldn't find: " ++ unsafeCoerce x) OBlackhole) id t
 
 class FV e where
-    freeVars :: Ord t => e t -> Set t 
+    freeVars :: Variable t => e t -> Set t 
 
 instance FV Expr where
     freeVars (EAtom e)       = freeVars e
@@ -92,11 +92,14 @@ instance FV Var where -- we are a bit unsure here...
     freeVars (Heap v)    = S.singleton v
     freeVars (Local _ v) = S.empty          
       
-freeVarsList :: (FV a, Ord t) => [a t] -> Set t
+freeVarsList :: (FV a, Variable t) => [a t] -> Set t
 freeVarsList = S.unions . map freeVars
 
 instance FV Branch where
-    freeVars (BCon c as e)   = freeVars e `S.difference` S.fromList as
+    freeVars (BCon c as e)   = (if (null as) 
+                                then S.singleton $ mkcons c
+                                else S.empty)
+                               `S.union` (freeVars e `S.difference` S.fromList as)
     freeVars (BDef x e)      = S.delete x (freeVars e) 
 
 instance FV Obj where

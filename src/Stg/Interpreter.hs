@@ -470,6 +470,7 @@ applyPrimOp op args = case (op,args) of
     (IntCmp{intCmp = (+)}, [ANum x,ANum y]) -> EAtom $ avar $ x + y
     (DblOp {dblOp  = (+)}, [ADec x,ADec y]) -> EAtom $ ADec $ x + y
     (DblCmp{dblCmp = (+)}, [ADec x,ADec y]) -> EAtom $ avar $ x + y
+    (ChrCmp{chrCmp = (+)}, [AChr x,AChr y]) -> EAtom $ avar $ x + y
     (MathFun{mathFun = f}, [ADec x])        -> EAtom $ ADec $ f x
     _                                       -> err
   where 

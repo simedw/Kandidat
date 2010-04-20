@@ -12,6 +12,7 @@ relatedBox (IntOp{})   = numCon
 relatedBox (IntCmp{})  = numCon
 relatedBox (DblOp{})   = decCon
 relatedBox (DblCmp{})  = decCon
+relatedBox (ChrCmp{})  = chrCon
 relatedBox (MathFun{}) = decCon
 
 boxPrimFun :: Variable t => Primitive t -> Function t

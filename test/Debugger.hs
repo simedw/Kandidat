@@ -373,7 +373,7 @@ setInputDoubles arg s =
 
 setInputString :: String -> Settings -> IO Settings
 setInputString arg s = 
-    return $ s { lset = (lset s) { input = (input (lset s)) { inputString = Just (read arg) }}}
+    return $ s { lset = (lset s) { input = (input (lset s)) { inputString = Just  arg }}}
 
 
 header = "Usage: main [OPTION...]"

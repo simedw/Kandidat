@@ -1,0 +1,14 @@
+== Resultat ==
+    * Jämför hur kod ser ut före och efter optimering. Förklara lite vad som har gjorts.
+        - Power har använts som löpande exempel, så vi skulle kunna visa det
+          här också.
+        - Andra program. Förslagsvis något av de lite större exempelprogrammen om vi
+          får dem att fungera bra och kan presentera det på ett vettigt sätt.
+                    Shapes, regexp
+    * Jämför snabbheten hos program med och utan optimering (benchmarks)
+        * Med och utan callstack för att visa hur mycket snabbare resultat det gav oss?
+        * scatterplot för en större mängd program (el. körningar)
+    * Jämför kodstorlek, komplexitet hos optimise
+    * Hur stor del av tiden går åt till att köra optimise? En graf skulle kunna visa
+      detta på ena axeln och listlängd på andra axeln, för att illustrera att
+      en optimerad funktion måste köras många gånger för att man ska vinna något på det.
