@@ -1,0 +1,109 @@
+
+Sockerspråk & Avsockring
+
+STG är ett ganska primitivt språk med tex att man kan bara anropa funktioner
+och skapa konstruktorer med argument från atomer, samt att alla objekt måste
+explicit annoteras om de är thunkar eller konstruktörer. För att underlätta
+att skriva kod skapade vi ett sockerspråk för att underlätta detta, och ett
+pass över koden som avsockrar.
+
+== code ==
+    
+    isPrimer n t = case t * t >= n of
+        { True -> True
+        ; False -> if (n % t == 0) False (isPrimer n (t + 1))
+        };
+
+== /code ==
+
+Den här koden kommer från testsviten och är del i ett program som testar
+primalitet. Här används sockerspråket flitigt för att göra koden läsbar
+och hanterlig. Olika delar som behöver avsockras är:
+    * isPrimer är ett funktionsobjekt i STG och skrivs där i en stil mer
+      lik en lambdafunktion:
+      == code ==
+          isPrimer = FUN (n t -> ...)
+      == /code ==
+
+
+    * I STG tar funktioner endast atomer som argument. Detta gör att 
+      i jämförelsen t * t >= n behövs först kvadreringen sparas bindas
+      till en temporär variabel:
+       == code ==
+        let temp = THUNK (t * t)
+        in  (>=) temp n
+       == /code ==
+      Liknande för if-satsen: ifs argument (n % t == 0) och 
+      (isPrimer n (t + 1)) är inte atomer så de behövs bindas och i
+      sin tur är n % t och t + 1 inte atomer till dessa funktionsanrop till
+      == och isPrimer.
+
+
+    * Allt med inledande versal i sockerspråket tolkas som konstruktorer,
+      precis som i Haskell. Så True ovan i koden behöver allokeras med
+      en let. Den första grenen blir i så fall
+        True -> let temp = CON (True) in temp
+      Faktum är att de nullära konstruktorerna True, False, Nil, finns 
+      allokerade på toppnivå i tolken och instantieras endast en gång. 
+      Men i alla andra fall behövs de let-bindas.
+
+    * Detta gäller även heltal och andra primitiver. 0 avsockras till
+          let temp = CON (I# 0)
+          in  temp
+      Notera att alla temporära variabler som skapas är unika.
+            
+    
+    * För att göra det lättare att operera på listor och göra booleska
+      jämförelser finns infixoperatorerna &&, || som alias för && och ||
+      respektive, och ++ och : för append och cons. Funnes någon av dessa
+      infixvarianter byts de ut under avsockringen. 
+
+
+    * I haskell används också $ flitigt som funktionsapplikation med låg
+      högerfixitet, exempelvis i denna kod som testar quicksort med en
+      lista sorterad i fallande ordning:
+       == code ==
+        main = qsort $ reverse $ take 3 $ iterate (\x.x + 1) 0;
+       == /code ==
+      Detta avsockras till motsvarande funktionsanrop:
+       == code ==
+        main = qsort (reverse (take 3 (iterate (\x.x + 1) 0)));
+       == /code ==
+      En annan metod är att göra $ ett alias för apply:
+       == code ==
+        main = apply (qsort (apply reverse (apply take3 (iterate (\x.x + 1) 0)));
+
+        apply f x = f x;
+       == /code ==
+      Detta ger så stor overhead för något så simpelt som funktionsapplikation
+      att det är rimligare att göra det till funktionsanrop direkt.
+        
+
+
+
+-- Detta kanske borde vara i optimise-avsnittet 
+Avsockring av optimise with
+
+     == code == 
+      let f = optimise foo x y with { caseBranches, inlinings = n * n } 
+      in map f zs
+     == /code ==
+
+    avsockras till
+
+     == code == 
+      let { temp1 = THUNK ( n * n )
+          ; temp2 = OPT ( foo x y ) with { caseBranches, inlinings = temp1 }
+          ; f = THUNK ( case temp1 of _ -> temp2 }
+          }
+      in map f zs
+     == /code ==
+
+    I sockerspråket är optimise ett nyckelord som ser ut som en 
+    funktionsapplikation, men avsockras till ett OPT-objekt. Dessutom så 
+    forceras alla dess inställningar med hjälp av en casesats.
+   
+
+
+
+    
