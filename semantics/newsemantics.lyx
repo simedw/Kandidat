@@ -67,7 +67,7 @@
 
 \begin_layout Standard
 \begin_inset FormulaMacro
-\newcommand{\PSI}[4]{\Psi_{#1;#2;#3}(#4)}
+\newcommand{\PSI}[5]{\Psi_{#1;#2;#3;#4}(#5)}
 \end_inset
 
 
@@ -261,7 +261,7 @@
 
 \begin_layout Standard
 \begin_inset FormulaMacro
-\renewcommand{\objCon}[1]{CON(#1)}
+\newcommand{\objCon}[1]{CON(#1)}
 \end_inset
 
 
@@ -269,7 +269,7 @@
 
 \begin_layout Standard
 \begin_inset FormulaMacro
-\renewcommand{\subst}[3]{#1[#2/#3]}
+\newcommand{\subst}[3]{#1[#2/#3]}
 \end_inset
 
 
@@ -284,8 +284,8 @@ Omega:
 \begin_inset Formula \begin{align*}
 \OMEGA s{\heap v{\THUNK e}}Av & \Rightarrow & \mc e{\cUpd vs}HA\\
 \OMEGA sH{\abyss v{\THUNK e}}v & \Rightarrow & \OMEGA{\cOUpd vs}HAe\\
-\OMEGA s{\heap v{\objCon{C\, a_{1}\cdots a_{n}}}}Av & \Rightarrow & \PSI sHAv\\
-\OMEGA sH{\abyss v{CON(C\, a_{1}\cdots a_{n})}}v & \Rightarrow & \PSI sHAv\\
+\OMEGA s{\heap v{\objCon{C\, a_{1}\cdots a_{n}}}}Av & \Rightarrow & \PSI sHA{v;[]}v\\
+\OMEGA sH{\abyss v{CON(C\, a_{1}\cdots a_{n})}}v & \Rightarrow & \PSI sHA{[]}v\\
 \OMEGA sHA{\eCase e{brs}} & \Rightarrow & \OMEGA{\oCase{brs}s}HAe\\
 \OMEGA s{\heap{f\mapsto g,\, a_{1}\cdots a_{n}}{h_{1}\cdots h_{n}}}A{f\, a_{1}\cdots a_{n}} & \Rightarrow & \mc{f\, a_{1}\cdots a_{n}}sHA\\
 funktionsapplikation\\
@@ -295,6 +295,19 @@ funktionsapplikation\\
  &  & x'\mbox{ fresh}\\
 Poppar\\
 \OMEGA sHAe & \Rightarrow & \IRR sHAe\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Psi:
+\begin_inset Formula \begin{align*}
+\PSI{\oLet xs}{\heap vh}A{lbs}v & \Rightarrow & \PSI sHA{lbs}v\\
+\PSI{\oLet xs}{\nheap v{}}A{lbs}v & \Rightarrow & \PSI sHA{x\,:\, lbs}v\\
+\PSI{\oCase{brs}s}HA{lbs}v & \Rightarrow & ...\\
+\PSI{\oCase{brs}s}HA{lbs}v & \Rightarrow & \IRR sHA{makeLets\, lbs\, v}\end{align*}
 
 \end_inset
 
