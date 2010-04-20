@@ -13,7 +13,7 @@ data Regexp a
 data List a
    = Cons a (List a)
    | Nil
- deriving Show
+ deriving (Show, Eq)
 
 
 toList = foldr Cons Nil
@@ -91,27 +91,30 @@ parse' cs stack = case cs of
     ; Nil       -> stack 
     }
 
+c x = Cons x Nil
 
-
-match :: Eq a => Regexp a -> [a] -> [Either [a] [a]]
+match :: Eq a => Regexp a -> List a -> List (Either (List a) (List a))
 match r l = case r of
-    { Empty -> [Right l]
+    { Empty -> c (Right l)
     ; Symbol a -> case l of
-        x : xs -> case (x==a) of
-                      { True  -> [Right xs]
-                      ; False -> [Left l]
+        Cons x xs -> case (x==a) of
+                      { True  -> c (Right xs)
+                      ; False -> c (Left l)
                       }
-        _       -> [Left l]
+        _       -> c (Left l)
     ; Star p -> case match p l of
                 {
-                 xs -> concatMap (either (\x -> [Right x]) (match (Star p))) xs
+                 xs -> concatMap' (either (\x -> c (Right x)) (match (Star p))) xs
                 }
-    ; Union p q ->  (match p l) ++ (match q l)
+    ; Union p q ->  (match p l) +++ (match q l)
     ; Seq p q -> case match p l of
-            {  xs -> concatMap (either (\x -> [Left x]) (match q)) xs
-
+            {  xs -> concatMap' (either (\x -> c (Left x)) (match q)) xs
             }
     }
 
+elem' y Nil = False
+elem' y (Cons x xs) = if (y == x) then True else (elem' y xs)
 
-mothermatch p l = (Right "") `elem` match p l
+--mothermatch p l = (Right "") `elem` match p l
+mothermatch p l = elem' (Right Nil) (match p l)
+

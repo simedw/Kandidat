@@ -160,6 +160,11 @@ fromMaybe d m = case m of
 isJust m = maybe False (const True) m;
 isNothing m = maybe True (const False) m;
 
+either f g x = case x of
+    { Left y  -> f y
+	; Right y -> g y
+	};
+
 -- Double functions
 pi = 3.141519265;
 
@@ -172,3 +177,4 @@ listSeq li = case li of
     { Cons x xs -> seq x (seq (listSeq xs) li)
     ; Nil       -> Nil
     };
+
