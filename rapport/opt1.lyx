@@ -1,0 +1,422 @@
+#LyX 1.6.5 created this file. For more info see http://www.lyx.org/
+\lyxformat 345
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\language english
+\inputencoding auto
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\paperfontsize default
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\author "" 
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\renewcommand{\mc}[3]{#1;#2;#3}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\renewcommand{\OMEGA}[3]{\Omega_{#1;#2}(#3)}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\renewcommand{\PSI}[3]{\Psi_{#1\,;\,#2}(#3)}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\renewcommand{\IRR}[3]{\Phi_{#1\,;\,#2}(#3)}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\renewcommand{\red}[2]{#1\Rightarrow#2}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\renewcommand{\lred}[2]{\begin{array}{c}
+ #1\\
+\Rightarrow#2\end{array}}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\renewcommand{\heap}[2]{H[#1\mapsto#2]}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\renewcommand{\nheap}[2]{H[#1\nrightarrow#2]}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\renewcommand{\heapp}[4]{H[#1\mapsto#2\,;\,#3\mapsto#4]}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\renewcommand{\OPT}[1]{OPT(#1)}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\renewcommand{\PAP}[2]{PAP(#1\,#2)}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\renewcommand{\FUN}[2]{FUN(#1\to#2)}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\renewcommand{\THUNK}[1]{THUNK\,#1}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\renewcommand{\cOPT}[2]{OPT\,#1\,:\,#2}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\renewcommand{\cOFUN}[3]{OFUN\,(#1\to\bullet)_{#2}\,:\,#3}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\renewcommand{\oCase}[2]{O\mathtt{case}\,\bullet\,\mathtt{of}\,#1\,:\,#2}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\renewcommand{\oLet}[3]{O\mathtt{let\,}#1=THUNK\,\bullet\,\mathtt{in}\,#2\,:\,#3}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\renewcommand{\oLetObj}[3]{O\mathtt{let\,}#1=#2\,\mathtt{in}\,\bullet\,:\,#3}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\renewcommand{\oFun}[3]{OFUN\,#1\,#2\,:\,#3}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\renewcommand{\oInline}[1]{OInlining\,:\,#1}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\renewcommand{\BH}{BLACKHOLE}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\renewcommand{\eCase}[2]{\mathtt{case}\,#1\,\mathtt{of}\,#2}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\renewcommand{\eLet}[3]{\mathtt{let}\,#1=#2\,\mathtt{in}\,#3}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph*
+Vi har använd ett par olika semantiker för att beskriva optimeringsskeded
+ i vårt språk, vi ska nu förklara var och ett av dessa i kronologisk ordning.
+ 
+\end_layout
+
+\begin_layout Paragraph*
+Detta optimeringspass arbetar sig igenom träded på ett sätt inte helt olikt
+ stg-maskinen, dock kan vi bland annat gå in och evaluera funktion utan
+ att känna till alla argument, s.k.
+ evaluera under lambdat.
+ För att inte duplicera för mycket av stg funktionallitet så anropas optimise
+ stg för dvs uppgifter.
+\end_layout
+
+\begin_layout Paragraph
+Det finns tre delar i optimeringen
+\end_layout
+
+\begin_layout Paragraph
+Omega, Ingångspunkten till optimeringsfunktionen, anropas från maskinen
+ när något har blivit annoterat för optimering.
+ Omega bryter ner träded och delegerar vidare vem och vad som ska ske, samt
+ lägger ut kontinuations för att senare bygga upp ett förhoppningsvis ny
+ träd.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \begin{align*}
+\OMEGA sH{\eCase e{brs}} & \Rightarrow & \OMEGA{\oCase{brs}s}He\\
+\OMEGA sH{f\,\bar{k}} & \Rightarrow & \mc{f\,\bar{k}}sH\\
+\OMEGA sH{f\,\bar{x}\, k\,\bar{y}} & \Rightarrow & \mc{f\,\bar{x}\, k\,\bar{y}}{\oInline s}H\\
+\OMEGA sH{\eLet x{\THUNK e}{e'}} & \Rightarrow & \OMEGA{\oLet x{e'}s}He\\
+\OMEGA s{\nheap x{\,}}{\bullet} & \Rightarrow & \IRR sH{\bullet}\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph
+Irr, kortform för Irreducable.
+ Anropas när Omega eller Psi inte längre kan optimeringa vidare.
+ Irr kan då utifrån nuvarande continuations bygga träded eller byta continuation
+ och fortsätta optimera på en andra delar i uttrycket.
+ Där är här vi kan tillslut fly tillbaka till stgmaskinen.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \begin{align*}
+\IRR{\oLet xes}H{e'} & \Rightarrow & \OMEGA{\oLetObj x{\THUNK{e'}}s}He\\
+\IRR{\oCase{brs}s}He & \Rightarrow & \IRR sH{ECase\, e\, brs}\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Istället för att skapa en ECase e brs har vi även testat att gå in och optimera
+ varje branch, detta brytter dock semantiken, vi kan fastna i oändliga loopar
+ i brancher vi aldrig hade hamnat i.
+ 
+\end_layout
+
+\begin_layout Standard
+
+\lang british
+\begin_inset Box Shadowbox
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "100col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+
+\lang british
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+case x of
+\end_layout
+
+\begin_layout Plain Layout
+
+	True  -> 5 : Nil
+\end_layout
+
+\begin_layout Plain Layout
+
+	False -> repeat 1
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Om x är okänd och vi försöker optimera False branchen kommer vi fastna i
+ en oändlig loop, dock är det möjligt att när programet körs kommer x bara
+ anta värdet True.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \begin{align*}
+\IRR{\oLetObj x{OBJ}s}He & \Rightarrow & \IRR sH{\eLet x{OBJ}e}\\
+\IRR{\cOFUN{\bar{x}}{\alpha}s}He & \Rightarrow & \mc{\alpha}s{\heap{\alpha}{\FUN{\bar{x}}e}}\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph
+Psi, anropas från när optimise har lagt ut något åt maskinen och maskinen
+ inte kan komma längre.
+ Psi kommer använda värdet från maskinen och sedan delegera vidare optimeringen.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \begin{align*}
+\PSI{\oLet xes}Hv & \Rightarrow & \PSI sH{e[v/x]}\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Här byter vi ut alla x mot värdet v som maskinen har arbetat fram.
+ Här använder vi en substitute funktion som går igenom hela e uttrycksträd
+ vilket är väldigt kostsamt.
+ Något som vi bytte ut i senare versioner.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \begin{align*}
+\PSI{\oLetObj x{OBJ}s}Hv & \Rightarrow & \IRR sH{\eLet x{OBJ}v}\\
+\PSI{\oCase{brs}s}Hv & \Rightarrow & \OMEGA sH{\text{instantiate correct brs with v}}\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Instantiate correct branch väljer helt enkelt vilken branch som matchar
+ värdet som maskinen arbetat fram.
+ Detta är troligtvis en av de viktigaste stegen i vår optimering då kan
+ skala bort alla onödiga brancher, minska koden och oftast fortsätta optimera
+ en bit in det nya uttrycket.
+\end_layout
+
+\begin_layout Paragraph*
+Stg, då vi interagerar med stg maskinen måste vi har tydliga regler för
+ när maskien ska sluta evaluera och börja optimera.
+ Detta sker antingen då den stöter på en OPT(t) för första gången, eller
+ när den inte längre kan evaluera ett uttryck och har en Optimise kontinuation
+ på stacken.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \begin{align*}
+\mc as{\heap a{\OPT t}} & \Rightarrow\\
+\mc t{\cOPT{a\,}s}{\heap a{\BH}}\\
+\mc x{\cOPT as}{\heapp x{\PAP f{a_{1}\cdots a_{n}}}f{\FUN{x_{1}\cdots x_{m}}e}} & \Rightarrow\\
+\OMEGA{\cOFUN{x_{n+1}\cdots x_{m}}as}H{e[a_{1}/x_{1}\cdots a_{n}/x_{n}]}\\
+\mc v{O.\star\,:\, s}{\nheap v{\THUNK e}} & \Rightarrow\\
+\PSI{O.\star\,:\, s}Hv\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document
