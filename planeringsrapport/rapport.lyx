@@ -1106,6 +1106,15 @@ Regexpexempel klart.
 \end_layout
 
 \begin_layout Subsection
+Milstolpe 2010-04-30 (Fredag LV 5)
+\end_layout
+
+\begin_layout Itemize
+En optimisefunktion som fungerar med callstacken, som har samma funktionalitet
+ som den förra call-by-name-optimeringen1.
+\end_layout
+
+\begin_layout Subsection
 Milstolpe 2010-05-07 (Fredag LV 6)
 \end_layout
 

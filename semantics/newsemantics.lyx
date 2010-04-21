@@ -306,12 +306,16 @@ Psi:
 \begin_inset Formula \begin{align*}
 \PSI{\oLet xs}{\heap vh}A{lbs}v & \Rightarrow & \PSI sHA{lbs}v\\
 \PSI{\oLet xs}{\nheap v{}}A{lbs}v & \Rightarrow & \PSI sHA{x\,:\, lbs}v\\
-\PSI{\oCase{brs}s}HA{lbs}v & \Rightarrow & ...\\
+\PSI{\oCase{brs}s}HA{lbs}v & \Rightarrow & \OMEGA sHA{instantiateBranch\, C\, a_{1}\cdots a_{n}\, brs}\\
 \PSI{\oCase{brs}s}HA{lbs}v & \Rightarrow & \IRR sHA{makeLets\, lbs\, v}\end{align*}
 
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+instantiateBranch, makeLets...
 \end_layout
 
 \end_body
