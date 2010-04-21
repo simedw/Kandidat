@@ -1,0 +1,58 @@
+\relax 
+\catcode`"\active
+\select@language{swedish}
+\@writefile{toc}{\select@language{swedish}}
+\@writefile{lof}{\select@language{swedish}}
+\@writefile{lot}{\select@language{swedish}}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Inledning | Bakgrund och motivering}{3}}
+\@writefile{toc}{\contentsline {section}{\numberline {2}V\IeC {\r a}rt Sockerspr\IeC {\r a}k}{3}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Introduktion}{3}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}BNF}{4}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}J\IeC {\"a}mf\IeC {\"o}relse med Haskell}{4}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Definitioner}{5}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.4.1}Fria variabler och substitution}{5}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.4.2}Partiell evaluering}{6}}
+\@writefile{toc}{\contentsline {section}{\numberline {3}Corespr\IeC {\r a}k}{6}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Olika maskiner}{6}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Semantik \IeC {\"o}ver STG}{6}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Avsockring av Sockerspr\IeC {\r a}k till STG}{11}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.1}Lambdalyftaren}{13}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}V\IeC {\r a}ra ut\IeC {\"o}kningar}{13}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.4.1}Boxing}{13}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.4.2}IO}{14}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.4.3}Print continuation}{14}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}Callstack}{15}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.5.1}Substitution}{15}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.5.2}Localise}{15}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Optimise}{18}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Introduktion till optimise}{18}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Call by Value semantik}{20}}
+\@writefile{toc}{\contentsline {paragraph}{Det finns tre delar i optimeringen}{20}}
+\@writefile{toc}{\contentsline {paragraph}{Omega, Ing\IeC {\r a}ngspunkten till optimeringsfunktionen, anropas fr\IeC {\r a}n maskinen n\IeC {\"a}r n\IeC {\r a}got har blivit annoterat f\IeC {\"o}r optimering. Omega bryter ner tr\IeC {\"a}ded och delegerar vidare vem och vad som ska ske, samt l\IeC {\"a}gger ut kontinuations f\IeC {\"o}r att senare bygga upp ett f\IeC {\"o}rhoppningsvis ny tr\IeC {\"a}d. }{20}}
+\@writefile{toc}{\contentsline {paragraph}{Irr, kortform f\IeC {\"o}r Irreducable. Anropas n\IeC {\"a}r Omega eller Psi inte l\IeC {\"a}ngre kan optimeringa vidare. Irr kan d\IeC {\r a} utifr\IeC {\r a}n nuvarande continuations bygga tr\IeC {\"a}ded eller byta continuation och forts\IeC {\"a}tta optimera p\IeC {\r a} en andra delar i uttrycket. D\IeC {\"a}r \IeC {\"a}r h\IeC {\"a}r vi kan tillslut fly tillbaka till stgmaskinen.}{20}}
+\@writefile{toc}{\contentsline {paragraph}{Psi, anropas fr\IeC {\r a}n n\IeC {\"a}r optimise har lagt ut n\IeC {\r a}got \IeC {\r a}t maskinen och maskinen inte kan komma l\IeC {\"a}ngre. Psi kommer anv\IeC {\"a}nda v\IeC {\"a}rdet fr\IeC {\r a}n maskinen och sedan delegera vidare optimeringen.}{21}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Optimise ... with ..}{22}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.3.1}Case Branches}{23}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.3.2}Inline-r\IeC {\"a}knare}{23}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Call by Name semantik}{23}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.5}D\IeC {\"o}dkods eliminering}{23}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.6}V\IeC {\"a}lk\IeC {\"a}nd case-lag}{24}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.7}Afterburner}{25}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.7.1}Gemensam caseganskare}{25}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Resultat}{26}}
+\@writefile{toc}{\contentsline {section}{\numberline {6}Diskussion}{26}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Implementerbarhet i kompilator}{27}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Lathet}{27}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}Optimise-with}{27}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.4}Sharing}{28}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.5}Call stack}{28}}
+\citation{mitchell2007supercompiler}
+\citation{bolz-automatic}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.6}Optimise med call stack}{29}}
+\@writefile{toc}{\contentsline {section}{\numberline {7}Relaterade Arbeten}{29}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.1}Statiska optimeringar}{29}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.2}Optimeringar under k\IeC {\"o}rningstid}{29}}
+\citation{marlow2006making}
+\bibdata{references}
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.3}Funktionella maskiner}{30}}
+\@writefile{toc}{\contentsline {section}{\numberline {8}Framtida Arbeten}{30}}

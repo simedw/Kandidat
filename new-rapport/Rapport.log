@@ -1,0 +1,885 @@
+This is pdfeTeX, Version 3.141592-1.21a-2.2 (Web2C 7.5.4) (format=pdflatex 2007.11.2)  21 APR 2010 17:43
+entering extended mode
+**Rapport.tex
+(./Rapport.tex
+LaTeX2e <2003/12/01>
+Babel <v3.8d> and hyphenation patterns for american, french, german, ngerman, b
+ahasa, basque, bulgarian, catalan, croatian, czech, danish, dutch, esperanto, e
+stonian, finnish, greek, icelandic, irish, italian, latin, magyar, norsk, polis
+h, portuges, romanian, russian, serbian, slovak, slovene, spanish, swedish, tur
+kish, ukrainian, nohyphenation, loaded.
+(/usr/share/texmf/tex/latex/base/article.cls
+Document Class: article 2004/02/16 v1.4f Standard LaTeX document class
+(/usr/share/texmf/tex/latex/base/size10.clo
+File: size10.clo 2004/02/16 v1.4f Standard LaTeX file (size option)
+)
+\c@part=\count79
+\c@section=\count80
+\c@subsection=\count81
+\c@subsubsection=\count82
+\c@paragraph=\count83
+\c@subparagraph=\count84
+\c@figure=\count85
+\c@table=\count86
+\abovecaptionskip=\skip41
+\belowcaptionskip=\skip42
+\bibindent=\dimen102
+) (./subfiles.sty
+Package: subfiles 2002/06/08 Federico Garcia
+
+(/usr/share/texmf/tex/latex/tools/verbatim.sty
+Package: verbatim 2003/08/22 v1.5q LaTeX2e package for verbatim enhancements
+\every@verbatim=\toks14
+\verbatim@line=\toks15
+\verbatim@in@stream=\read1
+)) (./fegr.sty
+(/usr/share/texmf/tex/latex/base/fontenc.sty
+Package: fontenc 2004/02/22 v1.99f Standard LaTeX package
+
+(/usr/share/texmf/tex/latex/base/t1enc.def
+File: t1enc.def 2004/02/22 v1.99f Standard LaTeX file
+LaTeX Font Info:    Redeclaring font encoding T1 on input line 43.
+))
+(/usr/share/texmf/tex/latex/base/inputenc.sty
+Package: inputenc 2004/02/05 v1.0d Input encoding file
+
+(/usr/share/texmf/tex/latex/base/utf8.def
+File: utf8.def 2004/02/09 v1.1b UTF-8 support for inputenc
+Now handling font encoding OML ...
+... no UTF-8 mapping file for font encoding OML
+Now handling font encoding T1 ...
+... processing UTF-8 mapping file for font encoding T1
+
+(/usr/share/texmf/tex/latex/base/t1enc.dfu
+File: t1enc.dfu 2004/02/09 v1.1b UTF-8 support for inputenc
+   defining Unicode char U+00A1 (decimal 161)
+   defining Unicode char U+00A3 (decimal 163)
+   defining Unicode char U+00AB (decimal 171)
+   defining Unicode char U+00BB (decimal 187)
+   defining Unicode char U+00BF (decimal 191)
+   defining Unicode char U+00C0 (decimal 192)
+   defining Unicode char U+00C1 (decimal 193)
+   defining Unicode char U+00C2 (decimal 194)
+   defining Unicode char U+00C3 (decimal 195)
+   defining Unicode char U+00C4 (decimal 196)
+   defining Unicode char U+00C5 (decimal 197)
+   defining Unicode char U+00C6 (decimal 198)
+   defining Unicode char U+00C7 (decimal 199)
+   defining Unicode char U+00C8 (decimal 200)
+   defining Unicode char U+00C9 (decimal 201)
+   defining Unicode char U+00CA (decimal 202)
+   defining Unicode char U+00CB (decimal 203)
+   defining Unicode char U+00CC (decimal 204)
+   defining Unicode char U+00CD (decimal 205)
+   defining Unicode char U+00CE (decimal 206)
+   defining Unicode char U+00CF (decimal 207)
+   defining Unicode char U+00D0 (decimal 208)
+   defining Unicode char U+00D1 (decimal 209)
+   defining Unicode char U+00D2 (decimal 210)
+   defining Unicode char U+00D3 (decimal 211)
+   defining Unicode char U+00D4 (decimal 212)
+   defining Unicode char U+00D5 (decimal 213)
+   defining Unicode char U+00D6 (decimal 214)
+   defining Unicode char U+00D8 (decimal 216)
+   defining Unicode char U+00D9 (decimal 217)
+   defining Unicode char U+00DA (decimal 218)
+   defining Unicode char U+00DB (decimal 219)
+   defining Unicode char U+00DC (decimal 220)
+   defining Unicode char U+00DD (decimal 221)
+   defining Unicode char U+00DE (decimal 222)
+   defining Unicode char U+00DF (decimal 223)
+   defining Unicode char U+00E0 (decimal 224)
+   defining Unicode char U+00E1 (decimal 225)
+   defining Unicode char U+00E2 (decimal 226)
+   defining Unicode char U+00E3 (decimal 227)
+   defining Unicode char U+00E4 (decimal 228)
+   defining Unicode char U+00E5 (decimal 229)
+   defining Unicode char U+00E6 (decimal 230)
+   defining Unicode char U+00E7 (decimal 231)
+   defining Unicode char U+00E8 (decimal 232)
+   defining Unicode char U+00E9 (decimal 233)
+   defining Unicode char U+00EA (decimal 234)
+   defining Unicode char U+00EB (decimal 235)
+   defining Unicode char U+00EC (decimal 236)
+   defining Unicode char U+00ED (decimal 237)
+   defining Unicode char U+00EE (decimal 238)
+   defining Unicode char U+00EF (decimal 239)
+   defining Unicode char U+00F0 (decimal 240)
+   defining Unicode char U+00F1 (decimal 241)
+   defining Unicode char U+00F2 (decimal 242)
+   defining Unicode char U+00F3 (decimal 243)
+   defining Unicode char U+00F4 (decimal 244)
+   defining Unicode char U+00F5 (decimal 245)
+   defining Unicode char U+00F6 (decimal 246)
+   defining Unicode char U+00F8 (decimal 248)
+   defining Unicode char U+00F9 (decimal 249)
+   defining Unicode char U+00FA (decimal 250)
+   defining Unicode char U+00FB (decimal 251)
+   defining Unicode char U+00FC (decimal 252)
+   defining Unicode char U+00FD (decimal 253)
+   defining Unicode char U+00FE (decimal 254)
+   defining Unicode char U+00FF (decimal 255)
+   defining Unicode char U+0102 (decimal 258)
+   defining Unicode char U+0103 (decimal 259)
+   defining Unicode char U+0104 (decimal 260)
+   defining Unicode char U+0105 (decimal 261)
+   defining Unicode char U+0106 (decimal 262)
+   defining Unicode char U+0107 (decimal 263)
+   defining Unicode char U+010C (decimal 268)
+   defining Unicode char U+010D (decimal 269)
+   defining Unicode char U+010E (decimal 270)
+   defining Unicode char U+010F (decimal 271)
+   defining Unicode char U+0110 (decimal 272)
+   defining Unicode char U+0111 (decimal 273)
+   defining Unicode char U+0118 (decimal 280)
+   defining Unicode char U+0119 (decimal 281)
+   defining Unicode char U+011A (decimal 282)
+   defining Unicode char U+011B (decimal 283)
+   defining Unicode char U+011E (decimal 286)
+   defining Unicode char U+011F (decimal 287)
+   defining Unicode char U+0130 (decimal 304)
+   defining Unicode char U+0131 (decimal 305)
+   defining Unicode char U+0139 (decimal 313)
+   defining Unicode char U+013A (decimal 314)
+   defining Unicode char U+013D (decimal 317)
+   defining Unicode char U+013E (decimal 318)
+   defining Unicode char U+0141 (decimal 321)
+   defining Unicode char U+0142 (decimal 322)
+   defining Unicode char U+0143 (decimal 323)
+   defining Unicode char U+0144 (decimal 324)
+   defining Unicode char U+0147 (decimal 327)
+   defining Unicode char U+0148 (decimal 328)
+   defining Unicode char U+014A (decimal 330)
+   defining Unicode char U+014B (decimal 331)
+   defining Unicode char U+0150 (decimal 336)
+   defining Unicode char U+0151 (decimal 337)
+   defining Unicode char U+0152 (decimal 338)
+   defining Unicode char U+0153 (decimal 339)
+   defining Unicode char U+0154 (decimal 340)
+   defining Unicode char U+0155 (decimal 341)
+   defining Unicode char U+0158 (decimal 344)
+   defining Unicode char U+0159 (decimal 345)
+   defining Unicode char U+015A (decimal 346)
+   defining Unicode char U+015B (decimal 347)
+   defining Unicode char U+015E (decimal 350)
+   defining Unicode char U+015F (decimal 351)
+   defining Unicode char U+0160 (decimal 352)
+   defining Unicode char U+0161 (decimal 353)
+   defining Unicode char U+0162 (decimal 354)
+   defining Unicode char U+0163 (decimal 355)
+   defining Unicode char U+0164 (decimal 356)
+   defining Unicode char U+0165 (decimal 357)
+   defining Unicode char U+016E (decimal 366)
+   defining Unicode char U+016F (decimal 367)
+   defining Unicode char U+0170 (decimal 368)
+   defining Unicode char U+0171 (decimal 369)
+   defining Unicode char U+0178 (decimal 376)
+   defining Unicode char U+0179 (decimal 377)
+   defining Unicode char U+017A (decimal 378)
+   defining Unicode char U+017B (decimal 379)
+   defining Unicode char U+017C (decimal 380)
+   defining Unicode char U+017D (decimal 381)
+   defining Unicode char U+017E (decimal 382)
+   defining Unicode char U+200C (decimal 8204)
+   defining Unicode char U+2013 (decimal 8211)
+   defining Unicode char U+2014 (decimal 8212)
+   defining Unicode char U+2018 (decimal 8216)
+   defining Unicode char U+2019 (decimal 8217)
+   defining Unicode char U+201A (decimal 8218)
+   defining Unicode char U+201C (decimal 8220)
+   defining Unicode char U+201D (decimal 8221)
+   defining Unicode char U+201E (decimal 8222)
+   defining Unicode char U+2030 (decimal 8240)
+   defining Unicode char U+2031 (decimal 8241)
+   defining Unicode char U+2039 (decimal 8249)
+   defining Unicode char U+203A (decimal 8250)
+   defining Unicode char U+2423 (decimal 9251)
+)
+Now handling font encoding OT1 ...
+... processing UTF-8 mapping file for font encoding OT1
+
+(/usr/share/texmf/tex/latex/base/ot1enc.dfu
+File: ot1enc.dfu 2004/02/09 v1.1b UTF-8 support for inputenc
+   defining Unicode char U+00A1 (decimal 161)
+   defining Unicode char U+00A3 (decimal 163)
+   defining Unicode char U+00B8 (decimal 184)
+   defining Unicode char U+00BF (decimal 191)
+   defining Unicode char U+00C5 (decimal 197)
+   defining Unicode char U+00C6 (decimal 198)
+   defining Unicode char U+00D8 (decimal 216)
+   defining Unicode char U+00DF (decimal 223)
+   defining Unicode char U+00E6 (decimal 230)
+   defining Unicode char U+00EC (decimal 236)
+   defining Unicode char U+00ED (decimal 237)
+   defining Unicode char U+00EE (decimal 238)
+   defining Unicode char U+00EF (decimal 239)
+   defining Unicode char U+00F8 (decimal 248)
+   defining Unicode char U+0131 (decimal 305)
+   defining Unicode char U+0141 (decimal 321)
+   defining Unicode char U+0142 (decimal 322)
+   defining Unicode char U+0152 (decimal 338)
+   defining Unicode char U+0153 (decimal 339)
+   defining Unicode char U+2013 (decimal 8211)
+   defining Unicode char U+2014 (decimal 8212)
+   defining Unicode char U+2018 (decimal 8216)
+   defining Unicode char U+2019 (decimal 8217)
+   defining Unicode char U+201C (decimal 8220)
+   defining Unicode char U+201D (decimal 8221)
+)
+Now handling font encoding OMS ...
+... processing UTF-8 mapping file for font encoding OMS
+
+(/usr/share/texmf/tex/latex/base/omsenc.dfu
+File: omsenc.dfu 2004/02/09 v1.1b UTF-8 support for inputenc
+   defining Unicode char U+00A7 (decimal 167)
+   defining Unicode char U+00B6 (decimal 182)
+   defining Unicode char U+02D9 (decimal 729)
+   defining Unicode char U+2020 (decimal 8224)
+   defining Unicode char U+2021 (decimal 8225)
+   defining Unicode char U+2022 (decimal 8226)
+)
+Now handling font encoding OMX ...
+... no UTF-8 mapping file for font encoding OMX
+Now handling font encoding U ...
+... no UTF-8 mapping file for font encoding U
+   defining Unicode char U+00A9 (decimal 169)
+   defining Unicode char U+00AA (decimal 170)
+   defining Unicode char U+00AE (decimal 174)
+   defining Unicode char U+00BA (decimal 186)
+   defining Unicode char U+02C6 (decimal 710)
+   defining Unicode char U+02CA (decimal 714)
+   defining Unicode char U+200C (decimal 8204)
+   defining Unicode char U+2026 (decimal 8230)
+   defining Unicode char U+2122 (decimal 8482)
+   defining Unicode char U+2423 (decimal 9251)
+))
+(/usr/local/share/texmf/tex/generic/babel/babel.sty
+Package: babel 1997/01/23 v3.6h The Babel package
+
+(/usr/share/texmf/tex/generic/babel/swedish.ldf
+Language: swedish 2004/02/20 v2.3d Swedish support from the babel system
+
+(/usr/share/texmf/tex/generic/babel/babel.def
+File: babel.def 2004/11/20 v3.8d Babel common definitions
+\babel@savecnt=\count87
+\U@D=\dimen103
+)
+Package babel Info: Making " an active character on input line 90.
+))
+(/usr/share/texmf/tex/latex/amsmath/amsmath.sty
+Package: amsmath 2000/07/18 v2.13 AMS math features
+\@mathmargin=\skip43
+
+For additional information on amsmath, use the `?' option.
+(/usr/share/texmf/tex/latex/amsmath/amstext.sty
+Package: amstext 2000/06/29 v2.01
+
+(/usr/share/texmf/tex/latex/amsmath/amsgen.sty
+File: amsgen.sty 1999/11/30 v2.0
+\@emptytoks=\toks16
+\ex@=\dimen104
+))
+(/usr/share/texmf/tex/latex/amsmath/amsbsy.sty
+Package: amsbsy 1999/11/29 v1.2d
+\pmbraise@=\dimen105
+)
+(/usr/share/texmf/tex/latex/amsmath/amsopn.sty
+Package: amsopn 1999/12/14 v2.01 operator names
+)
+\inf@bad=\count88
+LaTeX Info: Redefining \frac on input line 211.
+\uproot@=\count89
+\leftroot@=\count90
+LaTeX Info: Redefining \overline on input line 307.
+\classnum@=\count91
+\DOTSCASE@=\count92
+LaTeX Info: Redefining \ldots on input line 379.
+LaTeX Info: Redefining \dots on input line 382.
+LaTeX Info: Redefining \cdots on input line 467.
+\Mathstrutbox@=\box26
+\strutbox@=\box27
+\big@size=\dimen106
+LaTeX Font Info:    Redeclaring font encoding OML on input line 567.
+LaTeX Font Info:    Redeclaring font encoding OMS on input line 568.
+\macc@depth=\count93
+\c@MaxMatrixCols=\count94
+\dotsspace@=\muskip10
+\c@parentequation=\count95
+\dspbrk@lvl=\count96
+\tag@help=\toks17
+\row@=\count97
+\column@=\count98
+\maxfields@=\count99
+\andhelp@=\toks18
+\eqnshift@=\dimen107
+\alignsep@=\dimen108
+\tagshift@=\dimen109
+\tagwidth@=\dimen110
+\totwidth@=\dimen111
+\lineht@=\dimen112
+\@envbody=\toks19
+\multlinegap=\skip44
+\multlinetaggap=\skip45
+\mathdisplay@stack=\toks20
+LaTeX Info: Redefining \[ on input line 2666.
+LaTeX Info: Redefining \] on input line 2667.
+)
+(/usr/share/texmf/tex/latex/amscls/amsthm.sty
+Package: amsthm 2004/08/06 v2.20
+\thm@style=\toks21
+\thm@bodyfont=\toks22
+\thm@headfont=\toks23
+\thm@notefont=\toks24
+\thm@headpunct=\toks25
+\thm@preskip=\skip46
+\thm@postskip=\skip47
+\thm@headsep=\skip48
+\dth@everypar=\toks26
+)
+(/usr/share/texmf/tex/latex/amsfonts/amssymb.sty
+Package: amssymb 2002/01/22 v2.2d
+
+(/usr/share/texmf/tex/latex/amsfonts/amsfonts.sty
+Package: amsfonts 2001/10/25 v2.2f
+\symAMSa=\mathgroup4
+\symAMSb=\mathgroup5
+LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
+(Font)                  U/euf/m/n --> U/euf/b/n on input line 132.
+))
+(/usr/share/texmf/tex/latex/graphics/graphicx.sty
+Package: graphicx 1999/02/16 v1.0f Enhanced LaTeX Graphics (DPC,SPQR)
+
+(/usr/share/texmf/tex/latex/graphics/keyval.sty
+Package: keyval 1999/03/16 v1.13 key=value parser (DPC)
+\KV@toks@=\toks27
+)
+(/usr/share/texmf/tex/latex/graphics/graphics.sty
+Package: graphics 2001/07/07 v1.0n Standard LaTeX Graphics (DPC,SPQR)
+
+(/usr/share/texmf/tex/latex/graphics/trig.sty
+Package: trig 1999/03/16 v1.09 sin cos tan (DPC)
+)
+(/usr/share/texmf/tex/latex/graphics/graphics.cfg
+File: graphics.cfg 2005/02/03 v1.3 graphics configuration of teTeX/TeXLive
+)
+Package graphics Info: Driver file: pdftex.def on input line 80.
+
+(/usr/share/texmf/tex/latex/graphics/pdftex.def
+File: pdftex.def 2002/06/19 v0.03k graphics/color for pdftex
+\Gread@gobject=\count100
+))
+\Gin@req@height=\dimen113
+\Gin@req@width=\dimen114
+)
+(/usr/share/texmf/tex/latex/rotating/rotating.sty
+Package: rotating 1997/09/26 v2.13 Rotation package
+
+(/usr/share/texmf/tex/latex/base/ifthen.sty
+Package: ifthen 2001/05/26 v1.1c Standard LaTeX ifthen package (DPC)
+)
+\c@r@tfl@t=\count101
+\rot@float@box=\box28
+)
+(/usr/share/texmf/tex/latex/listings/listings.sty
+\lst@mode=\count102
+\lst@gtempboxa=\box29
+\lst@token=\toks28
+\lst@length=\count103
+\lst@currlwidth=\dimen115
+\lst@column=\count104
+\lst@pos=\count105
+\lst@lostspace=\dimen116
+\lst@width=\dimen117
+\lst@newlines=\count106
+\lst@lineno=\count107
+\c@lstlisting=\count108
+\lst@maxwidth=\dimen118
+
+(/usr/share/texmf/tex/latex/listings/lstpatch.sty
+File: lstpatch.sty 2004/10/17 1.3b (Carsten Heinz)
+)
+(/usr/share/texmf/tex/latex/listings/lstmisc.sty
+File: lstmisc.sty 2004/09/07 1.3 (Carsten Heinz)
+\c@lstnumber=\count109
+\lst@skipnumbers=\count110
+\lst@framebox=\box30
+)
+(/usr/share/texmf/tex/latex/listings/listings.cfg
+File: listings.cfg 2004/09/05 1.3 listings configuration
+))
+Package: listings 2004/10/17 1.3b (Carsten Heinz)
+
+(/usr/share/texmf/tex/latex/graphics/color.sty
+Package: color 1999/02/16 v1.0i Standard LaTeX Color (DPC)
+
+(/usr/share/texmf/tex/latex/graphics/color.cfg
+File: color.cfg 2005/02/03 v1.3 color configuration of teTeX/TeXLive
+)
+Package color Info: Driver file: pdftex.def on input line 125.
+)
+(/usr/share/texmf/tex/latex/fancyheadings/fancyheadings.sty
+\headrulewidth=\dimen119
+\footrulewidth=\dimen120
+\plainheadrulewidth=\dimen121
+\plainfootrulewidth=\dimen122
+\headwidth=\dimen123
+\footruleskip=\dimen124
+))
+(/usr/share/texmf/tex/latex/base/fontenc.sty
+Package: fontenc 2004/02/22 v1.99f Standard LaTeX package
+
+(/usr/share/texmf/tex/latex/base/t1enc.def
+File: t1enc.def 2004/02/22 v1.99f Standard LaTeX file
+LaTeX Font Info:    Redeclaring font encoding T1 on input line 43.
+))
+(/usr/share/texmf/tex/latex/fancybox/fancybox.sty
+Package: fancybox 2000/09/19 1.3
+
+Style option: `fancybox' v1.3 <2000/09/19> (tvz)
+\@fancybox=\box31
+\shadowsize=\dimen125
+\@Sbox=\box32
+\do@VerbBox=\toks29
+\the@fancyput=\toks30
+\this@fancyput=\toks31
+\EndVerbatimTokens=\toks32
+\Verbatim@Outfile=\write3
+\Verbatim@Infile=\read2
+) (/usr/share/texmf/tex/latex/tools/calc.sty
+Package: calc 1998/07/07 v4.1b Infix arithmetic (KKT,FJ)
+\calc@Acount=\count111
+\calc@Bcount=\count112
+\calc@Adimen=\dimen126
+\calc@Bdimen=\dimen127
+\calc@Askip=\skip49
+\calc@Bskip=\skip50
+LaTeX Info: Redefining \setlength on input line 59.
+LaTeX Info: Redefining \addtolength on input line 60.
+\calc@denominator=\count113
+)
+
+! LaTeX Error: File `xargs.sty' not found.
+
+Type X to quit or <RETURN> to proceed,
+or enter new name. (Default extension: sty)
+
+Enter file name: 
+
+LaTeX Warning: You have requested, on input line 14, version
+               `2008/03/08' of package xargs,
+               but only version
+               `'
+               is available.
+
+(./Rapport.aux)
+\openout1 = `Rapport.aux'.
+
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+ (/usr/share/texmf/tex/context/base/supp-pdf.tex
+(/usr/share/texmf/tex/context/base/supp-mis.tex
+loading : Context Support Macros / Miscellaneous (2004.10.26)
+\protectiondepth=\count114
+\scratchcounter=\count115
+\scratchtoks=\toks33
+\scratchdimen=\dimen128
+\scratchskip=\skip51
+\scratchmuskip=\muskip11
+\scratchbox=\box33
+\scratchread=\read3
+\scratchwrite=\write4
+\zeropoint=\dimen129
+\onepoint=\dimen130
+\onebasepoint=\dimen131
+\minusone=\count116
+\thousandpoint=\dimen132
+\onerealpoint=\dimen133
+\emptytoks=\toks34
+\nextbox=\box34
+\nextdepth=\dimen134
+\everyline=\toks35
+\!!counta=\count117
+\!!countb=\count118
+\recursecounter=\count119
+)
+loading : Context Support Macros / PDF (2004.03.26)
+\nofMPsegments=\count120
+\nofMParguments=\count121
+\MPscratchCnt=\count122
+\MPscratchDim=\dimen135
+\MPnumerator=\count123
+\everyMPtoPDFconversion=\toks36
+) (./Rapport.toc
+LaTeX Font Info:    Try loading font information for U+msa on input line 4.
+ (/usr/share/texmf/tex/latex/amsfonts/umsa.fd
+File: umsa.fd 2002/01/19 v2.2g AMS font definitions
+)
+LaTeX Font Info:    Try loading font information for U+msb on input line 4.
+
+(/usr/share/texmf/tex/latex/amsfonts/umsb.fd
+File: umsb.fd 2002/01/19 v2.2g AMS font definitions
+) [1
+
+{/usr/share/texmf-var/fonts/map/pdftex/updmap/pdftex.map}])
+\tf@toc=\write5
+\openout5 = `Rapport.toc'.
+
+ [2] (./Inledning.tex
+Overfull \hbox (5.30888pt too wide) in paragraph at lines 6--8
+\T1/cmr/m/n/10 Vanligtvis op-ti-me-ras kod en-dast vid kom-pi-le-rings-fa-sen. 
+I föl-jan-de Haskell-exempel
+ []
+
+LaTeX Font Info:    Try loading font information for T1+cmtt on input line 9.
+(/usr/share/texmf/tex/latex/base/t1cmtt.fd
+File: t1cmtt.fd 1999/05/25 v2.5h Standard LaTeX font definitions
+)) (./Socker.tex [3] [4] [5])
+(./Core.tex (./Core/Maskiner.tex) (./Core/Semantik.tex
+! Undefined control sequence.
+l.6 \newcommandx
+                \range[1][usedefault, addprefix=\global, 1=]{#1_{1}\,\ldots\...
+
+? 
+! Undefined control sequence.
+l.6 \newcommandx\range
+                      [1][usedefault, addprefix=\global, 1=]{#1_{1}\,\ldots\...
+
+? 
+! You can't use a prefix with `the character ,'.
+<to be read again> 
+                   ,
+l.6 ...ndx\range[1][usedefault, addprefix=\global,
+                                                   1=]{#1_{1}\,\ldots\,#1_{n}}
+? 
+! You can't use `macro parameter character #' in horizontal mode.
+l.6 ...nge[1][usedefault, addprefix=\global, 1=]{#
+                                                  1_{1}\,\ldots\,#1_{n}}
+? 
+! Missing $ inserted.
+<inserted text> 
+                $
+l.6 ...e[1][usedefault, addprefix=\global, 1=]{#1_
+                                                  {1}\,\ldots\,#1_{n}}
+? 
+! You can't use `macro parameter character #' in math mode.
+l.6 ...t, addprefix=\global, 1=]{#1_{1}\,\ldots\,#
+                                                  1_{n}}
+? 
+! Extra }, or forgotten $.
+l.6 ...prefix=\global, 1=]{#1_{1}\,\ldots\,#1_{n}}
+                                                  
+? 
+! Missing $ inserted.
+<inserted text> 
+                $
+l.7 
+    
+? 
+! Undefined control sequence.
+l.9 \newcommandx
+                \rangem[1][usedefault, addprefix=\global, 1=]{#1_{1}\,\ldots...
+
+? 
+! Undefined control sequence.
+l.9 \newcommandx\rangem
+                       [1][usedefault, addprefix=\global, 1=]{#1_{1}\,\ldots...
+
+? 
+! You can't use a prefix with `the character ,'.
+<to be read again> 
+                   ,
+l.9 ...dx\rangem[1][usedefault, addprefix=\global,
+                                                   1=]{#1_{1}\,\ldots\,#1_{m}}
+? 
+! You can't use `macro parameter character #' in horizontal mode.
+l.9 ...gem[1][usedefault, addprefix=\global, 1=]{#
+                                                  1_{1}\,\ldots\,#1_{m}}
+? 
+! Missing $ inserted.
+<inserted text> 
+                $
+l.9 ...m[1][usedefault, addprefix=\global, 1=]{#1_
+                                                  {1}\,\ldots\,#1_{m}}
+? 
+! You can't use `macro parameter character #' in math mode.
+l.9 ...t, addprefix=\global, 1=]{#1_{1}\,\ldots\,#
+                                                  1_{m}}
+? 
+! Extra }, or forgotten $.
+l.9 ...prefix=\global, 1=]{#1_{1}\,\ldots\,#1_{m}}
+                                                  
+? 
+! Missing $ inserted.
+<inserted text> 
+                $
+l.10 
+     
+? 
+[6] [7]
+Overfull \hbox (16.02689pt too wide) detected at line 97
+\OML/cmm/m/it/10 f \OT1/cmr/m/n/10 ;  \OML/cmm/m/it/10 a[] \OT1/cmr/m/n/10 : []
+ : \OML/cmm/m/it/10 a[] \OT1/cmr/m/n/10 : \OML/cmm/m/it/10 Stack \OT1/cmr/m/n/1
+0 ;  \OML/cmm/m/it/10 Heap\OT1/cmr/m/n/10 [\OML/cmm/m/it/10 f \OMS/cmsy/m/n/10 
+7! \OML/cmm/m/it/10 ^^Ux[] [] x[]:e\OT1/cmr/m/n/10 ] \OMS/cmsy/m/n/10 ) \OML/cm
+m/m/it/10 e\OT1/cmr/m/n/10 [\OML/cmm/m/it/10 a[][]=x[] [] a[]=x[]\OT1/cmr/m/n/1
+0 ];  \OML/cmm/m/it/10 Stack \OT1/cmr/m/n/10 ;  \OML/cmm/m/it/10 Heap
+ []
+
+
+Overfull \hbox (12.29872pt too wide) in paragraph at lines 100--104
+\OML/cmm/m/it/10 a[] [] a[]$\T1/cmr/m/n/10 som finns pa stac-ken. Vi no-te-rar 
+den-na sub-sti-tu-tion med $\OML/cmm/m/it/10 e\OT1/cmr/m/n/10 [\OML/cmm/m/it/10
+ a[][]=x[] [] a[]=x[]\OT1/cmr/m/n/10 ]$\T1/cmr/m/n/10 .
+ []
+
+[8]
+! Undefined control sequence.
+l.181 $C\;\range
+                [a]$ & $\CON C{\range[a]}$ & Konstruktor\tabularnewline
+? 
+! Undefined control sequence.
+<argument> \range 
+                  [a]
+l.181 $C\;\range[a]$ & $\CON C{\range[a]}
+                                         $ & Konstruktor\tabularnewline
+? 
+! Undefined control sequence.
+l.182 $\lambda\range
+                    [x].e$ & $\FUN{\range[x]}e$ & Lambdafunktion\tabularnewline
+
+? 
+! Undefined control sequence.
+<argument> \range 
+                  [x]
+l.182 $\lambda\range[x].e$ & $\FUN{\range[x]}e
+                                              $ & Lambdafunktion\tabularnewline
+
+? 
+[9]
+Overfull \hbox (28.85297pt too wide) detected at line 222
+\OML/cmm/m/it/10 x \OT1/cmr/m/n/10 ;  \OML/cmm/m/it/10 Stack \OT1/cmr/m/n/10 ; 
+ \OML/cmm/m/it/10 Heap\OT1/cmr/m/n/10 [\OML/cmm/m/it/10 x \OMS/cmsy/m/n/10 7! \
+OML/cmm/m/it/10 THUNK e\OT1/cmr/m/n/10 ] \OMS/cmsy/m/n/10 ) \OML/cmm/m/it/10 e 
+\OT1/cmr/m/n/10 ;  \OML/cmm/m/it/10 Upd x \OMS/cmsy/m/n/10 ^^O  \OT1/cmr/m/n/10
+ :  \OML/cmm/m/it/10 Stack \OT1/cmr/m/n/10 ;  \OML/cmm/m/it/10 Heap\OT1/cmr/m/n
+/10 [\OML/cmm/m/it/10 x \OMS/cmsy/m/n/10 7! \OML/cmm/m/it/10 BLACKHOLE\OT1/cmr/
+m/n/10 ]
+ []
+
+[10]
+! Undefined control sequence.
+<argument> \range 
+                  [x]
+l.272 ...:Stack\,;\, Heap[f\mapsto\FUN{\range[x]}e
+                                                  \Rightarrow p\,;\, Stack\,...
+
+? 
+! Undefined control sequence.
+<argument> \rangem 
+                   [a]
+l.272 ...tack\,;\, Heap[x\mapsto\PAP f{\rangem[a]}
+                                                  ]\]
+? 
+
+Overfull \hbox (73.89378pt too wide) detected at line 272
+\OML/cmm/m/it/10 f \OT1/cmr/m/n/10 ;  \OML/cmm/m/it/10 Arg a[] \OT1/cmr/m/n/10 
+: [] : \OML/cmm/m/it/10 Arg a[] \OT1/cmr/m/n/10 : \OML/cmm/m/it/10 Stack \OT1/c
+mr/m/n/10 ;  \OML/cmm/m/it/10 Heap\OT1/cmr/m/n/10 [\OML/cmm/m/it/10 f \OMS/cmsy
+/m/n/10 7! \OML/cmm/m/it/10 FUN\OT1/cmr/m/n/10 ([\OML/cmm/m/it/10 x\OT1/cmr/m/n
+/10 ] \OMS/cmsy/m/n/10 ! \OML/cmm/m/it/10 e\OT1/cmr/m/n/10 ) \OMS/cmsy/m/n/10 )
+ \OML/cmm/m/it/10 p \OT1/cmr/m/n/10 ;  \OML/cmm/m/it/10 Stack \OT1/cmr/m/n/10 ;
+  \OML/cmm/m/it/10 Heap\OT1/cmr/m/n/10 [\OML/cmm/m/it/10 x \OMS/cmsy/m/n/10 7! 
+\OML/cmm/m/it/10 PAP\OT1/cmr/m/n/10 (\OML/cmm/m/it/10 f \OT1/cmr/m/n/10 [\OML/c
+mm/m/it/10 a\OT1/cmr/m/n/10 ])]
+ []
+
+! Undefined control sequence.
+<argument> \range 
+                  [a]
+l.281 ...Stack\,;\, Heap[p\mapsto\PAP f{\range[a]}
+                                                  \Rightarrow f\,;\, Arg\, a...
+
+? 
+
+Overfull \hbox (76.39479pt too wide) detected at line 281
+\OML/cmm/m/it/10 p \OT1/cmr/m/n/10 ;  \OML/cmm/m/it/10 Arg a[] \OT1/cmr/m/n/10 
+: \OML/cmm/m/it/10 Stack \OT1/cmr/m/n/10 ;  \OML/cmm/m/it/10 Heap\OT1/cmr/m/n/1
+0 [\OML/cmm/m/it/10 p \OMS/cmsy/m/n/10 7! \OML/cmm/m/it/10 PAP\OT1/cmr/m/n/10 (
+\OML/cmm/m/it/10 f \OT1/cmr/m/n/10 [\OML/cmm/m/it/10 a\OT1/cmr/m/n/10 ]) \OMS/c
+msy/m/n/10 ) \OML/cmm/m/it/10 f \OT1/cmr/m/n/10 ;  \OML/cmm/m/it/10 Arg a[] \OT
+1/cmr/m/n/10 : [] : \OML/cmm/m/it/10 Arg a[] \OT1/cmr/m/n/10 : \OML/cmm/m/it/10
+ Arg a[] \OT1/cmr/m/n/10 : \OML/cmm/m/it/10 Stack \OT1/cmr/m/n/10 ;  \OML/cmm/m
+/it/10 Heap
+ []
+
+! Missing } inserted.
+<inserted text> 
+                }
+l.287 \end{document}
+                    
+? 
+! Missing } inserted.
+<inserted text> 
+                }
+l.287 \end{document}
+                    
+? 
+) (./Core/AvSockring.tex [11]
+Overfull \hbox (38.15643pt too wide) in paragraph at lines 76--76
+[]\T1/cmtt/m/n/10 main = apply (qsort (apply reverse (apply take3 (iterate (\x.
+x + 1) 0)));[] 
+ []
+
+
+Overfull \hbox (25.79999pt too wide) in paragraph at lines 87--89
+[][]
+ []
+
+
+Overfull \hbox (22.41028pt too wide) in paragraph at lines 99--99
+[]    \T1/cmtt/m/n/10 ; temp2 = OPT ( foo x y ) with { caseBranches, inlinings 
+= temp1 }[] 
+ []
+
+[12]) (./Core/Extensions.tex [13]
+Overfull \hbox (2.22777pt too wide) in paragraph at lines 31--36
+[]\T1/cmr/m/n/10 Funktionerna ge-tInt, ge-tInt-List, get-Doub-le, get-Double-Li
+st och get-St-ring finns
+ []
+
+
+Overfull \hbox (10.79999pt too wide) in paragraph at lines 38--44
+[]
+ []
+
+
+Overfull \hbox (64.1632pt too wide) detected at line 69
+\OML/cmm/m/it/10 x\OT1/cmr/m/n/10 ; \OML/cmm/m/it/10 Print \OT1/cmr/m/n/10 : \O
+ML/cmm/m/it/10 s\OT1/cmr/m/n/10 ; \OML/cmm/m/it/10 H\OT1/cmr/m/n/10 [\OML/cmm/m
+/it/10 x \OMS/cmsy/m/n/10 7! \OML/cmm/m/it/10 CON\OT1/cmr/m/n/10 (\OML/cmm/m/it
+/10 C a[] [] a[]\OT1/cmr/m/n/10 )] =\OML/cmm/m/it/10 > []
+ []
+
+[14] [15] [16])) (./Optimise.tex (./Optimise/Intro.tex [17] [18] [19])
+(./Optimise/CBV.tex [20] [21]
+Overfull \hbox (43.40515pt too wide) in paragraph at lines 108--108
+[]        \T1/cmtt/m/n/10 take n list = if (n == 0) Nil (head list : take (n-1)
+ (tail list))[] 
+ []
+
+) (./Optimise/With.tex [22]) (./Optimise/CBN.tex) (./Optimise/DeadCode.tex
+[23]) (./Optimise/ValkandCaseLag.tex [24]) (./Optimise/AfterBurner.tex))
+(./Resultat.tex
+LaTeX Font Info:    Try loading font information for OMS+cmr on input line 29.
+ (/usr/share/texmf/tex/latex/base/omscmr.fd
+File: omscmr.fd 1999/05/25 v2.5h Standard LaTeX font definitions
+)
+LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10> not available
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 29.
+
+Overfull \hbox (10.79999pt too wide) in paragraph at lines 29--30
+[]
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 29--30
+
+ []
+
+) (./Diskussion.tex [25]
+Overfull \hbox (10.79999pt too wide) in paragraph at lines 7--8
+[]
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 7--8
+
+ []
+
+
+Overfull \hbox (25.79999pt too wide) in paragraph at lines 9--10
+[][]
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 9--10
+
+ []
+
+[26] [27]
+Overfull \hbox (25.79999pt too wide) in paragraph at lines 99--100
+[][]
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 99--100
+
+ []
+
+[28]
+Overfull \hbox (10.79999pt too wide) in paragraph at lines 143--144
+[]
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 143--144
+
+ []
+
+) (./RelateradeArbeten.tex
+
+LaTeX Warning: Citation `mitchell2007supercompiler' on page 29 undefined on inp
+ut line 12.
+
+
+LaTeX Warning: Citation `bolz-automatic' on page 29 undefined on input line 25.
+
+
+[29]
+
+LaTeX Warning: Citation `marlow2006making' on page 30 undefined on input line 3
+3.
+
+No file Rapport.bbl.
+) (./FramtidaArbeten.tex) [30] (./Rapport.aux)
+
+LaTeX Warning: There were undefined references.
+
+ ) 
+Here is how much of TeX's memory you used:
+ 4543 strings out of 94500
+ 55357 string characters out of 1173669
+ 115338 words of memory out of 1000000
+ 7567 multiletter control sequences out of 10000+50000
+ 12998 words of font info for 35 fonts, out of 500000 for 2000
+ 580 hyphenation exceptions out of 1000
+ 34i,10n,44p,473b,381s stack positions out of 1500i,500n,5000p,200000b,5000s
+PDF statistics:
+ 143 PDF objects out of 300000
+ 0 named destinations out of 131072
+ 1 words of extra memory for PDF output out of 65536
+</usr/share/texmf/fonts/type1/bluesky/symbols/msbm10.pfb></usr/share/texmf/fo
+nts/type1/bluesky/cm/cmr5.pfb></usr/share/texmf/fonts/type1/bluesky/cm/cmmi5.pf
+b></usr/share/texmf/fonts/type1/bluesky/symbols/msbm7.pfb></usr/share/texmf/fon
+ts/type1/bluesky/cm/cmsy5.pfb></usr/share/texmf/fonts/type1/bluesky/cm/cmtt8.pf
+b></usr/share/texmf/fonts/type1/bluesky/cm/cmex10.pfb></usr/share/texmf/fonts/t
+ype1/bluesky/cm/cmsy7.pfb></usr/share/texmf/fonts/type1/bluesky/cm/cmmi7.pfb></
+usr/share/texmf/fonts/type1/bluesky/cm/cmr7.pfb></usr/share/texmf/fonts/type1/b
+luesky/cm/cmtt10.pfb></usr/share/texmf/fonts/type1/bluesky/cm/cmsy10.pfb> </var
+/lib/texmf/pk/ljfour/jknappen/ec/ecti1000.600pk> </var/lib/texmf/pk/ljfour/jkna
+ppen/ec/ecbx1200.600pk></usr/share/texmf/fonts/type1/bluesky/cm/cmr10.pfb></usr
+/share/texmf/fonts/type1/bluesky/cm/cmmi10.pfb> </var/lib/texmf/pk/ljfour/jknap
+pen/ec/ectt1000.600pk> </var/lib/texmf/pk/ljfour/jknappen/ec/ecrm1000.600pk> </
+var/lib/texmf/pk/ljfour/jknappen/ec/ecbx1000.600pk> </var/lib/texmf/pk/ljfour/j
+knappen/ec/ecbx1440.600pk>
+Output written on Rapport.pdf (30 pages, 259324 bytes).
