@@ -107,4 +107,56 @@ in map f zs
     forceras alla dess inställningar med hjälp av en casesats.
 
 
+\subsubsection{Lambdalyftaren}
+
+I tolkandet av koden underlättar det om man inte har några let-bundna funktioner.
+Dessa behöver lyftas ut tilkl toppnivå. I sockret kan dessa uppstå antingen
+av att man skriver lambdafunktioner eller let-bundna funktioner. Ett exempel
+från quicksort:
+
+\begin{codeEx}
+  Cons x xs ->
+      let { lesser y = y < x
+          ; listLess = filter lesser xs
+          ; listMore = filter (\y . y >= x) xs
+          }
+      in  qsort listLess ++ x : qsort ListMore
+\end{codeEx}
+
+Först översätts let-satsen med hjälp av avsockraren
+
+\begin{codeEx}
+  .. let { lesser = FUN (y -> let t = THUNK (y < x) in t)
+         ; listLess = THUNK (filter lesser xs)
+         ; lambda0 = FUN (y -> let t = THUNK (y >= x) in t)
+         ; listMore = THUNK (filter lambda 0 xs)
+         } ..
+\end{codeEx}
+      
+När dessa funktioner, lesser och lambda0, lambdalyfts, skapas nya funktioner
+på toppnivå. En sak att ha i åtanke då är att de fria variablerna i funktions-
+kroppen nödvändigtvis kommer från ursprungsfunktionen. Dessa måste skickas med
+som extra parametrar. I det här fallet rör det sig om variabeln x i båda fall.
+Dessa parametrar måste också skickas med när de anropas.
+
+-- på toppnivå
+\begin{codeEx}
+lesserLifted = FUN(x y -> let t = THUNK (y < x) in t)
+lambda0Lifted = FUN(x y -> let t = THUNK (y >= x) in t)
+\end{codeEx}
+
+-- nya letsatsen:
+\begin{codeEx}
+    .. let { lesser = THUNK (lesserLifted x)
+           ; listLess = THUNK (filter lesser xs)
+           ; lambda0 = THUNK (lambda0Lifted x)
+           ; listMore = THUNK (filter lambda0 xs)
+           } ..
+\end{codeEx}
+
+En sak att poängtera är att listLess och listMore inte behövs ändras för
+att de lyftna funktionerna partialevalueras med samma namn. Här lesser som
+blir lesserLifted partiellt applicerat på x.
+
+
 \end{document}

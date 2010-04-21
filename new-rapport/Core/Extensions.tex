@@ -101,4 +101,146 @@ sv ; PrintCon C ps [] : s ; H
 Konstruktorn är helt evaluerad när den kommit till sista konstruerande atomen.
 
 
+\subsection{Callstack}
+\subsubsection{Substitution}
+
+Till en början använde vår tolk sig av substitution, vilket innebär att man
+traverserar syntaxträdet och byter ut variabler mot deras värde, exempelvis vid
+funktionsapplikation.
+
+Detta är långsamt och orealistiskt. I en riktig kompilator vill man istället använda
+sig av en stack för de lokala variablerna så att man slipper traversera något träd.
+
+\subsubsection{Localise}
+
+I vår tolk har vi ett pass där vi går från ett syntaxträd där alla variabler
+antas substitueras (eller ligga på heapen) till ett träd där lokala variabler
+har information om sin position på call-framen.
+
+Genom exempel ska vi förklara hur lokaliseringstransformationen går till.
+
+
+\begin{codeEx}
+map f xs = case xs of
+    { Cons y ys -> let
+        { a = THUNK (f y)
+        ; b = THUNK (map f ys)
+        ; c = CON (Cons a b)
+        } in c
+    ; Nil -> xs};
+\end{codeEx}
+
+Eftersom argumenten skall ligga på stacken så ger vi dem indicier som anger dess position på stacken. Vi
+visar detta med <x,n> där x är vad variabeln kallades innan och n är indexet på
+stacken.
+
+\begin{codeEx}
+map <f,0> <xs,1> = case <xs,1> of
+    { Cons y ys -> let
+        { a = THUNK (<f,0> y)
+        ; b = THUNK (map <f,0> ys)
+        ; c = CON (Cons a b)
+        } in c
+    ; Nil -> <xs,1>};
+\end{codeEx}
+
+Eftersom case samt let också binder på stacken (pekaren till objektet) så skall även dessa
+ges indicier.
+
+\begin{codeEx}
+map <f,0> <xs,1> = case <xs,1> of
+    { Cons <y,2> <ys,3> -> let
+        { <a,4> = THUNK (<f,0> <y,2>)
+        ; <b,5> = THUNK (map <f,0> <ys,3>)
+        ; <c,6> = CON (Cons <a,4> <b,5>)
+        } in <c,6>
+    ; Nil -> <xs,1>};
+\end{codeEx}
+
+Här får vi dock ett problem med att thunkarna kommer att evalueras någon annanstanns, och därmed
+i en annan stack frame. Vi kommer därför evaluera thunkar i en egen stack frame. Men thunken kan använda sig av
+de lokala variabler som redan finns. I exemplet har vi till exempel att <a,4> = THUNK (<f,0> <y,2>)
+där f och y är kommer "utifrån". Därför måste 
+thunken veta vilka lokala variabler i map den använder, så att de kan läggas på dess stack frame. 
+Noterbart är även att när let allokerar kommer den att byta ut alla stackvariabler
+mot vad de pekar på i stacken. Så att Con (Cons pekar på heap objekt och inte stacken)
+
+\begin{codeEx}
+map <f,0> <xs,1> = case <xs,1> of
+    { Cons <y,2> <ys,3> -> let
+        { <a,4> = THUNK [<f,0>, <y,2>]  (<f,0> <y,1>)
+        ; <b,5> = THUNK [<f,0>, <ys,3>] (map <f,0> <ys,1>)
+        ; <c,6> = CON (Cons <a,4> <b,5>)
+        } in <c,6>
+    ; Nil -> <xs,1>};
+\end{codeEx}
+
+I <a,4> = THUNK [<f,0>, <y,2>]  (<f,0> <y,1>) ser vi att f och y har fått nya index jämfört med
+vad de hade utanför thunken, vilket beror på att de som sagt kommer att evalueras med en egen
+stack frame.
+
+Det största värdet på variabelindex + 1 blir funktionens stackstorlek, vilken man alltså
+kan veta statiskt (vid kompileringstid i en kompilator). map-funktionens stackstorlek blir här 7.
+
+Alla funktioner har då information om sin stackstorlek, så att den kan allokeras när funktionen ska köras.
+Detta möjliggör en effektiv implementering som kan använda arrayer av konstant storlek, 
+vilket ger en konstant lookup-tid i call-framesen.
+Även thunkar vet sin stakstorlek eftersom de också allokeras på sin egna stack frame, dessa
+räknas ut på liknande sätt som för funktioner, där de utomstående lokala variablerna (de så kallade fria 
+variablerna) kan ses som funktions argument.
+Thunken THUNK [<f,0>, <y,2>]  (<f,0> <y,1>) har stackstorlek 2.
+
+Ett lurigt fall är letrecs.
+
+Följande (ineffektiva) funktion f ger tillbaka en bool som säger om argumentet n är jämnt eller inte.
+[exempel {sockerspråk}]
+\begin{codeEx}
+f n = letrec 
+    { even x = if (x == 0) True  (odd  (x - 1))
+    ; odd  x = if (x == 0) False (even (x - 1))
+    } in even n;
+\end{codeEx}
+
+Funktionen lambdalyfts (se tidigare avsnitt) först till följande:
+
+\begin{codeEx}
+f n = letrec 
+    { even = THUNK (even' odd)
+    ; odd  = THUNK (odd' even)
+    } in even n;
+even' odd x = THUNK (if (x == 0) True  (odd  (x - 1)));
+odd' even x = THUNK (if (x == 0) False (even (x - 1)));
+\end{codeEx}
+
+Här måste even ha odds index och odd ha evens index. Vi får följande:
+
+\begin{codeEx}
+f <n,0> = letrec 
+    { <even,1> = THUNK [<even,1>,<odd,2>] (even' <odd,1>)
+    ; <odd,2>  = THUNK [<even,1>,<odd,2>] (odd' <even,0>)
+    } in <even,1> <n,0>;
+\end{codeEx}
+
+Den observanta läsaren ser att i första thunken läggs even till utan att den används. Detta är ett implementations val som tillåter stg att alltid lägga till allt som binds i en letrec i början på callstacken när thunkarna ska evalueras. Att hålla reda på vilka thunkar som behöver vad är svårt.
+
+
+
+
+Nu ska vi visa hur anropsstacken kan se ut vid ett anrop till map.
+
+
+\begin{codeEx}
+main = map cube [1,2,3];
+\end{codeEx}
+
+
+argumenten pushas först på continuation-stacken så att den ser ut typ:
+Arg cube
+Arg [1,2,3]
+
+Sen ser maskinen att map tar två argument, och funktionsapplikationen kan då köras, och vi lägger argumenten
+på argumentstacken och går in i funktionen. Argumentstacken blir:
+[cube, [1,2,3]]
+eftersom f i definitionen av map har index 0 och xs har index 1.
+
 \end{document}
