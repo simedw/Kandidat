@@ -1,6 +1,172 @@
 \documentclass[Rapport]{subfiles}
 \begin{document}
 
-\section{Vårat Sockerspråk}
+\section{Vårt Sockerspråk}
+
+%
+% Bnf, exempel
+%
+% socker
+%
+% lambdalyftare
+%
+% definitioner av tex toppnivå, substitution
+%
+% letrec
+%
+% vad är en PAP
+%
+
+%skiss:
+%
+%haskell 
+%    \
+%     \
+%      \
+%       \
+%        \        sockerspråk
+%         \          /
+%          \        /
+%           \      /
+%            \ STG
+
+\subsection{Introduktion}
+
+För att undersöka optimeringsmöjligheterna behövs ett språk att arbeta med. 
+Detta språk behöver inte vara lika rikt som Haskell, men tillräckligt bekvämt
+att arbeta med för att skriva några större program. Språket som används i den
+här rapporten kommer att refereras till som sockerspråket, för att det 
+innehåller syntatiskt socker. Detta är bekväma sätt att skriva olika saker, 
+fast de skulle gå att skriva mer omständigt. Ett klassiskt exempel är syntaxen
+för listor i Haskell, \miniCode{[5,0,4]} som är socker för \miniCode{5 : 0 : 4 : []}.
+    Det går att översätta Haskell till sockerspråket, och naturligtvis i också
+i motsatt riktning. Sockerspråket är också designat så, att det är lätt att
+översätta och avsockras till core-språket som introduceras i nästa kapitel. 
+
+\subsection{BNF}
+\begin{align*}
+program &::=& \overline{function} \\
+function &::=& v \; \overline{v} \mathtt{=} expr \mathtt{;} \\
+expr &::=& v \\
+       &|& v \; \overline{expr}  \\
+       &|& \mathtt{let \{} \overline{function} \mathtt{\} in }\; expr \\
+       &|& \mathtt{letrec \{} \overline{function} \mathtt{\} in} \; expr \\
+       &|& \mathtt{case} expr \mathtt{of \{} \overline{branch} \mathtt{\}} \\
+       &|& \mathtt{\lambda } v \mathtt{.} expr \\
+       &|& expr \oplus expr \\
+       &|& K \; \overline{expr} \\
+       &|& primitive \\
+branch &::=& K \; \overline{v} \; \mathtt{\rightarrow} \; expr \mathtt{;} \\
+         &|& v \; \mathtt{\rightarrow} \; expr \mathtt{;}
+\end{align*}
+
+Programmet är en lista av funktioner. Dessa funktioner är de som sägs vara på
+\emph{toppnivå}. Funktioner som är skapade med en lambdaabstraktion eller i en
+letsats är inte på toppnivå. 
+  Funktionerna har en identifierare, dess namn, med noll eller fler variabler som argument. Efter likhetstecknet
+kommer deras funktionskropp, som är ett uttryck, expr, och de avslutas med
+ett semikolon.
+    Uttrycken kan antingen vara en variabel, ett funktionsanrop som är ett
+funktionsnamn applicerat på en eller fler uttryck. Det kan också vara let eller
+letrec-bundna funktioner (eller variabler i det fallet då de är funktioner som
+inte tar något argument), eller en casesats som tar ett uttryck och flera grenar.
+Som uttryck tillåts också primitiva operationer som skrivs infix, tex addition 
+och multiplikation. Att returnera en konstruktor eller en primitiv som 
+exempelvis ett heltal eller decimaltal är också ett uttryck.
+    Grenarna kan antigen vara att mönstermatcha mot en konstruktor och binda
+dess konstruktionsvariabler, eller att matcha vilken konstruktor som helst.
+
+\subsection{Jämförelse med Haskell}
+
+    En feature som saknas i sockerspråket som ofta används flitigt i Haskell är 
+möjligheten att mönstermatcha närhelst en variabel binds, tex i vänsterledet
+i en funktionsapplikation. Det är hursomhelst så, att alla mönstermatchningar,
+även med vakter, går att översätta enbart med enkla casesatser. Vårt sockerspråk
+har sådana, och de är enkla i det avseendet att man inte kan mönstermatcha i 
+mer än ett djup, och att det inte finns några vakter.
+
+Här är insertmetoden skriven i Haskell, den sätter in ett element i en sorterad
+lista så att den är sorterad efteråt.
+
+\begin{codeEx}
+  insert :: Ord a => a -> [a] -> [a]
+  insert v (x:xs) 
+      | v < x     = v:x:xs
+      | otherwise = x:insert v xs 
+  insert v [] = [v]
+\end{codeEx}                  
+
+I sockerspråket hade det blivit
+
+\begin{codeEx}
+  insert v list = case list of
+      Cons x xs -> case v < x of
+          True  -> v:x:xs
+          False -> x:insert v xs
+      Nil -> v:Nil
+\end{codeEx}
+
+    I Haskell definieras användarnas datatyper explicit, som i definitionen
+av Maybe:
+\begin{codeEx}
+data Maybe a = Just a | Nothing
+\end{codeEx}
+I sockerspråket finns ingen sådan konstruktion, utan det är bara att använda
+konstruktorerna Just och Nothing när så behövs.
+
+
+Sockerspråket gör åtskillnad på rekursiva och vanliga let-bindningar. 
+\begin{codeEx}
+repeat x = letrec xs = x : xs in xs  
+\end{codeEx}
+Här används xs, som binds av letrec-satsen, även i uttrycket efteråt. Detta
+finns inte i Haskell, då alla let-bindningar räknas som rekursiva. I
+sockerspråket får användaren också ha i åtanke att let-bundna variabler binds
+sekvensiellt, dvs att de måste skrivas i ordning:
+\begin{codeEx}
+let { t1 = f x y
+    ; t2 = g y t1
+    }
+in  h t1 t2
+\end{codeEx}
+Här går det inte, till skillnad från i Haskell, att byta plats på t1 och t2.
+
+
+\subsection{Definitioner}
+
+\subsubsection{Fria variabler och substitution}
+Låt oss säga att vi har en funktion f som använder sina två 
+argument, x och y. Om vi betraktar funktionskroppsuttrycket för sig är x och y 
+\emph{fria variabler}. Det skulle inte gå att evaluera funktionskroppen utan
+att känna till vad de är. Vet man om x och y:s värden, låt oss säga att de är
+True och 9, så kan man \emph{substituera} in dem i uttrycket. Då byts varje
+x ut mot True och varje y mot 9. Om uttrycket är $e$ skrivs det $e[True/x, 9/y]$. 
+    Ett sätt att konkret realisera en substitution är att traversera trädet
+för uttrycket och jämföra varje variabel och ersätta om det är en av de
+relevanta. Detta är den effekten man alltid vill eftersträva rent abstrakt.
+Det går också att tänka sig andra sätt att implementera substitution, genom
+att tex göra ett uppslag i en tabell varje gång en fri variabel funnes när
+koden evalueras. 
+
+\subsubsection{Partiell evaluering}
+Detta arbete handlar till stor del om partiell evaluering. Men vad innebär det?
+I funktionella språk är funktioner första-ordningens medlemmar och kan tex
+skickas med som argument till andra funktioner, eller så kan de returneras från
+andra funktioner. Tag tex zipWith, här skriven i Haskell:
+\begin{codeEx}
+zipWith :: (a -> b -> c) -> [a] -> [b] -> [c]
+zipWith f (x:xs) (y:ys) = f x y : zipWith f xs ys
+zipWith _ _      _      = []
+\end{codeEx}
+Vad kan f vara här? Det kan tex vara en unär funktion som returnerar en ny
+funktion. Det kan vara et funktion som tar tre argument och redan har ett
+applicerat:
+\begin{codeEx}
+let f = (\x y z -> x * y - z)
+in  zipWith (f 3) list1 list2
+\end{codeEx}
+Funktioner som har några, men inte alla argument applicerade kallas att vara
+partiellt applicerade. Att börja evaluera en sådan funktion, partialevaluera,
+är inget som vanligtvis görs i Haskell, och vad som undersöks i detta projekt. 
 
 \end{document}

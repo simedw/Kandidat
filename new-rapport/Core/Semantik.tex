@@ -2,4 +2,286 @@
 \begin{document}
 \subsection{Semantik över STG}
 
+
+\newcommandx\range[1][usedefault, addprefix=\global, 1=]{#1_{1}\,\ldots\,#1_{n}}
+
+
+\newcommandx\rangem[1][usedefault, addprefix=\global, 1=]{#1_{1}\,\ldots\,#1_{m}}
+
+Språket som vi har definerat är en utökning till STG-maskinen, med
+nya regler och tillstånd. För att kunna diskutera dessa behöver man
+först förstå hur maskinen fungerar. Eftersom läsaren inte förväntas
+ha stött på begrepp som används när man beskriver abstrakta maskiner
+och deras semantik, kommer vi att bygga upp förståelsen via ett exempel
+och introducera koncepten efter hand det uppstår. En abstrakt maskin kan beskrivas
+av att den evalueras stegvis under evalueringen, detta kommer bli
+tydligare med hjälp av genomstegning av evalueringen av följande program.
+
+\begin{codeEx}
+cube x = x * x * x
+
+main = let list = [2,3,5,7,11]
+        in map cube list
+\end{codeEx}
+
+Det som evalueras först är main funktionen och där finns ett let-uttryck.
+De är verktyget för att binda variabler, i det här fallet variablen
+list, till listan av de fem första primtalen. Man kan använda let
+för att associera andra sort värden än listor, t.ex. andra sorters
+datastrukturer, numeriska värden samt funktioner.
+
+Vi behöver någonstanns att reservera utrymme för listan så därför
+inför vi en så kallad heap. I ett tradionellt, imperativt språk är
+det en representation av minnet som är för dynamisk allokering. När
+maskinen stöter på ett let-uttryck så allokerats det på heapen, detta
+beskrivs formellt av följande regel.
+
+\[
+\mathtt{let\;\mathrm{x\mathtt{=}e}\; in\; code}\,;\, Heap\Rightarrow\mathtt{code}\,;\, Heap[x\mapsto e]\]
+
+
+Läs det som att om maskinen är i tillståndet till vänster om $\Rightarrow$så
+blir nästa tillstånd det som står på högra sidan. Ett tillstånd i
+maskinen är ett uttryck och en heap, formellt separeras dessa med
+ett semikolon. I vårt fall så går maskinen från let-uttrycket till
+det som står efter in, samt att x läggs till i heapen och pekar på
+e. Heap{[}{]} betyder inte att heapen bara innehåller det som är inuti
+hakparanteserna utan är bara notation för att explicit påvisa vad
+en variabel binds till.
+
+Maskinens tillstånd är nu: 
+
+\[
+\mathtt{map\; cube\; list}\,;\, Heap[list\mapsto[2,3,5,7,11],cube\mapsto\lambda x.x\cdot x\cdot x,\ldots]\]
+
+
+Den observanta läsaren märker att även cube ligger på heapen, det
+beror på att funktioner på topnivå läggs in i heapen i maskinens initialtillstånd.
+Alltså ligger även även map och andra kända standardfunktioner där. 
+
+Som uttryck ligger nu ett anrop till map funktionen, den vill vi anropa.
+Här låter vi oss inspereras av imperativ anropsmetodik. Argumenten
+lägger vi på en stack. Formellt får vi då denna regel:
+
+\[
+f\; a_{1}\;\ldots\; a_{n}\,;\, Stack\,;\, Heap\Rightarrow f\,;\, a_{1}:\ldots:a_{n}:Stack\,;\, Heap\]
+
+
+Stacken är placerade mellan utrycket och heapen och vi använder :
+för att separera elementen på stacken, den tomma stacken skrivs som
+$\epsilon$. Maskinens tillstand ar:
+
+\[
+\mathtt{map\,\mathrm{;}\, cube\,:\, list\,:\,\epsilon}\,;\, Heap\]
+
+
+Nu behover vi diskutera koden for map:
+
+
+\begin{codeEx}
+map f xs = case xs of
+    { Cons x xs -> let { a = f x 
+                       ; b = map f xs
+                       } in Cons a b
+    ; Nil       -> Nil
+    }
+\end{codeEx}
+
+Anledningen till att argumenten till Cons inte ar funktionsapplikationer
+ar att maskinen blir mer latthanterlig om funktionsapplikationer enbart
+far let-bundna variabler, aven kallade atomer. Vi ser har att map
+tar tva argument och ater saledes upp tva argument fran argumentstacken.
+Formellt:
+
+\[
+f\,;\, a_{1}:\ldots:a_{n}:Stack\,;\, Heap[f\mapsto\lambda x_{1}\ldots x_{n}.e]\Rightarrow e[a{}_{1}/x_{1}\ldots a_{n}/x_{n}];\, Stack\,;\, Heap\]
+
+
+Har behover vi ersatta alla funktionens argument $x_{1}\ldots x_{n}$till
+de atomer $a_{1}\ldots a_{n}$som finns pa stacken. Vi noterar denna
+substitution med $e[a{}_{1}/x_{1}\ldots a_{n}/x_{n}]$. I vart fall
+sa substitueras f mot cube och xs till list. Maskinen:
+
+\[
+\mathtt{case\; list\; of\,\lbrace\ldots\rbrace};\,\epsilon\,;\, Heap\]
+
+
+I heapen pekar list på listan {[}2,3,5,7,11{]} men detta är socker
+för:
+
+\begin{codeEx}
+list = Cons 2 temp1
+temp1 = Cons 3 temp2
+temp2 = Cons 5 temp3
+temp3 = Cons 7 temp4
+temp4 = Cons 11 nil
+nil = Nil
+\end{codeEx}
+
+De temporära variablerna behövs för att konstruktorer skall kunna
+allokeras i ett sammanhängande minne i heapen. I vårat fall pekar
+list variabeln på en Cons konstruktor, som har en motsvarande gren
+i map funktionens definition. Det som ska hända är att maskinens uttryck
+blir grenen med x substituerat mot 2 och xs mot temp1. Detta kan vi
+åstadkomma med denna formella regel.
+
+\begin{multline*}
+case\; v\; of\;\{\ldots;C\; x_{1}\,\ldots\, x_{n}\;\rightarrow e;\ldots\}\,;\, Stack\,;\, Heap[v\mapsto C\; a_{1}\ldots a_{n}]\\
+\Rightarrow e[a_{1}/x_{1}\,\ldots\, a_{n}/x_{n}]\,;\, Stack\,;\, Heap\end{multline*}
+
+
+Det som står i granskaren, uttrycket mellan case och of, var i vårt
+fall en variabel. Det finns också fall då granskaren är andra uttryck
+t.ex. funktionsapplikation. I så fall vet vi inte vilken gren vi ska
+ta innan vi har evaluerat granskaren, då måste vi evaluera den först.
+Vi måste veta efter vi evaluerat klart vilken case-sats den skall
+gå tillbaka till, det här är snarlikt en returadress. Standard i imperativa
+språk är att returadresser pushas på stacken. Det vi gör är att lägga
+ut en case-continuation på stacken som också innehåller grenarna till
+case-satsen. 
+
+Formellt kommer vi beskriva en case-continuation som $case\;\bullet\; of\;\{\ldots\}$
+där $\bullet$ står för platsen vi skall lägga in resultatet. Så regeln
+blir följande:
+
+\[
+case\; e\; of\;\{\ldots\}\,;\, Stack\,;\, Heap\Rightarrow e\,;\, case\;\bullet\; of\;\{\ldots\}:Stack\,;\, Heap\]
+
+
+Det här uttrycket kommer att evalueras till ett värde t.ex. en konstruktor.
+Då kommer case-continuation ligga överst på stacken och vi vill välja
+rätt gren. Vi vill återanvända grenväljarregeln som vi definerade
+ovan så därför inför vi denna regel som ställer in maskinen för detta.
+Formellt blir det:
+
+\[
+v\,;\, case\;\bullet\; of\;\{\ldots\}:Stack\,;\, Heap\Rightarrow case\; v\; of\;\{\ldots\}\,;\, Stack\,;\, Heap\]
+
+
+För att återgå till löpande exempel så är koden just nu detta:
+
+\begin{codeEx}
+let { a = cube 2
+    ; b = map cube temp1
+    } in Cons a b
+\end{codeEx}
+
+Nu skall a bindas till ett uttryck, f 2, i tradionella språk skulle
+f 2 först evalueras och dess värde bindas till a. Men eftersom STG
+är lat så väntar den med att beräkna det, ifall den inte skulle behövas.
+Ett sådant senarlagt uttryck kallas för en thunk, det som händer är
+att a binds till thunken $\mathtt{f\;2}$. På heapen finns flera olika
+sorters objekt: konstruktorer, lambda funktioner och nu även thunkar.
+Formellt kommer vi behöva skilja dem åt, så vi inför ny notation för
+dessa objekt.
+
+\begin{tabular}{ccc}
+Föregående syntax & Faktisk syntax & Beskrivning\tabularnewline
+\hline
+$C\;\range[a]$ & $\CON C{\range[a]}$ & Konstruktor\tabularnewline
+$\lambda\range[x].e$ & $\FUN{\range[x]}e$ & Lambdafunktion\tabularnewline
+- & $\THUNK e$ & Senarelagd beräkning\tabularnewline
+\end{tabular}
+
+Så här skrivs egentligen map funktionen i STG språket utan något socker:
+
+\begin{codeEx}
+map f xs = case xs of
+    { Cons x xs -> let { a = THUNK (f x) 
+                       ; b = THUNK (map f xs)
+                       ; c = CON (Cons a b)
+                       } in c
+    ; Nil       -> xs
+    }
+\end{codeEx}
+
+Notera att i STG är det bara med let man kan allokera objekt, således
+måste vi använda en tempvariabel c för att returnera en konstruktor.
+Numera är vårt exempel med riktig syntax egentligen:
+
+\begin{codeEx}
+let { a = THUNK (cube 2)
+    ; b = THUNK (map cube temp1)
+    ; c = CON (Cons a b)
+    } in c
+\end{codeEx}
+
+Maskinen kommer stega igenom let-uttrycket och allokera objekten.
+Därefter returneras en variabel som pekar på en konstruktor i heapen
+som är en Cons, skapad enligt ovan. När man retunerar något som är
+en konstruktor sägs den vara i weak head normal form (WHNF). Denna
+behöver inte vara helt evaluerad, som exempel har vi vårt fall där
+den innehåller två pekare till olika thunkar. Eftersom STG är ett
+lat språk så är det upp till koden som kallade på map att fortsätta
+evaluera dessa thunkar ifall de behövs eller inte. I vårt fall är
+det main som har kallat på map och då main skriver ut det den har
+binds till kommer den att evaluera thunkarna. Vi tänker oss fallet
+då den börjar evaluera variabeln a.
+
+\[
+x\,;\, Stack\,;\, Heap[x\mapsto\THUNK e]\Rightarrow e\,;\, Upd\, x\,\bullet\,:\, Stack\,;\, Heap[x\mapsto BLACKHOLE]\]
+
+
+Evalueringen av en thunk kommer då att flytta uttrycket till den nya
+koden för evaluering. Den kommer också lägga ut en Upd continuation,
+detta återigen för att STG är lat. Lathet kräver att utryck bara evalueras
+en gång, däför kommer vi när e har evaluerats till ett värde att spara
+det så att x pekar på det nya värdet och om x's värde skulle behövas
+igen kan man returnera det direkt. Under evalueringen av x sätter
+vi även x till ett BLACKHOLE, detta sker av två anledningar. 
+\begin{enumerate}
+\item Om x beror på sig själv, eller flera variabler beror på varandra utan
+att producera värden. Om man evaluerade utan att sätta till BLACKHOLE
+skulle vår maskin komma in i en oändlig loop. Detta är ett sätt att
+upptäcka det och vi kan berätta för programmeraren att det har blivit
+ett fel.
+\item Garbage Collection, gcn kommer gå igenom alla heap och stack objekt
+samt koden efter vilka värden som fortfarande kan nås via den nuvarande
+koden samt stacken. Thunken kan referera till objekt, som inte längre
+behövs för evalueringen, men gc kommer inte se att dessa objekt skulle
+kunna garbage collectas. Om man istället sätter det till ett BLACKHOLE
+kommer gc veta att den inte behöver söka efter vilka objekt som den
+behöver, då alla som behövs för den finns redan på koden samt stacken.
+\end{enumerate}
+Det som saknas för thunkar är nu regeln som uppdaterar dem när de
+är klara, det sker via denna regel.
+
+\[
+v\,;\, Upd\, x\,\bullet:Stack\,;\, Heap\Rightarrow v\,;\, Stack\,;\, Heap[x\mapsto Heap[v]]\]
+
+
+Om $v$ är ett värde så uppdateras $x$ med vad $v$ pekar på.
+
+Det saknas nu bara en feature innan vår beskrivning av STG är komplett.
+Vad gör vi med funktioner som inte fått alla sina argument? 
+
+\begin{codeEx}
+max x y = case x < y of
+    { True  -> y
+    ; False -> x
+    }
+\end{codeEx}
+
+Om man nu skriver $\mathtt{max\,100}$ så är det en ny funktion som
+retunerar det maximala talet mellan dess input och 100. För detta
+kommer ett nytt heap objekt att skapas vid namn PAP som står för partial
+application. Denna kommer innehålla argumenten samt en pekare till
+funkitonen. 
+
+\[
+f\,;\, Arg\, a_{1}:\ldots:Arg\, a_{m}:Stack\,;\, Heap[f\mapsto\FUN{\range[x]}e\Rightarrow p\,;\, Stack\,;\, Heap[x\mapsto\PAP f{\rangem[a]}]\]
+
+
+Där antalet argument m är mindre än antalet parametrar n, alltså är det en sparad funktionsapplikation som kommer
+utföras när resterande argument har kommit. Så för att avsluta så
+kommer regeln som verkligen gör applikationen av dessa partiellt applicerade
+objekt.
+
+\[
+p\,;\, Arg\, a_{n+1}:Stack\,;\, Heap[p\mapsto\PAP f{\range[a]}\Rightarrow f\,;\, Arg\, a_{1}:\ldots:Arg\, a_{n}:Arg\, a_{n+1}:Stack\,;\, Heap\]
+
+
+Denna regel kommer återigen försöka göra applikationen, antigen lyckas
+den, eller så kommer den skapa ett nytt PAP objekt med ytterligare
+argument.
 \end{document}
