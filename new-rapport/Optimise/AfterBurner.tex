@@ -3,4 +3,51 @@
 
 \subsection{Afterburner}
 
+Alla optimeringar som hitills har arbetar tillsammans, dvs att de traverserar trädet endast engång och följer en gemensam semantik för att nå det önskade resultatet. Detta är önskvärt ut tidssynpunkt fast gör det ibland svårt att byta ut enskilda delar utan att behöva ändra på många smådelar.
+
+Det finns även en del optimeringar som behöver se större delar av syntax-träded
+samtidigt för att kunna vara verksamma. Dessa high-level (vad ska vi kalla det här?)
+optimeringar är oftast mycket långsamare att utföra.
+
+Vi har valt att utföra ett antal sådana optimeringar efter de vanliga
+optimeringana är körda, därifrån namnet "after burner".
+
+\subsubsection{Gemensam caseganskare}
+
+Att case:a på samma uttryck två gånger kommer alltid i ett funktionellt språk att ge
+samma resultat då alla variabler egentligen är konstanter. För varje casebranch
+vi går in i vet vi att alla nästlade case på samma uttryck måste initiera samma
+branch.
+
+\begin{codeEx}
+test x = x * x
+\end{codeEx}
+
+Blir efter vanlig optimering
+
+\begin{codeEx}
+test x = case x of
+            I# a -> case x of
+                I# b -> case a #* b of
+                    r' -> let r = I# r'
+                            in r
+\end{codeEx}
+
+Om vi sedan kör gemensam casegranskare erhålls:
+\begin{codeEx}
+test x = case x of
+            I# a -> case a #* b of
+                r' -> let r = I# r'
+                    in r
+\end{codeEx}
+
+Generellt:
+		\begin{codeEx}
+case x of
+    C a b -> e1
+    D a b -> e2
+\end{codeEx}
+Vi söker upp \miniCode{case x} i \miniCode{e1} och initiera C branchen med a b som värden. I \miniCode{e2} gör vi samma sak fast initierar D branchen.
+
+
 \end{document}

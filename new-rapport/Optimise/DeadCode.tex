@@ -3,4 +3,47 @@
 
 \subsection{Dödkods eliminering}
 
+När diverse optimeringar har körts och det är dags att bygga upp träded igen kommer
+så kallad "död kod" att förekomma. Det vill säga, kod som inte längre behövs eftersom
+den inte kan nås.
+
+\begin{codeEx}
+main = let t = getValue() in
+            case True of
+               True  -> 15
+               False -> t
+\end{codeEx}
+
+Detta exemplet är trivialt att optimera då värdet i casen är känd. Vi kan därför
+initisera den korrekta branchen.
+
+
+\begin{codeEx}
+main = let t = getValue() in 15
+\end{codeEx}
+
+
+Vi ser nu att t inte längre är bunded i uttrycket (15) och därför kan vi
+ betrakta \miniCode{let t = getValue} som `död kod'. Död kod tar inte bara onödig plats
+ vilket i sig är ett stort problem, kod ligger på flera pages i minnet och
+ access tiden blir otroligt mycket högre, det tar även längre tid att traversera
+ träded i interperten eller i andra optimeringar. Därför är det viktigt att
+ eftersträva en så kort kod som möjligt.
+
+\begin{codeEx}
+main = 15
+\end{codeEx}
+
+Denna process kan mer formellt skrivas som
+
+\begin{codeEx}
+t not in freevars(e2)
+++++++++++++++++++++++++++
+let t = e1 in e2 => e2
+\end{codeEx}
+
+Detta är en kontroll som utförs varje gång vi bygger upp en let i Irr och Psi.
+Dock är freevars ganska kostsam (bör stå om det här någon annanstans).
+
+
 \end{document}
