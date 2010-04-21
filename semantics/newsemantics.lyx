@@ -83,24 +83,6 @@
 
 \begin_layout Standard
 \begin_inset FormulaMacro
-\newcommand{\red}[2]{#1\Rightarrow#2}
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset FormulaMacro
-\newcommand{\lred}[2]{\begin{array}{c}
- #1\\
-\Rightarrow#2\end{array}}
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset FormulaMacro
 \newcommand{\heap}[2]{H[#1\mapsto#2]}
 \end_inset
 
@@ -181,6 +163,22 @@
 
 \begin_layout Standard
 \begin_inset FormulaMacro
+\newcommand{\cOApp}[2]{OApp\,#1\,:\,#2}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\cOInstant}[2]{OInstant\,#1\,:\,#2}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
 \newcommand{\cOPT}[2]{OPT\,#1\,:\,#2}
 \end_inset
 
@@ -213,7 +211,7 @@
 
 \begin_layout Standard
 \begin_inset FormulaMacro
-\newcommand{\oLetObj}[3]{O\mathtt{let\,}#1=#2\,\mathtt{in}\,\bullet\,:\,#3}
+\renewcommand{\oLetObj}[3]{O\mathtt{let\,}#1=#2\,\mathtt{in}\,\bullet\,:\,#3}
 \end_inset
 
 
@@ -221,7 +219,7 @@
 
 \begin_layout Standard
 \begin_inset FormulaMacro
-\newcommand{\oFun}[3]{OFUN\,#1\,#2\,:\,#3}
+\renewcommand{\oFun}[3]{OFUN\,#1\,#2\,:\,#3}
 \end_inset
 
 
@@ -229,7 +227,7 @@
 
 \begin_layout Standard
 \begin_inset FormulaMacro
-\newcommand{\oInline}[1]{OInlining\,:\,#1}
+\renewcommand{\oInline}[1]{OInlining\,:\,#1}
 \end_inset
 
 
@@ -237,7 +235,7 @@
 
 \begin_layout Standard
 \begin_inset FormulaMacro
-\newcommand{\BH}{BLACKHOLE}
+\renewcommand{\BH}{BLACKHOLE}
 \end_inset
 
 
@@ -245,7 +243,7 @@
 
 \begin_layout Standard
 \begin_inset FormulaMacro
-\newcommand{\eCase}[2]{\mathtt{case}\,#1\,\mathtt{of}\,#2}
+\renewcommand{\eCase}[2]{\mathtt{case}\,#1\,\mathtt{of}\,#2}
 \end_inset
 
 
@@ -253,7 +251,7 @@
 
 \begin_layout Standard
 \begin_inset FormulaMacro
-\newcommand{\eLet}[3]{\mathtt{let}\,#1=#2\,\mathtt{in}\,#3}
+\renewcommand{\eLet}[3]{\mathtt{let}\,#1=#2\,\mathtt{in}\,#3}
 \end_inset
 
 
@@ -261,7 +259,7 @@
 
 \begin_layout Standard
 \begin_inset FormulaMacro
-\newcommand{\objCon}[1]{CON(#1)}
+\renewcommand{\objCon}[1]{CON(#1)}
 \end_inset
 
 
@@ -269,10 +267,51 @@
 
 \begin_layout Standard
 \begin_inset FormulaMacro
-\newcommand{\subst}[3]{#1[#2/#3]}
+\renewcommand{\subst}[3]{#1[#2/#3]}
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\renewcommand{\Arg}[2]{Arg\,#1\,:\,#2}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Nya regler:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \begin{align*}
+\mc as{\heap a{\OPT t}}A & \Rightarrow & \mc t{\cOPT{a\,}s}{\heap a{\BH}}A\\
+\mc x{\cOPT as}{\heapp x{\PAP f{a_{1}\cdots a_{n}}}f{\FUN{x_{1}\cdots x_{m}}e}}A & \Rightarrow & \OMEGA{\cOFUN{x_{n+1}\cdots x_{m}}as}HA{e[a_{1}/x_{1}\cdots a_{n}/x_{n}]}\\
+\mc v{O.\star\,:\, s}{\nheap v{\THUNK e}}A & \Rightarrow & \PSI{O.\star\,:\, s}HA{[]}v\\
+\mc x{\cOInstant ns}HA & \Rightarrow & \OMEGA sHAx\\
+n\leq0\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Om 
+\begin_inset Formula $OInstant\, n$
+\end_inset
+
+ ligger överst på stacken (i vilken regel som helst), så uppdateras 
+\begin_inset Formula $n$
+\end_inset
+
+ till 
+\begin_inset Formula $n-1$
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Standard
@@ -284,17 +323,40 @@ Omega:
 \begin_inset Formula \begin{align*}
 \OMEGA s{\heap v{\THUNK e}}Av & \Rightarrow & \mc e{\cUpd vs}HA\\
 \OMEGA sH{\abyss v{\THUNK e}}v & \Rightarrow & \OMEGA{\cOUpd vs}HAe\\
-\OMEGA s{\heap v{\objCon{C\, a_{1}\cdots a_{n}}}}Av & \Rightarrow & \PSI sHA{v;[]}v\\
-\OMEGA sH{\abyss v{CON(C\, a_{1}\cdots a_{n})}}v & \Rightarrow & \PSI sHA{[]}v\\
+\OMEGA s{\heap v{\objCon{C\, a_{1}\cdots a_{n}}}}Av,\,\OMEGA sH{\abyss v{CON(C\, a_{1}\cdots a_{n})}}v & \Rightarrow & \PSI sHA{[]}v\\
 \OMEGA sHA{\eCase e{brs}} & \Rightarrow & \OMEGA{\oCase{brs}s}HAe\\
 \OMEGA s{\heap{f\mapsto g,\, a_{1}\cdots a_{n}}{h_{1}\cdots h_{n}}}A{f\, a_{1}\cdots a_{n}} & \Rightarrow & \mc{f\, a_{1}\cdots a_{n}}sHA\\
-funktionsapplikation\\
+\OMEGA s{\heap f{\FUN{x_{1}\cdots x_{n}}e}}A{f\, a_{1}\cdots a_{n}} & \Rightarrow & \mc f{\Arg{a_{1}}{\cdots\,:\,\Arg{a_{n}}{\cOInstant 1s}}}HA\\
+\OMEGA s{\heap f{\THUNK e}}A{f\, a_{1}\cdots a_{n}} & \Rightarrow & \mc e{\cUpd f{\cOApp{a_{1}\cdots a_{n}}s}}HA\\
+\OMEGA sH{\abyss f{\THUNK e}}{f\, a_{1}\cdots a_{n}} & \Rightarrow & \OMEGA{\cOApp{a_{1}\cdots a_{n}}s}HAe\\
+\OMEGA sHA{f\, a_{1}\cdots a_{n}} & \Rightarrow & \IRR sHA{f\, a_{1}\cdots a_{n}}\\
 \OMEGA s{\heap{a_{1}\cdots a_{n}}{h_{1}\cdots h_{n}}}A{\eLet x{\objCon{C\, a_{1}\cdots a_{n}}}r} & \Rightarrow & \OMEGA s{\heap{x'}{C\, a_{1}\cdots a_{n}}}A{\subst r{x'}x}\\
  &  & x'\mbox{ fresh}\\
 \OMEGA sHA{\eLet x{obj}r} & \Rightarrow & \OMEGA{\oLet{x'}s}H{\abyss{x'}{obj}}{\subst r{x'}x}\\
  &  & x'\mbox{ fresh}\\
-Poppar\\
+\OMEGA sHA{\oplus\, a_{1}\cdots a_{n}} & \Rightarrow & \mc{\oplus\, a_{1}\cdots a_{n}}{\cOInstant 2s}HA\\
+\oplus\mbox{ is a primitive operation}\\
 \OMEGA sHAe & \Rightarrow & \IRR sHAe\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Irr:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \begin{align*}
+\IRR{\oCase{brs'}s}HA{\eCase e{brs}} & \Rightarrow & \OMEGA sHA{\eCase{(\eCase e{brs})}{brs}'}\\
+\IRR{\oCase{brs}s}HAe & \Rightarrow & \IRR sHA{\eCase e{brs}}\\
+\IRR{\oLet xs}H{\abyss xo}e & \Rightarrow & \IRR sHA{\eLet xoe}\\
+\IRR{\cOFUN{a_{1}\cdots a_{n}}{\alpha}s}HAe & \Rightarrow & \mc{\alpha}{ss}{\heap{\alpha}{\FUN{a_{1}\cdots a_{n}}e}}A\\
+ &  & \mbox{here we can also run the afterburner}\\
+\IRR{\cOApp{a_{1}\cdots a_{n}}s}HAe & \Rightarrow & \IRR sHA{\eLet v{\THUNK e}{v\, a_{1}\cdots a_{n}}}\\
+ &  & v\mbox{ fresh}\\
+\IRR{\cOUpd vs}HAe & \Rightarrow & \IRR sH{\abyss v{\THUNK e}}e\end{align*}
 
 \end_inset
 
@@ -306,16 +368,15 @@ Psi:
 \begin_inset Formula \begin{align*}
 \PSI{\oLet xs}{\heap vh}A{lbs}v & \Rightarrow & \PSI sHA{lbs}v\\
 \PSI{\oLet xs}{\nheap v{}}A{lbs}v & \Rightarrow & \PSI sHA{x\,:\, lbs}v\\
-\PSI{\oCase{brs}s}HA{lbs}v & \Rightarrow & \OMEGA sHA{instantiateBranch\, C\, a_{1}\cdots a_{n}\, brs}\\
-\PSI{\oCase{brs}s}HA{lbs}v & \Rightarrow & \IRR sHA{makeLets\, lbs\, v}\end{align*}
+\PSI{\oCase{brs}s}HA{lbs}v & \Rightarrow & \OMEGA sHA{\mbox{instantiate correct \ensuremath{brs} with \ensuremath{v} and add the let bindings from \ensuremath{lbs}}}\\
+\PSI{\cOUpd xs}{\heap vo}A{lbs}v,\,\PSI{\cOUpd xs}H{\abyss vo}{lbs}v & \Rightarrow & \PSI sH{\abyss xo}{lbs}v\\
+\PSI{\cUpd xs}{\heap vo}A{lbs}v & \Rightarrow & \PSI sH{\abyss xo}{lbs}v\\
+\PSI{\cOFUN{a_{1}\cdots a_{n}}{\alpha}s}HA{lbs}v & \Rightarrow & \IRR{\cOFUN{a_{1}\cdots a_{n}}{\alpha}s}HA{v\mbox{ with the let bindings from \ensuremath{lbs\mbox{ added}}}}\\
+\PSI{\cOApp{a_{1}\cdots a_{n}}s}HA{lbs}v & \Rightarrow & \OMEGA sHA{v\, a_{1}\cdots a_{n}\mbox{ with the let bindings from \ensuremath{lbs}added}}\end{align*}
 
 \end_inset
 
 
-\end_layout
-
-\begin_layout Standard
-instantiateBranch, makeLets...
 \end_layout
 
 \end_body
