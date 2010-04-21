@@ -1,6 +1,43 @@
 \documentclass[Rapport]{subfiles}
 \begin{document}
 
-\section{Inledning}
+\section{Inledning | Bakgrund och motivering}
+
+Vanligtvis optimeras kod endast vid kompileringsfasen. I följande Haskell-exempel 
+skulle en sådan optimering inte ge ett optimalt resultat.
+
+\begin{codeEx}
+power :: Integer -> Integer -> Integer
+power 0 x = 1
+power n x = x * power (n - 1) x
+
+powers :: Integer -> [Integer] -> [Integer]
+powers n xs = map (power n) xs
+
+main = do
+    n <- getIntegerFromUserInput
+    print (powers n [1..100])
+\end{codeEx}
+
+Funktionen $powers$ tar in ett tal $n$ och en lista $xs$, och kör funktionen $power\:n$, 
+som upphöjer ett tal till $n$, på varje element i listan. Om indatan $n$ till 
+$powers$ är känd statiskt (när programmet kompileras) skulle en kompilator kunna 
+göra en specialiserad version av $power$ för just det $n$-värdet. Till exempel, när $n=4$:
+
+\begin{codeEx}
+power_4 :: Integer -> Integer
+power_4 x = x * x * x * x
+\end{codeEx}
+
+Den specialiserade versionen av $power$ är snabbare än originalet, då den inte är 
+rekursiv och inte behöver titta på värdet som $n$ har.
+
+I $main$-funktionen ovan är dock $n$ inte känt när programmet kompileras, utan läses 
+istället in från användaren under körningstid. Detta gör att en kompilator inte 
+har tillräckligt mycket information för att kunna göra en specialiserad version av $power$.
+
+Vi har i det här projektet tagit fram en möjlig lösning på detta problem, där programmeraren kan 
+annotera var optimeringar ska ske under körningstid. 
+
 
 \end{document}

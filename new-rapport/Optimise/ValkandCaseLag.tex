@@ -2,5 +2,31 @@
 \begin{document}
 
 \subsection{Välkänd case-lag}
+Alternative title, case identitet. 
+
+Väldigt ofta uppstår en casesats inuti en casesats, vilket är svårt att optimera vidare. Vi utnyttjar i dessa tillfällen en identitet hos case:ar. 
+\begin{codeEx}
+ case (case x of
+         A a -> x'
+         B b -> y'
+      )
+   X -> r
+   Y -> y
+
+\end{codeEx}
+ 
+$\Leftrightarrow$
+
+\begin{codeEx}
+ case x of
+     A a -> case x' of
+              X -> r
+              Y -> y
+     B b -> case y' of
+              X -> r
+              Y -> y
+\end{codeEx}
+
+Nu är det lättare att applicera flera av våra andra optimeringar, t ex gemensam casegranskare. 
 
 \end{document}
