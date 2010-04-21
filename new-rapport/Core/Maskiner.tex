@@ -2,21 +2,21 @@
 \begin{document}
 
 \subsection{Olika maskiner}
-För att evaluera program skrivna i ett lat funktionellt programmeringsspråk
-behövs en evalueringsmodell. Det finns olika abstrakta maskiner utvecklade för 
-detta ändamål, tex G-maskinen, TIM (Three Instruction Machine), GRIN, och STG.
-Dessa går att dels tolka, dvs skriva ett program som kopierar maskinens
-funktionalitet i något programmeringsspråk, exempelvis Haskell. Man kan också
+För att evaluera program skrivna i ett funktionellt programmeringsspråk
+behövs en evalueringsmodell. Det finns olika abstrakta maskiner utvecklade för
+detta ändamål, till exempel G-maskinen, TIM (Three Instruction Machine), GRIN och STG.
+Dessa går att dels tolka, det vill säga att i något programmeringsspråk, exempelvis
+Haskell, skriva ett program som kopierar maskinens funktionalitet. Det går också att
 kompilera dem till något lågniva-språk som C, assembly eller LLVM.
-    I det här arbetet har vi valt att utveckla en egen tolk. Att skriva en
-kompilator hade varit ett delikat arbete i sig, även utan optimering. Vi ville
-fokusera mer på optimeringen och valde därför att skriva en tolk.
-    Av de olika maskiner vi undersökte när vi valde vilken vi skulle tolka så
-ansåg vi att STG var mest lämpad. I de andra ovan nämnda maskinerna är
-instruktionerna lågnivå, liknande assemblerinstruktioner men för att manipulera
+
+Att skriva en kompilator hade varit ett delikat arbete i sig, även utan
+optimering. Vi ville fokusera mer på optimeringen och valde därför att skriva en tolk.
+
+Av de olika maskiner vi undersökte när vi valde vilken vi skulle tolka
+ansåg vi att STG var lämpligast. I de andra ovan nämnda maskinerna är
+instruktionerna på låg nivå, liknande assemblerinstruktioner men för att manipulera
 ett tänkt syntaxträd. STG, å andra sidan, ser ut som ett funktionellt
-programmeringsspråk och det skulle underlätta att arbeta på optimeringen av
-den anledningen.
+programmeringsspråk vilket skulle underlätta arbetet på optimeringen.
 
 
 \end{document}

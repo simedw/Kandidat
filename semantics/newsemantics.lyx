@@ -211,7 +211,7 @@
 
 \begin_layout Standard
 \begin_inset FormulaMacro
-\renewcommand{\oLetObj}[3]{O\mathtt{let\,}#1=#2\,\mathtt{in}\,\bullet\,:\,#3}
+\newcommand{\oLetObj}[3]{O\mathtt{let\,}#1=#2\,\mathtt{in}\,\bullet\,:\,#3}
 \end_inset
 
 
@@ -219,7 +219,7 @@
 
 \begin_layout Standard
 \begin_inset FormulaMacro
-\renewcommand{\oFun}[3]{OFUN\,#1\,#2\,:\,#3}
+\newcommand{\oFun}[3]{OFUN\,#1\,#2\,:\,#3}
 \end_inset
 
 
@@ -227,7 +227,7 @@
 
 \begin_layout Standard
 \begin_inset FormulaMacro
-\renewcommand{\oInline}[1]{OInlining\,:\,#1}
+\newcommand{\oInline}[1]{OInlining\,:\,#1}
 \end_inset
 
 
@@ -235,7 +235,7 @@
 
 \begin_layout Standard
 \begin_inset FormulaMacro
-\renewcommand{\BH}{BLACKHOLE}
+\newcommand{\BH}{BLACKHOLE}
 \end_inset
 
 
@@ -243,7 +243,7 @@
 
 \begin_layout Standard
 \begin_inset FormulaMacro
-\renewcommand{\eCase}[2]{\mathtt{case}\,#1\,\mathtt{of}\,#2}
+\newcommand{\eCase}[2]{\mathtt{case}\,#1\,\mathtt{of}\,#2}
 \end_inset
 
 
@@ -251,7 +251,7 @@
 
 \begin_layout Standard
 \begin_inset FormulaMacro
-\renewcommand{\eLet}[3]{\mathtt{let}\,#1=#2\,\mathtt{in}\,#3}
+\newcommand{\eLet}[3]{\mathtt{let}\,#1=#2\,\mathtt{in}\,#3}
 \end_inset
 
 
@@ -259,7 +259,7 @@
 
 \begin_layout Standard
 \begin_inset FormulaMacro
-\renewcommand{\objCon}[1]{CON(#1)}
+\newcommand{\objCon}[1]{CON(#1)}
 \end_inset
 
 
@@ -267,7 +267,7 @@
 
 \begin_layout Standard
 \begin_inset FormulaMacro
-\renewcommand{\subst}[3]{#1[#2/#3]}
+\newcommand{\subst}[3]{#1[#2/#3]}
 \end_inset
 
 
@@ -275,7 +275,7 @@
 
 \begin_layout Standard
 \begin_inset FormulaMacro
-\renewcommand{\Arg}[2]{Arg\,#1\,:\,#2}
+\newcommand{\Arg}[2]{Arg\,#1\,:\,#2}
 \end_inset
 
 
@@ -289,7 +289,7 @@ Nya regler:
 \begin_inset Formula \begin{align*}
 \mc as{\heap a{\OPT t}}A & \Rightarrow & \mc t{\cOPT{a\,}s}{\heap a{\BH}}A\\
 \mc x{\cOPT as}{\heapp x{\PAP f{a_{1}\cdots a_{n}}}f{\FUN{x_{1}\cdots x_{m}}e}}A & \Rightarrow & \OMEGA{\cOFUN{x_{n+1}\cdots x_{m}}as}HA{e[a_{1}/x_{1}\cdots a_{n}/x_{n}]}\\
-\mc v{O.\star\,:\, s}{\nheap v{\THUNK e}}A & \Rightarrow & \PSI{O.\star\,:\, s}HA{[]}v\\
+\mc v{O.\star\,:\, s}{\nheap v{\THUNK e}}A & \Rightarrow & \PSI{O.\star\,:\, s}HA{\epsilon}v\\
 \mc x{\cOInstant ns}HA & \Rightarrow & \OMEGA sHAx\\
 n\leq0\end{align*}
 
@@ -323,7 +323,7 @@ Omega:
 \begin_inset Formula \begin{align*}
 \OMEGA s{\heap v{\THUNK e}}Av & \Rightarrow & \mc e{\cUpd vs}HA\\
 \OMEGA sH{\abyss v{\THUNK e}}v & \Rightarrow & \OMEGA{\cOUpd vs}HAe\\
-\OMEGA s{\heap v{\objCon{C\, a_{1}\cdots a_{n}}}}Av,\,\OMEGA sH{\abyss v{CON(C\, a_{1}\cdots a_{n})}}v & \Rightarrow & \PSI sHA{[]}v\\
+\OMEGA s{\heap v{\objCon{C\, a_{1}\cdots a_{n}}}}Av,\,\OMEGA sH{\abyss v{CON(C\, a_{1}\cdots a_{n})}}v & \Rightarrow & \PSI sHA{\epsilon}v\\
 \OMEGA sHA{\eCase e{brs}} & \Rightarrow & \OMEGA{\oCase{brs}s}HAe\\
 \OMEGA s{\heap{f\mapsto g,\, a_{1}\cdots a_{n}}{h_{1}\cdots h_{n}}}A{f\, a_{1}\cdots a_{n}} & \Rightarrow & \mc{f\, a_{1}\cdots a_{n}}sHA\\
 \OMEGA s{\heap f{\FUN{x_{1}\cdots x_{n}}e}}A{f\, a_{1}\cdots a_{n}} & \Rightarrow & \mc f{\Arg{a_{1}}{\cdots\,:\,\Arg{a_{n}}{\cOInstant 1s}}}HA\\
@@ -368,7 +368,7 @@ Psi:
 \begin_inset Formula \begin{align*}
 \PSI{\oLet xs}{\heap vh}A{lbs}v & \Rightarrow & \PSI sHA{lbs}v\\
 \PSI{\oLet xs}{\nheap v{}}A{lbs}v & \Rightarrow & \PSI sHA{x\,:\, lbs}v\\
-\PSI{\oCase{brs}s}HA{lbs}v & \Rightarrow & \OMEGA sHA{\mbox{instantiate correct \ensuremath{brs} with \ensuremath{v} and add the let bindings from \ensuremath{lbs}}}\\
+\PSI{\oCase{brs}s}HA{lbs}v & \Rightarrow & \OMEGA sHA{\mbox{instantiate correct \ensuremath{brs}with \ensuremath{v}and add the let bindings from \ensuremath{lbs}}}\\
 \PSI{\cOUpd xs}{\heap vo}A{lbs}v,\,\PSI{\cOUpd xs}H{\abyss vo}{lbs}v & \Rightarrow & \PSI sH{\abyss xo}{lbs}v\\
 \PSI{\cUpd xs}{\heap vo}A{lbs}v & \Rightarrow & \PSI sH{\abyss xo}{lbs}v\\
 \PSI{\cOFUN{a_{1}\cdots a_{n}}{\alpha}s}HA{lbs}v & \Rightarrow & \IRR{\cOFUN{a_{1}\cdots a_{n}}{\alpha}s}HA{v\mbox{ with the let bindings from \ensuremath{lbs\mbox{ added}}}}\\
