@@ -2,5 +2,127 @@
 \begin{document}
 
 \section{Diskussion}
+Vi har gjort en tolk för ett funktionellt programmeringsspråk
+med en semantik som följer STG-maskinen som används i Haskellkompilatorn GHC.
+Till denna har vi lagt till möjligheten att optimera partiellt applicerade funktioner under körningstid
+då vi känner till värdena som applicerades och kan utnyttja dessa till optimering.
 
+\subsection{Implementerbarhet i kompilator}
+Vi valde att göra en tolk eftersom det ofta är enklare än att implementera en kompilator.
+En tolk innebär att man känner till syntaxträdet hos koden, vilket vanligtvis kompilerad
+kod inte gör, vilket gör att om det skulle implementeras i en kompilator skulle
+denna information behöva kompileras ner för att finnas tillgänglig när programmet körs.
+
+\subsection{Lathet}
+Vid optimeringen vill man att koden ska vara så optimerad som möjligt, men man får
+vara försiktig så att man inte är för aggressiv, eftersom det kan leda till icke-terminering.
+
+\begin{codeEx}
+take n xs = let
+    { a1 = THUNK (n == 0)
+    ; a2 = THUNK (case xs of
+        { Nil -> Nil
+        ; Cons _ ys -> let
+            { b1 = THUNK (n - 1)
+            } in take b1 ys
+        )
+    } in if a1 Nil a2;
+
+main = (optimise (take 5)) [1,2,3,4,5,6,7];
+\end{codeEx}
+
+I exemplet ovan går optimisefunktionen in och optimerar a2 oberoende av värdet på
+a1, och eftersom vi inte vet värdet på xs när funktionen optimeras leder det till
+icke-terminering om man inlinar det rekursiva anropet till take.
+
+\subsection{Optimise-with}
+En möjlig lösning på problemet ovan är att låta programmeraren själv avgöra hur
+många gånger en funktion får inlinas.
+
+\begin{codeEx}
+main = optimise (take 5) with { inline take 5 } [1,2,3,4,5,6,7];
+\end{codeEx}
+
+I exemplet ovan betyder inline take 5 att take bara får inlinas 5 gånger.
+Denna lösning kan tyckas vara suboptimal, och man skulle hellre vilja att optimise
+kunde vara lite smartare genom att detektera när den potentiellt skulle kunna
+falla in i en oändlig inliningloop. Men det har vi ännu inte funnit
+någon lösning på.
+
+\subsection{Sharing}
+Ett annat problem med lathet är att optimise måste se till att variabler bara 
+evalueras en gång. Detta ställer till besvär hur man skall optimera let satser.
+
+\begin{codeEx}
+test x y = let
+    { a = THUNK (fib x + y)
+    } in (+) a a;
+
+main = optimise (test 100) 5
+\end{codeEx}
+
+I exemplet ovan inlinas a i let-satsen, vilket gör att optimise sedan kommer att
+köras två gånger på samma kod, när man egentligen skulle vilja att den delar resultatet
+av att optimera a och använder det på båda ställen där det används.
+
+\begin{codeEx}
+test_x y = let
+    { a = THUNK ([|fib x|] + y)
+    } in (+) a a;
+\end{codeEx}
+Där [|.|] betyder att man evaluerat uttrycket till den kända x. 
+
+\subsection{Call stack}
+
+Från början använde vi substituering för att göra exempelvis funktionsapplikation
+vilket betyder att man går ner i syntaxträdet och byter argumentvariablerna i funktionen
+mot vad argumenten faktiskt är. Detta är långsamt och inte särskilt realistiskt - 
+speciellt inte om man talar om en kompilator. Kompilatorer kan istället använda call-stacks
+där man låter funktionsargumenten indexeras in på en stack, så att man slipper
+gå ner i hela syntaxträdet (vilket ju vanligtvis inte är möjligt i kompilerad kod 
+om den inte har tillgång till det).
+
+För att göra vår tolk mer realistisk bytte vi till att använda detta, vilket också
+gav oss prestanda som är mer jämförbar med det riktiga livet.
+
+\begin{codeEx}
+f a = case g a b of
+    A -> .. a ..
+    B -> .. a ..
+\end{codeEx}
+
+Om vi vill evaluera vad f 5 blir så substituerar vi argumentet a mot 5 i kroppen.
+
+\begin{codeEx}
+f_a = case g 5 b of
+    A -> .. 5 ..
+    B -> .. 5 ..
+\end{codeEx}
+
+Med en callstack så har man gjort att fuktionen f har sina lokala variabler indexerade
+så istället för a har man 0 för första lokala variablen (i exemplet visas det som
+<a,0> för att underlätta läsning). Detta görs för alla lokala variabler, och inte
+bara argument, även let-bundna samt varibler bundna via case blir indexerade.
+
+Att ge alla lokala variabler ett index görs i ett transformeringspass före tolken körs,
+så att inget onödigt arbete behöver göras vid körningstid.
+
+\begin{codeEx}
+f <a,0> = case (+) <a,0> b of
+    A -> .. <a,0> ..
+    B -> .. <a,0> ..
+\end{codeEx}
+
+När man anropar funktionen behöver man nu bara lägga argumentet a på position 0 på
+stacken, och överallt där a används kan man sedan indexera in på stacken för att
+få ut värdet.
+
+\subsection{Optimise med call stack}
+
+När vi implementerade call-stacks hade vi från början kvar vår gamla optimisefunktion
+som fortfarande använde vanlig substituering. När optimise skulle köras fick vi då
+transformera tillbaka syntaxträdet till den representationen, och sedan transformera
+tillbaka när optimeringen var klar. Ganska ineffektivt.
+
+[berätta om hur vi gjorde sedan]
 \end{document}

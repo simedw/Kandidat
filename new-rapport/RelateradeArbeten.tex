@@ -2,5 +2,39 @@
 \begin{document}
 
 \section{Relaterade Arbeten}
+Vårt arbete spänner över två forskningsområden, partiell evaluering
+och optimering under körningstid. I litteraturen är dessa områden
+oftas separerade, något som vi håller'
+
+
+\subsection{Statiska optimeringar}
+
+Core\cite{mitchell2007supercompiler}
+
+Partiell evaluering
+
+
+\subsection{Optimeringar under körningstid}
+
+JIT (just in time) compilation är en metod för att dynamiskt optimera
+de delar av ett program som används mest under körningstid. Val av
+dessa punkter sker med hjälp av statistik och heuristik gentemot vår
+lösning där programmeraren själv har kontroll över angreppspunkterna. 
+
+Att annotera optimeringspunkten har gjorts tidigare av Bolz C., då
+för en Prologvariant.\cite{bolz-automatic} Vårt arbete liknar hans
+på många punker, men skiljer sig i bl. a. hur vi hanterar förgreningar
+(i vårt fall case-satser i hans if-satser). Han lägger till en callback
+medan vi försöker fortsätta optimeringen.
+
+
+\subsection{Funktionella maskiner}
+
+Stg....\cite{marlow2006making}
+
+		% \newpage
+
+%\bibliographystyle{apalike}
+\bibliography{references}
 
 \end{document}

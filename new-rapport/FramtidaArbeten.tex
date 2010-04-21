@@ -3,4 +3,36 @@
 
 \section{Framtida Arbeten}
 
+Extremt informellt?
+
+En avgränsning för vårt projekt var att jobba inom ramen för en interpreter. 
+Detta av flera anledningar, men främst för att det är lättare att prototypa nya 
+regler för optimise. Nu när vi har tagit fram fungerande optimerings semtantik 
+är steget till att implementera vårt språk i en kompilator inte allt för 
+avlägset. 
+Vi har som bekant även byt ut vår substitutions-funktion nästan överallt mot att
+använda en callstack, vilket är mycket mer kompilator vänligt. 
+
+
+Vårt core språk liknar det som både yhc och ghc arbetar med i sina mellansteg.
+Det hade varit ytterst intressant att utöka vårt språk så att vi skulle kunna 
+vara backend till något större kompilator (eller runtimesystem?). 
+Vi har alltid haft detta i åtanke och det är delvis därför vi ej har någon 
+typechecker.
+
+[Info bild som visar en pipe line för vart vår kompilator finns i kedjan.]
+
+En typechecker och stöd för t ex algebric datatypes i ett frontend hade också
+varit trevligt då det är väldigt lätt att skriva fel i testprogramen. 
+
+
+Något annat som föll lite utanför ramen för vårt arbete är att bevisa
+korrektheten hos optimisefunktionen, för att se att en optimerad funktion
+gör samma sak som dess ooptimerade motsvarighet. Vi har endast använt oss av en testsvit
+och andra exempelprogram för att testa optimise. För att vara säker på att den
+gör vad som förväntas skulle det vara intressant att formalisera reglerna och bevisa
+att de är korrekta, exempelvis med hjälp av en bevisassistent såsom Agda.
+
+[Sharing skulle kunna vara med här (om vi inte får det att fungera).]
+
 \end{document}
