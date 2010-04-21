@@ -5,60 +5,67 @@
 \subsection{Optimise ... with ..}
 
   Det är finns alltid specialfall där brott mot semantiken hade varit fördelaktigt.
-  Sådana fall ytterst svåra att idenfiera maskinellt, därför ombes användaren
+  Sådana fall är ytterst svåra att idenfiera maskinellt, därför ombes användaren
   ge ytterligare argument till optimeringsfunktionen när detta är dessa specialfall uppstår.
 
 \begin{codeEx}
-  optimise f x with { options }
+optimise f x with { options }
 \end{codeEx}
 
-
+Här är det möjligt att genom att ge keywordet `with' efter optimise ge olika options.
 
 \subsubsection{Case Branches}
       Ibland finns det möjlighet att optimera i en casebranch. Detta bryter semantiken
       då detta kan forcera evaluering av uttryck som vanligtvis inte skulle beräknats.
 \begin{codeEx}
 f x y z = case g z of
-        A -> case h x y of
-              R -> t1 z
-              S -> t2 z
-        B -> case h y x of
-              R -> t3 z
-              S -> t4 z
+    { A -> case h x y of
+        { R -> t1 z
+        ;S -> t2 z
+        }
+    { B -> case h y x of
+        { R -> t3 z
+        ; S -> t4 z
+        }
+    };
 \end{codeEx}
 
-
-      Om vi nu använder \miniCode{optimise( f 1 2 )}, så är \miniCode{z} okänd, men i brancherna så
-      finns det case-sastser som bara beror på \miniCode{x} och \miniCode{y} och rätt gren kan alltså väljas. Vi har stöd för att optimera i sådana här casegrenar:
+Om vi nu använder \miniCode{optimise( f 1 2 )}, så är \miniCode{z} okänd, men i brancherna så
+finns det case-sastser som bara beror på \miniCode{x} och \miniCode{y} och rätt gren kan alltså väljas. Vi har stöd för att optimera i sådana här casegrenar:
 
 \begin{codeEx}
   optimise f x y with { casebranches }
 \end{codeEx}
 
-       Detta kan bryta semantiken, tex om
+\NOTE{Jag är trött men borde inte vi ge vad optimise (f 1 2) with \{ casebranches \} är?}
+
+Detta kan bryta semantiken, tex om
+
 \begin{codeEx}
 f x z = case z of
-    True  -> error -- tex en oändlig loop
-    False -> x
+    { True  -> error -- tex en oändlig loop
+    ; False -> x
+    };
 \end{codeEx}
-      Om vi här försöker optimera i brancherna då z är okänd kommer optimeringen
-      att loopa, och det skulle programmet inte gjort om t ex. f alltid får False som
-      argument.
+
+Om vi här försöker optimera i brancherna då z är okänd kommer optimeringen
+att loopa, och det skulle programmet inte gjort om t ex. f alltid får False som
+argument.
 
 \subsubsection{Inline-räknare}
-     När man valt en utökning som bryter mot semantiken kan man inte alltid vara säker på
-     att den terminerar, därför kan inline-räknaren användas för att garantera det det högst
-     ser ett visst antal inlines.
+När man valt en utökning som bryter mot semantiken kan man inte alltid vara säker på
+att den terminerar, därför kan inline-räknaren användas för att garantera det det högst
+ser ett visst antal inlines.
 
-     Det går att både begränsa det globala antalet inlines och inlines för olika funktioner.
+Det går att både begränsa det globala antalet inlines och inlines för olika funktioner.
 
 \begin{codeEx}
-     f z = case g z of
-        A -> repeat 1
-        B -> Nil
+f z = case g z of
+    { A -> repeat 1
+    ; B -> Nil
+    };
 \end{codeEx}
 
-    Här hade det varit otrevligt att försöka inlina repeat då den aldrig terminerar.
-
+Här hade det varit otrevligt att försöka inlina repeat då den aldrig terminerar.
 
 \end{document}

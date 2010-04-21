@@ -4,52 +4,59 @@
 
 \subsection{Introduktion till optimise}
 
-Vi börjar med att återigen betrakta powerfunktionsexemplet från introduktionen.
-
+Vi börjar med att återigen betrakta powerfunktionsexemplet från introduktionen. Vi är
+intreserade av att se vilka optimeringar som krävs för att den skall optimeras till den
+mer optimala kod som visades.
 \begin{codeEx}
 power n x = let t1 = Thunk (n==0)
-              in case t1 of
-                      True -> 1
-                      False -> let t2 = n - 1 
-                                   t3 = power t2 x
-                                   t4 = x * t3
-                                in t4
+    in case t1 of
+        { True -> 1
+        ; False -> let 
+            { t2 = n - 1 
+            ; t3 = power t2 x
+            ; t4 = x * t3
+            } in t4
+        };
 \end{codeEx}
 Vi ser att \miniCode{power 3 5} kommer upphöja 5 till 3, dvs 5 * 5 * 5
 
 Om vi känner till exponenten men inte basen kan vi göra en optimerad version av power
-specialicerad för just den exponenten, hur detta går till ska vi nu försöka visa på ett 
-informellt sätt. Misströsta ej alla detaljer ges senare.
+specialicerad för just den exponenten, hur detta går till skall vi nu visa på ett 
+mer informellt sätt. Senare kommer mer formella regler att ges. Vi antar att programmeraren
+har skrivit följande för att visa att hon vill ha en specialiserad version av \miniCode{power} för $3$.
 
 \begin{codeEx}
 optimise (power 3)
 \end{codeEx}
 
-Vi börjar med att byta ut alla n mot 3 i power. Ingeting kan göras med \miniCode{x} då 
-den är okänd. Vi `döper' också om power för att inte förstöra orginalet.
+Vi börjar med att byta ut alla n mot 3 i power, ingeting görs med \miniCode{x} för 
+att den är okänd. Vi `döper' också om power för att inte förstöra orginalet.
 \begin{codeEx}
 power_3 x = let t1 = Thunk (3==0)
-               in case t1 of
-                     True -> 1
-                     False -> let t2 = 3 - 1 
-                                  t3 = power t2 x
-                                  t4 = x * t3
-                               in t4
+    in case t1 of
+        { True -> 1
+        ; False -> let 
+            { t2 = 3 - 1 
+            ; t3 = power t2 x
+            ; t4 = x * t3
+            } in t4
+        };
 \end{codeEx}
 
-Vi börjar nu gå igenom trädet. Först möter vi \miniCode{let t1 = ... in exp} vilket sparas undan och vi gå vidare in i \miniCode{exp} som är ett case-uttryck. Case:en kan forcera fram värdet oss t1 då t1 är fri från fria variabler. Då \miniCode{3==0} är falskt fås nu: 
+Vi börjar nu gå igenom trädet. Först möter vi \miniCode{let t1 = ... in exp} vilket sparas undan och vi gå vidare in i \miniCode{exp} som är ett case-uttryck. Case:en kan forcera fram värdet från t1 då t1 är inte innehåller några fria variabler, som i det här fallet är x. Då \miniCode{3==0} är falskt fås nu: 
 
 \begin{codeEx}
 power_3 x = case False of
-              True -> 1
-              False -> let t2 = 3 - 1 
-                           t3 = power t2 x
-                           t4 = x * t3
-                         in t4
+    { True -> 1
+    ; False -> let 
+        { t2 = 3 - 1 
+        ; t3 = power t2 x
+        ; t4 = x * t3
+        } in t4
+    };
 \end{codeEx}
 
-Vi kan nu välja False branchen, vi sparar sedan undan let:arna och går in i t4. Vi inlinar det hela
-(Egentligen allokeras 3-1 på heapen och forceras fram senare)
+Vi kan nu välja False grenen, vi sparar sedan undan let:arna och går in i t4, därefter inlinas t4.
 
 \begin{codeEx}
 power_3 x = x * power (3-1) x
@@ -62,9 +69,9 @@ power_3 x = x * x * x * 1
 \end{codeEx}
 
 Vilket är en mycket mindre och snabbare funktion.
-Men det här är inte hela sanningen, egentlingen boxas varje heltal i vårt språk 
-(står säkert någon annanstans). Och + är som bekant bara socker för att case 
-fram värdet i av intarna och sedan addera det med en primitiv plus operator \#+
+Men det här är inte hela sanningen, egentlingen boxas varje heltal i vårt språk.
+ Och * är som bekant en funktion som evaluerar dess argument och sedan multiplicerar
+dem med den primitiva gånger operatorn *\#
 
 \begin{codeEx}
 a * b
@@ -74,55 +81,48 @@ blir efter inlining
 
 \begin{codeEx}
 case a of
-    I# a' -> case b of
-        I# b' -> case  a' #* b' of
-            r' -> let r = I# r'
-                      in r
+    { I# a' -> case b of
+        { I# b' -> case  a' #* b' of
+            { r' -> let r = I# r' in r}}}
 \end{codeEx}
 
-Och om vi då inlinarna alla multiplicationer i power\_3 får vi följande kod:
+Och om vi då inlinarna alla multiplicationer i power\_3 får vi följande svårbegriblig kod:
 \begin{codeEx}
-power_3 x = case (
-                     case (
-                     case x of
-                        I# a -> case x of
-                            I# b -> case a #* b of
-                                  r' -> let r = I# r'
-                                   in r
-                        )
-                          of
-                        I# c -> case x of
-                            I# d -> case c #* d of
-                                  r' -> let r = I# r'
-                                   in r
-                   case x of
-                        I# a -> case x of
-                            I# b -> case a #* b of
-                                  r' -> let r = I# r'
-                                   in r
-                        )
-                          of
-                        I# c -> case c #* 1 of
-                                  r' -> let r = I# r'
-                                   in r                                                         
+power_3 x = case 
+    ( case 
+        ( case 
+            ( case x of
+                { I# a -> case x of
+                    { I# b -> case a #* b of
+                        { r' -> let r = I# r' in r}}}
+            ) of
+            { I# c -> case x of
+                { I# d -> case c #* d of
+                    { r' -> let r = I# r' in r}}}                
+         ) of
+         { I# a -> case x of
+              { I# b -> case a #* b of
+                   { r' -> let r = I# r' in r}}}
+    ) of
+        { I# c -> case c #* 1 of
+            { r' -> let r = I# r' in r}};                                     
 \end{codeEx}
 
 
 Vi case:ar flera gånger på x och bygger upp I\# för att direkt ta bort de senare.
- Detta kan naturligtvis också optimeras.
+ Detta kommer vi att optimera bort och få följande funktion.
 
 \begin{codeEx}
 power_3 x = case x of
-               I# x' -> case x' #* x' of
-                       a -> case x' #* a of
-                          b -> case x' #* b of
-                             c -> case x' #* 1 of
-                               r' -> let r = I# r'
-                                 in r
+    { I# x' -> case x' #* x' of
+        { a -> case x' #* a of
+            { b -> case x' #* b of
+                { c -> case x' #* 1 of
+                    { r' -> let r = I# r' in r}}}}};
 \end{codeEx}
 
-Detta är hur långt vår optimise funktionalitet kommer. x * 1 skulle naturligtvis
-kunna optimeras till x, men vi har inte fokuserat på dessa corner cases.
+Detta är hur långt vår optimise funktionalitet kommer. \miniCode{x * 1} skulle naturligtvis
+kunna optimeras till x, men vi har inte fokuserat på dessa specialfall.
 I resten av det här avsnittet kommer vi i detalj förklara vart och ett av dessa 
 steg och varför det fungerar som det gör.
 
