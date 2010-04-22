@@ -1,12 +1,14 @@
 \documentclass[../Optimise]{subfiles}
 \begin{document}
 
+\numberwithin{equation}{section}
+
 \global\long\def\subst#1#2#3{#1[#2/#3]}
 \global\long\def\abyss#1#2{A[#1\mapsto#2]}
 
 \global\long\def\cUpd#1#2{Upd\,#1\,:\,#2}
 \global\long\def\cOInstant#1#2{OInstant\,#1\,:\,#2}
-\global\long\def\cOApp#1#2{OApp\,#1\,:\,#2}
+\global\long\def\cOApp#1#2#3{OApp\,#1\;#2\,:\,#3}
 \global\long\def\cOUpd#1#2{OUpd\,#1\,:\,#2}
 
 
@@ -34,50 +36,93 @@ med stort A, och användas på liknande sätt som Heapen H.
 
 
 \subsubsection{Funktionsapplikationer}
+\begin{align}
+\CBNOMEGA s{\heap f{\FUN{x_{1}\ldots x_{n}}e}}A{f\, a_{1}\cdots a_{n}} \Rightarrow & \CBNMC f{\Arg{a_{1}}{\ldots\,:\,\Arg{a_{n}}{\cOInstant 1s}}}HA
+\end{align}
 
-\begin{align*}
-\CBNOMEGA s{\heap f{\FUN{x_{1}\cdots x_{n}}e}}A{f\, a_{1}\cdots a_{n}} & \Rightarrow & \mc f{\Arg{a_{1}}{\cdots\,:\,\Arg{a_{n}}{\cOInstant 1s}}}HA\\
-\CBNOMEGA s{\heap f{\THUNK e}}A{f\, a_{1}\cdots a_{n}} & \Rightarrow & \mc e{\cUpd f{\cOApp{a_{1}\cdots a_{n}}s}}HA\\
-\CBNOMEGA sH{\abyss f{\THUNK e}}{f\, a_{1}\cdots a_{n}} & \Rightarrow & \CBNOMEGA{\cOApp{a_{1}\cdots a_{n}}s}HAe\\
-\CBNOMEGA sHA{f\, a_{1}\cdots a_{n}} & \Rightarrow & \CBNIRR sHA{f\, a_{1}\cdots a_{n}}\\
-\CBNOMEGA sHA{\oplus\, a_{1}\cdots a_{n}} & \Rightarrow & \mc{\oplus\, a_{1}\cdots a_{n}}{\cOInstant 2s}HA\\
-\CBNIRR{\cOApp{a_{1}\cdots a_{n}}s}HAe & \Rightarrow & \CBNIRR sHA{\eLet v{\THUNK e}{v\, a_{1}\cdots a_{n}}}\\
- &  & v\mbox{ fresh}\\
-\CBNPSI{\cOApp{a_{1}\cdots a_{n}}s}HA{lbs}v & \Rightarrow & \CBNOMEGA sHA{v\, a_{1}\cdots a_{n}\mbox{ with the let bindings from \ensuremath{lbs} added}}
-\end{align*}
+Den här regeln används för inlining, vi låter maskinen få göra det då vi lägger ut en
+\cont{OInstant} som tillåter maskinen att reducera $1$ steg. Efter det kommer optimeringen
+fortsätta. Vad som inte syns i denna formulering är att vi endast gör det om
+inline-räknaren tillåter det.
 
-Värt att notera är att primitiva operationer så som \miniCode{+\# *\# ==\#} betecknas $\oplus$.  
+\NOTE{Detta är en ful regel, jepp}
+
+\begin{align}
+\CBNOMEGA s{\heap f{\THUNK e}}A{f\, a_{1}\ldots a_{n}}  \Rightarrow & \CBNMC f{\cOApp f{a_{1}\ldots a_{n}}s}HA\\
+\CBNOMEGA sH{\abyss f{\THUNK e}}{f\, a_{1}\ldots a_{n}}  \Rightarrow & \CBNOMEGA{\cOApp f{a_{1}\ldots a_{n}}s}HAe\\
+\label{CBN:Fun:Irr}\CBNIRR{\cOApp f {a_{1}\ldots a_{n}}s}HAe  \Rightarrow & \CBNIRR sHA{f\, a_{1}\ldots a_{n}}\\
+\CBNPSI{\cOApp f{a_{1}\ldots a_{n}}s}HA{lbs}v  \Rightarrow & \CBNOMEGA sHA{v\, a_{1}\ldots a_{n}\footnote{ with the let bindings from \ensuremath{lbs} added}}
+\end{align}
+
+Vi introducerar en ny continuation \cont{OApp} som pekar på ett objekt som är av
+funktionstyp, samt har en samling av argument. Den används för att funktionen är
+ännu inte evaluerad till ett funktions objekt, och därför behöver vi evaluera det.
+Om det inte lyckades \eqref{CBN:Fun:Irr} så använder vi det gamla funktionsvärdet
+när vi bygger upp det igen.
+
+\begin{align}
+\CBNOMEGA sHA{\oplus\, a_{1}\ldots a_{n}}  \Rightarrow & \mc{\oplus\, a_{1}\ldots a_{n}}{\cOInstant 2s}HA
+\end{align}
+
+Värt att notera är att primitiva operationer så som \miniCode{+\# *\# ==\#} betecknas $\oplus$. 
+Dessa körs också via maskinen, så först måste man även kontrollera att dess argument
+är kända.
 
 \subsubsection{let-uttryck}
-\begin{align*}
-\CBNOMEGA s{\heap{a_{1}\cdots a_{n}}{h_{1}\cdots h_{n}}}A{\eLet x{\objCon{C\, a_{1}\cdots a_{n}}}r} & \Rightarrow & \CBNOMEGA s{\heap{x'}{C\, a_{1}\cdots a_{n}}}A{\subst r{x'}x}\\
- &  & x'\mbox{ fresh}\\
-\CBNOMEGA sHA{\eLet x{obj}r} & \Rightarrow & \CBNOMEGA{\oLet{x'}s}H{\abyss{x'}{obj}}{\subst r{x'}x}\\
- &  & x'\mbox{ fresh} \\
- \CBNIRR{\oLet xs}H{\abyss xo}e & \Rightarrow & \CBNIRR sHA{\eLet xoe}\\
- \CBNIRR{\cOUpd vs}HAe & \Rightarrow & \CBNIRR sH{\abyss v{\THUNK e}}e \\
-\CBNPSI{\oLet xs}H A{lbs}v & \Rightarrow & \CBNPSI sHA{x\,:\, lbs}v \\
-\CBNPSI{\cOUpd xs}{\heap vo}A{lbs}v,\,\CBNPSI{\cOUpd xs}H{\abyss vo}{lbs}v & \Rightarrow & \CBNPSI sH{\abyss xo}{lbs}v\\
-\CBNPSI{\cUpd xs}{\heap vo}A{lbs}v & \Rightarrow & \CBNPSI sH{\abyss xo}{lbs}v 
-\end{align*}
+\begin{align}
+\label{CBN:Let1} \CBNOMEGA s{\heap{a_{1}\cdots a_{n}}{h_{1}\cdots h_{n}}}A{\eLet x{\objCon{C\, a_{1}\cdots a_{n}}}r} \\ \nonumber \Rightarrow & \CBNOMEGA s{\heap{x'}{C\, a_{1}\cdots a_{n}}}A{\subst r{x'}x}\\
+   & x'\mbox{ fresh} \nonumber \\
+\label{CBN:Let2} \CBNOMEGA sHA{\eLet x{obj}r} \\ \nonumber \Rightarrow & \CBNOMEGA{\oLet{x'}s}H{\abyss{x'}{obj}}{\subst r{x'}x}\\
+   & x'\mbox{ fresh} \nonumber \\
+\label{CBN:Let3} \CBNIRR{\oLet xs}H{\abyss xo}e \Rightarrow & \CBNIRR sHA{\eLet xoe}\\
+\label{CBN:Let4} \CBNIRR{\cOUpd vs}HAe \Rightarrow & \CBNIRR sH{\abyss v{\THUNK e}}e \\
+\label{CBN:Let5} \CBNPSI{\oLet xs}H A{lbs}v \Rightarrow & \CBNPSI sHA{x\,:\, lbs}v \\
+\label{CBN:Let6} \CBNPSI{\cOUpd xs}{\heap vo}A{lbs}v \Rightarrow & \CBNPSI sH{\abyss xo}{lbs}v\\
+\CBNPSI{\cOUpd xs}H{\abyss vo}{lbs}v \Rightarrow & \CBNPSI sH{\abyss xo}{lbs}v\\
+\label{CBN:Let7} \CBNPSI{\cUpd xs}{\heap vo}A{lbs}v  \Rightarrow & \CBNPSI sH{\abyss xo}{lbs}v 
+\end{align}
+
+Alla \miniCode{let} som $\Omega$ ser kommer nu att läggas på abyssen, med undantag av \miniCode{CON} om alla varaibler kända \eqref{CBN:Let2}. Detta undantag infördes då det underlätta optimering i case:ar, vi kan inte case på något på abyssen.
+
+$\Psi$ kan ändast få variabler som argument, aldrig uttryck. Detta innebär att vi i regler \eqref{CBN:Let5} vet med säkerhet att variablen inte refererar till det let-bunda uttrycket. Vi kan därför ta bort det från stacken och fortsätta vår optimering. I $\Phi$ får vi dock ett uttryck som argument och måste därför återbygga let-satsen. 
+
+De resterade reglerna behandlar \cont{OUpd} vilket läggs ut när innehållet i en thunk optimeras. 
+
+%När vi slutligen når $\Psi$ med en OLet-continuation \eqref{CBN:Let5} på stacken kan vi vara säkra på vi inte använder den bortsparade let-satsen och vi kan därför kasta bort den. I \eqref{CBN:Let3} kan dock uttrycket innehålla en reference till let:en och därför återskapas uttrycket. 
+
+
 
 \subsubsection{case-satser}
-\begin{align*}
-\CBNOMEGA sHA{\eCase e{brs}} & \Rightarrow & \CBNOMEGA{\oCase{brs}s}HAe\\
-\CBNIRR{\oCase{brs'}s}HA{\eCase e{brs}} & \Rightarrow & \CBNOMEGA sHA{\eCase{(\eCase e{brs})}{brs}'}\\
-\CBNIRR{\oCase{brs}s}HAe & \Rightarrow & \CBNIRR sHA{\eCase e{brs}}\\
-\CBNPSI{\oCase{brs}s}HA{lbs}v & \Rightarrow & \CBNOMEGA sHA{\mbox{instantiate correct \ensuremath{brs}with \ensuremath{v}and add the let bindings from \ensuremath{lbs}}}\\
-\end{align*}
-
+Fungerar precis som tidigare, dock forslas let bunda variabler samt abyssen nu också runt.
+%\begin{align}
+%\label{eq:case1}\CBNOMEGA sHA{\eCase e{brs}}  \Rightarrow &\, \CBNOMEGA{\oCase{brs}s}HAe\\
+%\label{eq:case2}\CBNIRR{\oCase{brs}s}HAe  \Rightarrow &\, \CBNIRR sHA{\eCase e{brs}}\\
+%\label{eq:case3}\CBNPSI{\oCase{brs}s}HA{lbs}v  \Rightarrow &\, \CBNOMEGA sHA{e'}
+%\end{align}
+%Där \miniCode{e'} är instantierad med den korrekta grenen och let bundna variabler från \miniCode{lbs} läggs till.
+%Vi ser att \eqref{eq:case1} är oförändrade från CBV-semantiken. 
 
 \subsubsection{Atoms}
-\begin{align*}
-\CBNOMEGA s{\heap v{\THUNK e}}Av & \Rightarrow & \mc e{\cUpd vs}HA\\
-\CBNOMEGA sH{\abyss v{\THUNK e}}v & \Rightarrow & \CBNOMEGA{\cOUpd vs}HAe\\
-\CBNOMEGA s{\heap v{\objCon{C\, a_{1}\cdots a_{n}}}}Av,\,\CBNOMEGA sH{\abyss v{CON(C\, a_{1}\cdots a_{n})}}v & \Rightarrow & \PSI sHA{\epsilon}v\\
-\end{align*}
+\begin{align}
+\label{CBN:Atoms1}\CBNOMEGA s{\heap v{\THUNK e}}Av \Rightarrow &\, \CBNMC vsHA\\
+\label{CBN:Atoms2}\CBNOMEGA sH{\abyss v{\THUNK e}}v  \Rightarrow &\, \CBNOMEGA{\cOUpd vs}HAe\\
+\label{CBN:Atoms3}\CBNOMEGA sH{\abyss v{CON(C\, a_{1}\cdots a_{n})}}v \Rightarrow &\, \CBNPSI sHA{\epsilon}v \\
+\label{CBN:Atoms4}\CBNOMEGA s{\heap v{\objCon{C\, a_{1}\cdots a_{n}}}}Av \Rightarrow &\, \CBNPSI sHA{\epsilon}v
+\end{align}
+Regel \eqref{CBN:Atoms1} så lämnar vi arbetet vidare åt maskinen, den får fortsätta att
+evaluera thunken som den fick in.
 
-\subsubsection{Övrigt}
+Liknande behövs göras ifall thunken är på abyssen, dock kan vi inte använda maskinen
+så vi får kalla vidare med $\Omega$, vilket görs av regel \eqref{CBN:Atoms2}. När vi 
+sedan kommer bygga upp let-uttrycket som bundit denna thunk vill vi där att man skall
+använda det optimerade värdet av thunken. Därför lägger vi ut en \cont{OUPd}
+continuation som kommer att uppdatera med ett förhopningsvis optimerat resultat.
+
+De övriga reglerna är att vi har hittat ett värde och $\Psi$ funktionen kan kallas.
+Vilket kommer leda till att dessa kan användas i tidigare case-utryck eller liknande.
+
+
+%\subsubsection{Övrigt}
 
 %\subsubsection{CBNOMEGA $\CBNOMEGA$}
 

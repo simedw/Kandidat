@@ -1,7 +1,7 @@
 \documentclass[../Optimise]{subfiles}
 \begin{document}
 
-\subsection{Call-by-Value-semantik}
+\subsection{Call by Value semantik}
 
 \NOTE{
 Dessa regler är listade lite fult samt det förklaras inte riktigt varför
@@ -97,6 +97,13 @@ på stacken.
 \mc v{O.\star\,:\, s}{\nheap v{\THUNK e}} & \Rightarrow\\
 \PSI{O.\star\,:\, s}Hv
 \end{align*}
+
+
+%\begin{multline}
+%%\mc as{\heap a{\OPT t}} \Rightarrow \mc t{\cOPT{a\,}s}{\heap a{\BH}} \\
+%\mc x{\cOPT as}{\heapp x{\PAP f{a_{1}\cdots a_{n}}}f{\FUN{x_{1}\cdots x_{m}}e}} \\ \Rightarrow  \OMEGA{\cOFUN{x_{n+1}\cdots x_{m}}as}H{e[a_{1}/x_{1}\cdots a_{n}/x_{n}]}\\
+%%\mc v{O.\star\,:\, s}{\nheap v{\THUNK e}} & \Rightarrow & \PSI{O.\star\,:\, s}Hv
+%\end{multline}
 
 \subsubsection{Problem med CBV semantiken}
 

@@ -45,6 +45,7 @@ i motsatt riktning. Sockerspråket är också designat så, att det är lätt at
 
 \subsection{BNF}
 \NOTE{BNFen ser mycket dålig ut. Detta ska naturligtvis lösas.}
+
 \begin{equation*}
 \begin{aligned}
 program &::=& \overline{function} \\
@@ -66,11 +67,9 @@ branch &::=& K \; \overline{v} \; \mathtt{\rightarrow} \; expr \mathtt{;} \\
 Programmet är en lista av funktioner. Dessa funktioner är de som sägs vara på
 \emph{toppnivå}. Funktioner som är skapade med en lambdaabstraktion eller i en
 letsats är inte på toppnivå. 
-
   Funktionerna har en identifierare, dess namn, med noll eller fler variabler som argument. Efter likhetstecknet
 tillkommer deras funktionskropp, som är ett uttryck \miniCode{expr}, och funktionen avslutas med
 ett semikolon.
-
     Uttrycken kan antingen vara en variabel, ett funktionsanrop som är ett
 funktionsnamn applicerat på en eller fler uttryck. Det kan också vara let eller
 letrec-bundna funktioner (eller variabler i det fallet då de är funktioner som
@@ -78,7 +77,6 @@ inte tar något argument), eller en casesats som tar ett uttryck och flera grena
 Som uttryck tillåts också primitiva operationer som skrivs infix, tex addition 
 och multiplikation. Att returnera en konstruktor eller en primitiv som 
 exempelvis ett heltal eller decimaltal är också ett uttryck.
-
     Grenarna kan antigen vara att mönstermatcha mot en konstruktor och binda
 dess konstruktionsvariabler, eller att matcha vilken konstruktor som helst.
 
@@ -126,8 +124,8 @@ Sockerspråket gör åtskillnad på rekursiva och vanliga let-bindningar.
 \begin{codeEx}
 repeat x = letrec xs = x : xs in xs  
 \end{codeEx}
-Här används xs, som binds av letrec-satsen, även i uttrycket på högerledet.
-Detta finns inte i Haskell, då alla let-bindningar räknas som rekursiva. I
+Här används xs, som binds av letrec-satsen, även i uttrycket efteråt. Detta
+finns inte i Haskell, då alla let-bindningar räknas som rekursiva. I
 sockerspråket får användaren också ha i åtanke att let-bundna variabler binds
 sekvensiellt, dvs att de måste skrivas i ordning:
 \begin{codeEx}
@@ -137,6 +135,25 @@ let { t1 = f x y
 in  h t1 t2
 \end{codeEx}
 Här går det inte, till skillnad från i Haskell, att byta plats på t1 och t2.
+
+\subsection{Standardbibliotek och testsvit}
+
+För att slippa skriva om alla enkla funktioner hela tiden gjorde vi ett litet standardbibliotek
+som helt enkelt är en fil med en rad funktioner skriven i sockerspråket som läggs
+till på slutet av den aktuella filen som ska köras.
+
+Under tiden som vi jobbade med projektet skrev vi ofta små enkla
+program för att testa ny funktionalitet. Vi samlade på oss en mängd sådana program av
+olika karaktär och komplexitet och gjorde så att de kunde testas automatiskt, 
+vilket var ett bra redskap för oss 
+när vi gjorde ändringar i tolken eftersom vi då kunde se om något som tidigare
+fungerat slutade fungera med en viss ändring. 
+
+En testsvit är också en bra morot när man gör stora ändringar som kanske gör så att
+alla testprogram slutar fungera, för när man så sakteliga får saker att fungera
+igen kommer det att reflekteras i antalet fungerande testprogram i testsviten. 
+Man ser konkreta resultat av sitt arbete.
+
 
 
 \subsection{Definitioner}
@@ -174,7 +191,7 @@ in  zipWith (f 3) list1 list2
 \end{codeEx}
 Funktioner som har några, men inte alla argument applicerade kallas 
 partiellt applicerade. Att börja evaluera en sådan funktion, partialevaluera,
-är inget som vanligtvis görs i Haskellimplementationer, 
+är inget som vanligtvis görs i Haskellimplementationer,
 och vad som undersöks i detta projekt. 
 
 \end{document}

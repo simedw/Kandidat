@@ -1,0 +1,17 @@
+\documentclass[Rapport]{subfiles}
+\begin{abstract}
+
+Vi har utvecklat en tolk för ett funktionellt programmeringsspråk med lat semantik.
+Tolken använder sig av STG, som används i exempelvis Haskellkompilatorn GHC, som
+intern representation av koden. I språket ges möjligheten att annotera var koden
+ska optimeras under körningstid, vilket möjliggör fler optimeringar än de som kan
+göras statiskt.
+
+Vi introducerar tolken, de byggstenar den består av och STG grundligt och ger 
+sedan en formell modell över hur optimeringen kan göras under körningstid.
+
+Vi visar sedan våra praktiska resultat och ser att optimeringen
+ger stora tidsvinster i de fall då en funktion som partiellt applicerats med värden, som inte är kända
+statiskt, optimeras och sedan körs ett relativt stort antal gånger.
+
+\end{abstract}
