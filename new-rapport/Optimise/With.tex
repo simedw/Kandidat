@@ -4,9 +4,10 @@
 
 \subsection{Optimise ... with ..}
 
-  Det är finns alltid specialfall där brott mot semantiken hade varit fördelaktigt.
-  Sådana fall är ytterst svåra att idenfiera maskinellt, därför ombes användaren
-  ge ytterligare argument till optimeringsfunktionen när detta är dessa specialfall uppstår.
+Det är finns alltid specialfall där brott mot den lata STG-semantiken hade varit 
+fördelaktigt.  Sådana fall är ytterst svåra att idenfiera maskinellt, därför 
+ombeds användaren ge ytterligare argument till optimeringsfunktionen när 
+dessa specialfall uppstår. Notationen är följande:
 
 \begin{codeEx}
 optimise f x with { options }
@@ -21,7 +22,7 @@ Här är det möjligt att genom att ge keywordet `with' efter optimise ge olika 
 f x y z = case g z of
     { A -> case h x y of
         { R -> t1 z
-        ;S -> t2 z
+        ; S -> t2 z
         }
     { B -> case h y x of
         { R -> t3 z
@@ -30,14 +31,13 @@ f x y z = case g z of
     };
 \end{codeEx}
 
-Om vi nu använder \miniCode{optimise( f 1 2 )}, så är \miniCode{z} okänd, men i brancherna så
-finns det case-sastser som bara beror på \miniCode{x} och \miniCode{y} och rätt gren kan alltså väljas. Vi har stöd för att optimera i sådana här casegrenar:
+Om vi nu använder \miniCode{optimise( f 1 2 )}, så är \miniCode{z} okänd, men i
+grenarna så finns det case-sastser som bara beror på \miniCode{x} och \miniCode{y} 
+och rätt gren kan alltså väljas. Vi har stöd för att optimera i sådana här casegrenar:
 
 \begin{codeEx}
   optimise f x y with { casebranches }
 \end{codeEx}
-
-\NOTE{Jag är trött men borde inte vi ge vad optimise (f 1 2) with \{ casebranches \} är?}
 
 Detta kan bryta semantiken, tex om
 
