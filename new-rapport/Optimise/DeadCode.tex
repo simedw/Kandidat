@@ -14,7 +14,7 @@ så kallad "död kod" att förekomma. Det vill säga, kod som inte längre behö
 den inte kan nås.
 
 \begin{codeEx}
-main = let t = getValue() in
+main = let t = getValue in
             case True of
                True  -> 15
                False -> t
@@ -25,7 +25,7 @@ initisera den korrekta branchen.
 
 
 \begin{codeEx}
-main = let t = getValue() in 15
+main = let t = getValue in 15
 \end{codeEx}
 
 
@@ -43,8 +43,8 @@ main = 15
 Denna process kan mer formellt skrivas som
 
 \begin{codeEx}
-t not in freevars(e2)
-++++++++++++++++++++++++++
+ t not in freevars(e2)
+----------------------
 let t = e1 in e2 => e2
 \end{codeEx}
 

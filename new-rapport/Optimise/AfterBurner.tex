@@ -4,7 +4,7 @@
 \subsection{Afterburner}
 \NOTE{
 \begin{align*}
-\CBNIRR{\cOFUN{a_{1}\cdots a_{n}}{\alpha}s}HAe & \Rightarrow & \CBNMC{\alpha}{ss}{\heap{\alpha}{\FUN{a_{1}\cdots a_{n}}e}}A\\
+\CBNIRR{\cOFUN{a_{1}\cdots a_{n}}{\alpha}s}HAe & \Rightarrow & \CBNMC{\alpha}{s}{\heap{\alpha}{\FUN{a_{1}\cdots a_{n}}e}}A\\
  &  & \mbox{here we can also run the afterburner}\\
 \end{align*}
 }
@@ -53,7 +53,9 @@ case x of
     C a b -> e1
     D a b -> e2
 \end{codeEx}
-Vi söker upp \miniCode{case x} i \miniCode{e1} och initiera C branchen med a b som värden. I \miniCode{e2} gör vi samma sak fast initierar D branchen.
+
+Vi söker upp \miniCode{case x} i \miniCode{e1} och initiera 
+C-grenen med a b som värden. I \miniCode{e2} gör vi samma sak fast initierar D-grenen.
 
 
 \end{document}

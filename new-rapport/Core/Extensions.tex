@@ -6,9 +6,10 @@
 
 För att få en uniform representation av användardefinierade datatyper, skapade
 med en konstruktor, och primitiva datatyper som Int, Double och Char, ges även 
-de sistanämnda konstruktorer. I\# för Int, D\# för Double, C\# för Char. De har
-invarianten, till skillnad från egna datatyper, att de inte pekar på en thunk
-utan är fullt evaluerade. Detta kallas att boxa primitiven.
+de sistanämnda konstruktorer. \miniCode{I\#} för Int, \miniCode{D\#} för Double, 
+\miniCode{C\#} för Char. De har invarianten, till skillnad från egna datatyper, 
+att de inte pekar på en thunk utan är fullt evaluerade. 
+Detta kallas för att boxa primitiven.
     För att utföra addition skapas den här funktionen som avboxar primitiven,
 forcerar och utför primitiv addition och sen boxar igen:
 

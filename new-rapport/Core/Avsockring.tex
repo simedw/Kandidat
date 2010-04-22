@@ -1,6 +1,6 @@
 \documentclass[../Core]{subfiles}
 \begin{document}
-\subsection{Avsockring av Sockerspråk till STG}
+\subsection{Avsockring till STG}
 STG är ett ganska primitivt språk med tex att man kan bara anropa funktioner
 och skapa konstruktorer med argument från atomer, samt att alla objekt måste
 explicit annoteras om de är thunkar eller konstruktörer. För att underlätta
@@ -42,7 +42,7 @@ funktionsanrop till \miniCode{==} och \miniCode{isPrimer}.
 Allt med inledande versal i sockerspråket tolkas som konstruktorer,
 precis som i Haskell. Så \miniCode{True} ovan i koden behöver allokeras med
 en let. Den första grenen blir i så fall
-  \miniCode{True -> let temp = CON (True) in temp}
+  \miniCode{True -> let temp = CON (True) in temp}.
 Faktum är att de nullära konstruktorerna \miniCode{True}, \miniCode{False}, \miniCode{Nil}, finns 
 allokerade på toppnivå i tolken och instantieras endast en gång. 
 Men i alla andra fall behövs de let-bindas.
@@ -53,7 +53,7 @@ Notera att alla temporära variabler som skapas är unika.
             
     
 För att göra det lättare att operera på listor och göra booleska
-jämförelser finns infixoperatorerna \&\&, || som alias för \&\& och ||
+jämförelser finns infixoperatorerna \&\&, || som alias för and och or
 respektive, och ++ och : för append och cons. Funnes någon av dessa
 infixvarianter byts de ut under avsockringen. 
 
@@ -107,7 +107,7 @@ in map f zs
     forceras alla dess inställningar med hjälp av en casesats.
 
 
-\subsubsection{Lambdalyftaren}
+\subsubsection{Lambdalyftare}
 
 I tolkandet av koden underlättar det om man inte har några let-bundna funktioner.
 Dessa behöver lyftas ut tilkl toppnivå. I sockret kan dessa uppstå antingen
@@ -139,14 +139,10 @@ kroppen nödvändigtvis kommer från ursprungsfunktionen. Dessa måste skickas m
 som extra parametrar. I det här fallet rör det sig om variabeln x i båda fall.
 Dessa parametrar måste också skickas med när de anropas.
 
--- på toppnivå
 \begin{codeEx}
 lesserLifted = FUN(x y -> let t = THUNK (y < x) in t)
 lambda0Lifted = FUN(x y -> let t = THUNK (y >= x) in t)
-\end{codeEx}
 
--- nya letsatsen:
-\begin{codeEx}
     .. let { lesser = THUNK (lesserLifted x)
            ; listLess = THUNK (filter lesser xs)
            ; lambda0 = THUNK (lambda0Lifted x)
@@ -154,9 +150,10 @@ lambda0Lifted = FUN(x y -> let t = THUNK (y >= x) in t)
            } ..
 \end{codeEx}
 
-En sak att poängtera är att listLess och listMore inte behövs ändras för
-att de lyftna funktionerna partialevalueras med samma namn. Här lesser som
-blir lesserLifted partiellt applicerat på x.
+En sak att poängtera är att \miniCode{listLess} och \miniCode{listMore} 
+inte behövs modifieras för att de lyftna funktionerna partialevalueras 
+med samma namn. Här \miniCode{lesser} som blir \miniCode{lesserLifted}
+partiellt applicerat på \miniCode{x}.
 
 
 \end{document}

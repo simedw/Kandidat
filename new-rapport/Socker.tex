@@ -1,7 +1,7 @@
 \documentclass[Rapport]{subfiles}
 \begin{document}
 
-\section{Vårt Sockerspråk}
+\section{Sockerspråk}
 
 %
 % Bnf, exempel
@@ -44,6 +44,7 @@ i motsatt riktning. Sockerspråket är också designat så, att det är lätt at
 översätta och avsockras till core-språket som introduceras i nästa kapitel. 
 
 \subsection{BNF}
+\NOTE{BNFen ser mycket dålig ut. Detta ska naturligtvis lösas.}
 \begin{equation*}
 \begin{aligned}
 program &::=& \overline{function} \\
@@ -65,9 +66,11 @@ branch &::=& K \; \overline{v} \; \mathtt{\rightarrow} \; expr \mathtt{;} \\
 Programmet är en lista av funktioner. Dessa funktioner är de som sägs vara på
 \emph{toppnivå}. Funktioner som är skapade med en lambdaabstraktion eller i en
 letsats är inte på toppnivå. 
+
   Funktionerna har en identifierare, dess namn, med noll eller fler variabler som argument. Efter likhetstecknet
 tillkommer deras funktionskropp, som är ett uttryck \miniCode{expr}, och funktionen avslutas med
 ett semikolon.
+
     Uttrycken kan antingen vara en variabel, ett funktionsanrop som är ett
 funktionsnamn applicerat på en eller fler uttryck. Det kan också vara let eller
 letrec-bundna funktioner (eller variabler i det fallet då de är funktioner som
@@ -75,9 +78,9 @@ inte tar något argument), eller en casesats som tar ett uttryck och flera grena
 Som uttryck tillåts också primitiva operationer som skrivs infix, tex addition 
 och multiplikation. Att returnera en konstruktor eller en primitiv som 
 exempelvis ett heltal eller decimaltal är också ett uttryck.
+
     Grenarna kan antigen vara att mönstermatcha mot en konstruktor och binda
 dess konstruktionsvariabler, eller att matcha vilken konstruktor som helst.
-\NOTE{ Lätt att bli förvirrad :-( Kan vara att jag är trött ?,  BNF dock mycket bra }
 
 
 \subsection{Jämförelse med Haskell}
@@ -123,8 +126,8 @@ Sockerspråket gör åtskillnad på rekursiva och vanliga let-bindningar.
 \begin{codeEx}
 repeat x = letrec xs = x : xs in xs  
 \end{codeEx}
-Här används xs, som binds av letrec-satsen, även i uttrycket efteråt. Detta
-finns inte i Haskell, då alla let-bindningar räknas som rekursiva. I
+Här används xs, som binds av letrec-satsen, även i uttrycket på högerledet.
+Detta finns inte i Haskell, då alla let-bindningar räknas som rekursiva. I
 sockerspråket får användaren också ha i åtanke att let-bundna variabler binds
 sekvensiellt, dvs att de måste skrivas i ordning:
 \begin{codeEx}
@@ -166,11 +169,12 @@ Vad kan f vara här? Det kan tex vara en unär funktion som returnerar en ny
 funktion. Det kan vara et funktion som tar tre argument och redan har ett
 applicerat:
 \begin{codeEx}
-let f = (\x y z -> x * y - z)
+let f = \x y z -> x * y - z
 in  zipWith (f 3) list1 list2
 \end{codeEx}
 Funktioner som har några, men inte alla argument applicerade kallas 
 partiellt applicerade. Att börja evaluera en sådan funktion, partialevaluera,
-är inget som vanligtvis görs i Haskell, och vad som undersöks i detta projekt. 
+är inget som vanligtvis görs i Haskellimplementationer, 
+och vad som undersöks i detta projekt. 
 
 \end{document}
