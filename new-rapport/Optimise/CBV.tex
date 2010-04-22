@@ -49,9 +49,9 @@ värdet som maskinen arbetat fram. Detta är troligtvis en av de viktigaste
 stegen i vår optimering då kan skala bort alla onödiga brancher, minska
 koden och oftast fortsätta optimera en bit in det nya uttrycket.
 
-\textbf{Irr} $\Phi$, kortform för Irreducable. Anropas när Omega eller Psi inte längre
+\textbf{Irr} $\Phi$, kortform för Irreducible. Anropas när Omega eller Psi inte längre
 kan optimeringa vidare. Irr kan då utifrån nuvarande continuations
-bygga träded eller byta continuation och fortsätta optimera på en
+bygga trädet eller byta continuation och fortsätta optimera på en
 andra delar i uttrycket. Det är här vi kan tillslut gå tillbaka till
 STG-maskinen.
 
@@ -67,8 +67,9 @@ i oändliga loopar i brancher vi aldrig hade hamnat i.
 
 \begin{codeEx}
 case x of
-    True  -> 5 : Nil
-    False -> repeat 1
+    { True  -> 5 : Nil
+    ; False -> repeat 1
+    }
 \end{codeEx}
 Om x är okänd och vi försöker optimera False branchen kommer vi fastna
 i en oändlig loop, dock är det möjligt att när programet körs kommer
