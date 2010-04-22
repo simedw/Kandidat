@@ -193,7 +193,7 @@ Så här skrivs \miniCode{map}-funktionen i STG-språket utan något syntaktiskt
 
 \begin{codeEx}
 map f xs = case xs of
-    { Cons x xs -> let { a = THUNK (f x) 
+    { Cons x xs -> let { a = THUNK (f x)
                        ; b = THUNK (map f xs)
                        ; c = CON (Cons a b)
                        } in c
@@ -226,39 +226,37 @@ kommer den att evaluera thunkarna. Vi tänker oss fallet då den börjar evaluer
 \[
 x\,;\, Stack\,;\, Heap[x\mapsto\THUNK e]\Rightarrow e\,;\, Upd\, x\,\bullet\,:\, Stack\,;\, Heap[x\mapsto BLACKHOLE]\]
 
-
 För att evaluera en en thunk flyttar vi thunkens uttryck till maskinens kod
 för evaluering. Den kommer också att lägga ut en Upd-continuation, vilket
 återigen beror på att STG är lat. Lathet kräver att uttryck bara evalueras
-en gång, och därför kommer vi när \miniCode{e} har evaluerats till ett värde att spara % Hit har Olle ändrat
-det så att x pekar på det nya värdet och om x's värde skulle behövas
-igen kan man returnera det direkt. Under evalueringen av x sätter
-vi även x till ett BLACKHOLE, detta sker av två anledningar. 
+en gång, och därför kommer vi när \miniCode{e} har evaluerats till ett värde att spara
+det så att \miniCode{x} pekar på det nya värdet och om \miniCode{x}'s värde skulle behövas
+igen kan man returnera det direkt. Under evalueringen av \miniCode{x} sätter
+vi även värdet \miniCode{x} till BLACKHOLE. Detta sker av två anledningar.
 \begin{enumerate}
-\item Om x beror på sig själv, eller flera variabler beror på varandra utan
-att producera värden. Om man evaluerade utan att sätta till BLACKHOLE
-skulle vår maskin komma in i en oändlig loop. Detta är ett sätt att
-upptäcka det och vi kan berätta för programmeraren att det har blivit
-ett fel.
-\item Garbage Collection, gcn kommer gå igenom alla heap och stack objekt
-samt koden efter vilka värden som fortfarande kan nås via den nuvarande
-koden samt stacken. Thunken kan referera till objekt, som inte längre
-behövs för evalueringen, men gc kommer inte se att dessa objekt skulle
-kunna garbage collectas. Om man istället sätter det till ett BLACKHOLE
-kommer gc veta att den inte behöver söka efter vilka objekt som den
-behöver, då alla som behövs för den finns redan på koden samt stacken.
+\item Om \miniCode{x} beror på sig själv, eller flera variabler beror på varandra, utan
+att producera värden. Om man evaluerade utan att sätta variabeln till BLACKHOLE
+skulle maskinen falla in i en oändlig loop. Att använda BLACKHOLE ger oss ett sätt att
+upptäcka det och maskinen kan då berätta för programmeraren att något har gått fel
+istället för att loopa oändligt.
+\item Garbage collection. Garbage collectorn kommer att gå igenom alla heap- och stackobjekt
+samt koden, för att hitta vilka värden som fortfarande kan nås via den nuvarande
+koden och stacken. Thunken kan referera till objekt som inte längre
+behövs för evalueringen, men garbage collectorn kommer inte att se att dessa objekt skulle
+kunna tas bort. Om man sätter värdet till BLACKHOLE
+kommer collectorn veta att alla variabler som används av den variabeln finns
+i maskinens kod.
 \end{enumerate}
 Det som saknas för thunkar är nu regeln som uppdaterar dem när de
-är klara, det sker via denna regel.
+är klara. Det sker via denna regel:
 
 \[
 v\,;\, Upd\, x\,\bullet:Stack\,;\, Heap\Rightarrow v\,;\, Stack\,;\, Heap[x\mapsto Heap[v]]\]
 
-
 Om $v$ är ett värde så uppdateras $x$ med vad $v$ pekar på.
 
-Det saknas nu bara en feature innan vår beskrivning av STG är komplett.
-Vad gör vi med funktioner som inte fått alla sina argument? 
+Nu är det bara en sak kvar att visa för att vår beskrivning av STG ska bli komplett.
+Vad gör vi med funktioner som inte fått alla sina argument?
 
 \begin{codeEx}
 max x y = case x < y of
@@ -267,26 +265,27 @@ max x y = case x < y of
     }
 \end{codeEx}
 
-Om man nu skriver $\mathtt{max\,100}$ så är det en ny funktion som
-retunerar det maximala talet mellan dess input och 100. För detta
-kommer ett nytt heap objekt att skapas vid namn PAP som står för partial
-application. Denna kommer innehålla argumenten samt en pekare till
-funkitonen. 
+Om man skriver \miniCode{max 100} så är det en ny funktion som
+ger tillbaka det största talet av 100 och funktionens argument. För att
+detta ska fungera behövs ett nytt heapobjekt som vi kallar för PAP som står för partial
+application. En PAP innehåller de hittills applicerade argumenten och en pekare till funktionen.
+Regeln blir följande:
 
 \[
 f\,;\, Arg\, a_{1}:\ldots:Arg\, a_{m}:Stack\,;\, Heap[f\mapsto\FUN{\range[x]}e\Rightarrow p\,;\, Stack\,;\, Heap[x\mapsto\PAP f{\rangem[a]}]\]
 
 
-Där antalet argument m är mindre än antalet parametrar n, alltså är det en sparad funktionsapplikation som kommer
-utföras när resterande argument har kommit. Så för att avsluta så
-kommer regeln som verkligen gör applikationen av dessa partiellt applicerade
+Antalet argument $m$ är mindre än antalet parametrar $n$.
+Alltså kan det ses som en sparad funktionsapplikation som kommer att
+utföras när resterande argument appliceras. Till sist kommer nu
+regeln som verkligen gör applikationen av dessa partiellt applicerade
 objekt.
 
 \[
 p\,;\, Arg\, a_{n+1}:Stack\,;\, Heap[p\mapsto\PAP f{\range[a]}\Rightarrow f\,;\, Arg\, a_{1}:\ldots:Arg\, a_{n}:Arg\, a_{n+1}:Stack\,;\, Heap\]
 
 
-Denna regel kommer återigen försöka göra applikationen, antigen lyckas
-den, eller så kommer den skapa ett nytt PAP objekt med ytterligare
+Denna regel kommer återigen att försöka göra applikationen. Antigen lyckas
+den, eller så kommer den att skapa ett nytt PAP-objekt med ytterligare
 argument.
 \end{document}
