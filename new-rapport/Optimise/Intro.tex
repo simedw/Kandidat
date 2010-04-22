@@ -8,7 +8,7 @@ Vi börjar med att återigen betrakta powerfunktionsexemplet från introduktione
 intreserade av att se vilka optimeringar som krävs för att den skall optimeras till den
 mer optimala kod som visades.
 \begin{codeEx}
-power n x = let t1 = Thunk (n==0)
+power n x = let t1 = n==0
     in case t1 of
         { True -> 1
         ; False -> let 
@@ -32,7 +32,7 @@ optimise (power 3)
 Vi börjar med att byta ut alla n mot 3 i power, ingeting görs med \miniCode{x} för 
 att den är okänd. Vi `döper' också om power för att inte förstöra orginalet.
 \begin{codeEx}
-power_3 x = let t1 = Thunk (3==0)
+power_3 x = let t1 = 3==0
     in case t1 of
         { True -> 1
         ; False -> let 
@@ -59,13 +59,13 @@ power_3 x = case False of
 Vi kan nu välja False grenen, vi sparar sedan undan let:arna och går in i t4, därefter inlinas t4.
 
 \begin{codeEx}
-power_3 x = x * power (3-1) x
+power_3 x = x * power (3-1) x;
 \end{codeEx}
 
 Vi forstätter med att inline power (3-1) x på samma sätt.
 
 \begin{codeEx}
-power_3 x = x * x * x * 1
+power_3 x = x * x * x * 1;
 \end{codeEx}
 
 Vilket är en mycket mindre och snabbare funktion.
