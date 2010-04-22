@@ -1,6 +1,6 @@
 \documentclass[../Core]{subfiles}
 \begin{document}
-\subsection{Semantik över STG}
+\subsection{En semantik för STG}
 
 
 \newcommandx\range[1][usedefault, addprefix=\global, 1=]{#1_{1}\,\ldots\,#1_{n}}
@@ -8,14 +8,14 @@
 
 \newcommandx\rangem[1][usedefault, addprefix=\global, 1=]{#1_{1}\,\ldots\,#1_{m}}
 
-Språket som vi har definerat är en utökning till STG-maskinen, med
-nya regler och tillstånd. För att kunna diskutera dessa behöver man
-först förstå hur maskinen fungerar. Eftersom läsaren inte förväntas
+Språket som vi har definerat är en utökning av STG-maskinen, med några
+nya regler och tillstånd. För att kunna diskutera dessa behövs först
+förståelse för hur maskinen fungerar. Eftersom läsaren inte förväntas
 ha stött på begrepp som används när man beskriver abstrakta maskiner
 och deras semantik, kommer vi att bygga upp förståelsen via ett exempel
-och introducera koncepten efter hand det uppstår. En abstrakt maskin kan beskrivas
-av att den evalueras stegvis under evalueringen, detta kommer bli
-tydligare med hjälp av genomstegning av evalueringen av följande program.
+och introducera nya koncept när de behövs. En abstrakt maskin kan beskrivas
+av en stegvis evaluering där varje steg bestäms av en regel. Reglerna
+för STG ska vi visa genom att evaluera följande program:
 
 \begin{codeEx}
 cube x = x * x * x
@@ -24,89 +24,96 @@ main = let list = [2,3,5,7,11]
         in map cube list
 \end{codeEx}
 
-Det som evalueras först är main funktionen och där finns ett let-uttryck.
-De är verktyget för att binda variabler, i det här fallet variablen
-list, till listan av de fem första primtalen. Man kan använda let
-för att associera andra sort värden än listor, t.ex. andra sorters
-datastrukturer, numeriska värden samt funktioner.
+Kodens ingångsfunktionen är \miniCode{main}, som börjar med ett \miniCode{let}-uttryck.
+De är ett verktyg som används för att binda variabler, vilket betyder att man ger ett
+namn, som kan användas i uttrycket som följer efter \miniCode{in},
+för något värde. I det här fallet får
+en lista som består av de fem första primtalen namnet \miniCode{list}.
+Man kan använda let för att associera andra sorters värden än listor,
+t.ex. andra sorters datastrukturer, numeriska värden eller funktioner.
 
-Vi behöver någonstanns att reservera utrymme för listan så därför
+Vi behöver någonstans att reservera minnesutrymme för listan, och därför
 inför vi en så kallad heap. I ett tradionellt, imperativt språk är
-det en representation av minnet som är för dynamisk allokering. När
-maskinen stöter på ett let-uttryck så allokerats det på heapen, detta
-beskrivs formellt av följande regel.
+det en representation av minnet som används för dynamisk allokering. När
+maskinen stöter på ett \miniCode{let}-uttryck allokeras det på heapen, vilket
+beskrivs mer formellt av följande regel:
 
 \[
 \mathtt{let\;\mathrm{x\mathtt{=}e}\; in\; code}\,;\, Heap\Rightarrow\mathtt{code}\,;\, Heap[x\mapsto e]\]
 
 
-Läs det som att om maskinen är i tillståndet till vänster om $\Rightarrow$så
-blir nästa tillstånd det som står på högra sidan. Ett tillstånd i
-maskinen är ett uttryck och en heap, formellt separeras dessa med
-ett semikolon. I vårt fall så går maskinen från let-uttrycket till
-det som står efter in, samt att x läggs till i heapen och pekar på
-e. Heap{[}{]} betyder inte att heapen bara innehåller det som är inuti
-hakparanteserna utan är bara notation för att explicit påvisa vad
-en variabel binds till.
+Regeln säger vilket nästa tillstånd blir, till höger om pilen,
+om maskinen är i tillståndet till vänster om pilen.
+Maskinens tillstånd är ett koduttryck och en heap, som separeras med
+semikolon. I regeln ovan går maskinen från \miniCode{let}-uttrycket till
+uttrycket som står efter \miniCode{in}, alltså \miniCode{code},
+och \miniCode{x} läggs på heapen och pekar på \miniCode{e}.
+Heap{[}{]} betyder inte att heapen bara innehåller det som är inuti
+hakparanteserna utan är en notation för att visa att heapen
+uppdateras med en variabelbindning.
 
-Maskinens tillstånd är nu: 
+Maskinens tillstånd är nu:
 
 \[
 \mathtt{map\; cube\; list}\,;\, Heap[list\mapsto[2,3,5,7,11],cube\mapsto\lambda x.x\cdot x\cdot x,\ldots]\]
 
 
-Den observanta läsaren märker att även cube ligger på heapen, det
-beror på att funktioner på topnivå läggs in i heapen i maskinens initialtillstånd.
-Alltså ligger även även map och andra kända standardfunktioner där. 
+Den observanta läsaren märker att även \miniCode{cube} ligger på heapen, vilket
+beror på att funktioner på toppnivå läggs på heapen före körning.
+Alltså ligger även även \miniCode{map} och andra funktioner definierade
+i standardbiblioteket där.
 
-Som uttryck ligger nu ett anrop till map funktionen, den vill vi anropa.
-Här låter vi oss inspereras av imperativ anropsmetodik. Argumenten
-lägger vi på en stack. Formellt får vi då denna regel:
+Som uttryck i maskinens tillstånd ligger nu ett anrop till
+\miniCode{map}-funktionen, vilket vi därför ska försöka oss på.
+Här låter vi oss inspereras av imperativa språk som ofta lägger argumenten
+på en stack före funktionsanrop. Formellt får vi denna regel:
 
 \[
 f\; a_{1}\;\ldots\; a_{n}\,;\, Stack\,;\, Heap\Rightarrow f\,;\, a_{1}:\ldots:a_{n}:Stack\,;\, Heap\]
 
 
-Stacken är placerade mellan utrycket och heapen och vi använder :
-för att separera elementen på stacken, den tomma stacken skrivs som
-$\epsilon$. Maskinens tillstand ar:
+I regeln har vi placerat stacken mellan uttrycket och heapen, och kolon används
+för att separera element på den. Den tomma stacken skrivs som $\epsilon$.
+Maskinens tillstånd blir nu:
 
 \[
 \mathtt{map\,\mathrm{;}\, cube\,:\, list\,:\,\epsilon}\,;\, Heap\]
 
 
-Nu behover vi diskutera koden for map:
+Nu behövs koden för \miniCode{map}:
 
 
 \begin{codeEx}
 map f xs = case xs of
-    { Cons x xs -> let { a = f x 
+    { Cons x xs -> let { a = f x
                        ; b = map f xs
                        } in Cons a b
     ; Nil       -> Nil
     }
 \end{codeEx}
 
-Anledningen till att argumenten till Cons inte ar funktionsapplikationer
-ar att maskinen blir mer latthanterlig om funktionsapplikationer enbart
-far let-bundna variabler, aven kallade atomer. Vi ser har att map
-tar tva argument och ater saledes upp tva argument fran argumentstacken.
+Anledningen till att argumenten till Cons inte är direkta funktionsapplikationer
+ar att maskinen blir mer lätthanterlig om funktionsapplikationer alltid
+blir \miniCode{let}-bundna variabler, eller atomer som de (tillsammans med primitiv data)
+också kallas. Vi ser att \miniCode{map} tar två argument och äter således upp två
+argument från argumentstacken.
+
 Formellt:
 
 \[
 f\,;\, a_{1}:\ldots:a_{n}:Stack\,;\, Heap[f\mapsto\lambda x_{1}\ldots x_{n}.e]\Rightarrow e[a{}_{1}/x_{1}\ldots a_{n}/x_{n}];\, Stack\,;\, Heap\]
 
 
-Har behover vi ersatta alla funktionens argument $x_{1}\ldots x_{n}$till
-de atomer $a_{1}\ldots a_{n}$som finns pa stacken. Vi noterar denna
-substitution med $e[a{}_{1}/x_{1}\ldots a_{n}/x_{n}]$. I vart fall
-sa substitueras f mot cube och xs till list. Maskinen:
+Här behover vi ersätta alla funktionens argument $x_{1}\ldots x_{n}$ mot
+de atomer $a_{1}\ldots a_{n}$ som finns på stacken. Vi skriver denna
+substitution som $e[a{}_{1}/x_{1}\ldots a_{n}/x_{n}]$. I vårt fall
+substitueras f mot cube och xs mot list. Maskinens tillstånd blir följande:
 
 \[
 \mathtt{case\; list\; of\,\lbrace\ldots\rbrace};\,\epsilon\,;\, Heap\]
 
 
-I heapen pekar list på listan {[}2,3,5,7,11{]} men detta är socker
+I heapen pekar list på listan \miniCode{[2,3,5,7,11]}, men detta är egentligen syntaktiskt socker
 för:
 
 \begin{codeEx}
@@ -119,46 +126,46 @@ nil = Nil
 \end{codeEx}
 
 De temporära variablerna behövs för att konstruktorer skall kunna
-allokeras i ett sammanhängande minne i heapen. I vårat fall pekar
-list variabeln på en Cons konstruktor, som har en motsvarande gren
-i map funktionens definition. Det som ska hända är att maskinens uttryck
-blir grenen med x substituerat mot 2 och xs mot temp1. Detta kan vi
-åstadkomma med denna formella regel.
+allokeras med konstant storlek på heapen. I vårt fall pekar
+\miniCode{list}-variabeln på en \miniCode{Cons}-konstruktor, som har en motsvarande gren
+i \miniCode{map}-funktionens definition. Vi vill nu att maskinens uttryck
+blir den grenen med \miniCode{x} substituerat mot \miniCode{2} och \miniCode{xs} mot \miniCode{temp1}.
+Detta åstadkoms med följande formella regel:
 
 \begin{multline*}
 case\; v\; of\;\{\ldots;C\; x_{1}\,\ldots\, x_{n}\;\rightarrow e;\ldots\}\,;\, Stack\,;\, Heap[v\mapsto C\; a_{1}\ldots a_{n}]\\
 \Rightarrow e[a_{1}/x_{1}\,\ldots\, a_{n}/x_{n}]\,;\, Stack\,;\, Heap\end{multline*}
 
 
-Det som står i granskaren, uttrycket mellan case och of, var i vårt
-fall en variabel. Det finns också fall då granskaren är andra uttryck
+Det som står i granskaren, uttrycket mellan \miniCode{case} och \miniCode{of}, är i vårt
+fall en variabel. Det finns också fall då granskaren är andra uttryck, som
 t.ex. funktionsapplikation. I så fall vet vi inte vilken gren vi ska
-ta innan vi har evaluerat granskaren, då måste vi evaluera den först.
-Vi måste veta efter vi evaluerat klart vilken case-sats den skall
-gå tillbaka till, det här är snarlikt en returadress. Standard i imperativa
-språk är att returadresser pushas på stacken. Det vi gör är att lägga
-ut en case-continuation på stacken som också innehåller grenarna till
-case-satsen. 
+ta innan vi har evaluerat granskaren, vilket vi då vill göra.
+Efter att den har evaluerat färdigt måste maskinen ha något sätt att
+veta vilken \miniCode{case}-sats den ska gå tillbaka till. Detta kan liknas
+vid en returadress, som ofta läggs på stacken i imperativa språk för att
+en funktion ska veta var körningen ska fortsätta efter att funktionen körts.
+Det vi gör är att vi lägger ut ut en \miniCode{case}-continuation på stacken
+som innehåller \miniCode{case}-satsens grenar.
 
-Formellt kommer vi beskriva en case-continuation som $case\;\bullet\; of\;\{\ldots\}$
-där $\bullet$ står för platsen vi skall lägga in resultatet. Så regeln
+Formellt kommer vi att beskriva en \miniCode{case}-continuation som $case\;\bullet\; of\;\{\ldots\}$
+där $\bullet$ står för platsen där resultatet ska läggas in när det har evaluerats. Regeln
 blir följande:
 
 \[
 case\; e\; of\;\{\ldots\}\,;\, Stack\,;\, Heap\Rightarrow e\,;\, case\;\bullet\; of\;\{\ldots\}:Stack\,;\, Heap\]
 
 
-Det här uttrycket kommer att evalueras till ett värde t.ex. en konstruktor.
-Då kommer case-continuation ligga överst på stacken och vi vill välja
+Det här uttrycket kommer att evalueras till ett värde, som t.ex. en konstruktor.
+Efter evalueringen kommer en case-continuation att ligga överst på stacken och vi skulle nu kunna välja
 rätt gren. Vi vill återanvända grenväljarregeln som vi definerade
-ovan så därför inför vi denna regel som ställer in maskinen för detta.
-Formellt blir det:
+ovan, så därför inför vi följande regel som ställer in maskinens tillstånd för det:
 
 \[
 v\,;\, case\;\bullet\; of\;\{\ldots\}:Stack\,;\, Heap\Rightarrow case\; v\; of\;\{\ldots\}\,;\, Stack\,;\, Heap\]
 
 
-För att återgå till löpande exempel så är koden just nu detta:
+För att återgå till vårt löpande exempel så är koden för tillfället denna:
 
 \begin{codeEx}
 let { a = cube 2
@@ -166,14 +173,13 @@ let { a = cube 2
     } in Cons a b
 \end{codeEx}
 
-Nu skall a bindas till ett uttryck, f 2, i tradionella språk skulle
-f 2 först evalueras och dess värde bindas till a. Men eftersom STG
-är lat så väntar den med att beräkna det, ifall den inte skulle behövas.
-Ett sådant senarlagt uttryck kallas för en thunk, det som händer är
-att a binds till thunken $\mathtt{f\;2}$. På heapen finns flera olika
-sorters objekt: konstruktorer, lambda funktioner och nu även thunkar.
-Formellt kommer vi behöva skilja dem åt, så vi inför ny notation för
-dessa objekt.
+Nu skall a bindas till ett uttryck, \miniCode{f 2}. I tradionella språk skulle
+\miniCode{f 2} först evalueras och dess värde bindas till a. Men eftersom STG
+är lat så väntar maskinen med att beräkna det tills värdet behövs.
+En sådan senarelagd beräkning kallas för en thunk. Det som händer nu är att
+a binds till thunken \miniCode{f 2}. På heapen tillåts flera olika
+sorters objekt: konstruktorer, lambdafunktioner och nu även thunkar.
+Vi behöver kunna skilja dem åt, så vi inför ny notation för dessa objekt:
 
 \begin{tabular}{ccc}
 Föregående syntax & Faktisk syntax & Beskrivning\tabularnewline
@@ -183,7 +189,7 @@ $\lambda\range[x].e$ & $\FUN{\range[x]}e$ & Lambdafunktion\tabularnewline
 - & $\THUNK e$ & Senarelagd beräkning\tabularnewline
 \end{tabular}
 
-Så här skrivs egentligen map funktionen i STG språket utan något socker:
+Så här skrivs \miniCode{map}-funktionen i STG-språket utan något syntaktiskt socker:
 
 \begin{codeEx}
 map f xs = case xs of
@@ -195,9 +201,9 @@ map f xs = case xs of
     }
 \end{codeEx}
 
-Notera att i STG är det bara med let man kan allokera objekt, således
-måste vi använda en tempvariabel c för att returnera en konstruktor.
-Numera är vårt exempel med riktig syntax egentligen:
+Notera att man bara kan allokera objekt med hjälp av \miniCode{let}-uttryck. Således
+måste vi använda en \miniCode{let}-bunden variabel \miniCode{c} för att funktionen ska kunna ge tillbaka en konstruktor.
+Om vi använder denna mer riktiga syntax blir det löpande exemplet följande:
 
 \begin{codeEx}
 let { a = THUNK (cube 2)
@@ -206,26 +212,25 @@ let { a = THUNK (cube 2)
     } in c
 \end{codeEx}
 
-Maskinen kommer stega igenom let-uttrycket och allokera objekten.
-Därefter returneras en variabel som pekar på en konstruktor i heapen
-som är en Cons, skapad enligt ovan. När man retunerar något som är
-en konstruktor sägs den vara i weak head normal form (WHNF). Denna
-behöver inte vara helt evaluerad, som exempel har vi vårt fall där
-den innehåller två pekare till olika thunkar. Eftersom STG är ett
-lat språk så är det upp till koden som kallade på map att fortsätta
+Maskinen kommer att stega igenom \miniCode{let}-uttrycket och allokera objekten.
+Därefter ges en heapvariabel som pekar på en konstruktor
+som är en Cons tillbaka, skapad enligt ovan. När man ger tillbaka något som är
+en konstruktor sägs den vara i weak head normal form (WHNF). Konstruktorns
+argument behöver inte vara helt evaluerade. Till exempel innehåller konstruktorn i vårt fall
+två pekare till oevaluerade thunkar. Eftersom STG är ett
+lat språk så är det upp till koden som kallade på \miniCode{map} att fortsätta
 evaluera dessa thunkar ifall de behövs eller inte. I vårt fall är
-det main som har kallat på map och då main skriver ut det den har
-binds till kommer den att evaluera thunkarna. Vi tänker oss fallet
-då den börjar evaluera variabeln a.
+det \miniCode{main} som har kallat på \miniCode{map} och eftersom vi skriver ut resultatet från \miniCode{main}
+kommer den att evaluera thunkarna. Vi tänker oss fallet då den börjar evaluera variabeln \miniCode{a}:
 
 \[
 x\,;\, Stack\,;\, Heap[x\mapsto\THUNK e]\Rightarrow e\,;\, Upd\, x\,\bullet\,:\, Stack\,;\, Heap[x\mapsto BLACKHOLE]\]
 
 
-Evalueringen av en thunk kommer då att flytta uttrycket till den nya
-koden för evaluering. Den kommer också lägga ut en Upd continuation,
-detta återigen för att STG är lat. Lathet kräver att utryck bara evalueras
-en gång, däför kommer vi när e har evaluerats till ett värde att spara
+För att evaluera en en thunk flyttar vi thunkens uttryck till maskinens kod
+för evaluering. Den kommer också att lägga ut en Upd-continuation, vilket
+återigen beror på att STG är lat. Lathet kräver att uttryck bara evalueras
+en gång, och därför kommer vi när \miniCode{e} har evaluerats till ett värde att spara % Hit har Olle ändrat
 det så att x pekar på det nya värdet och om x's värde skulle behövas
 igen kan man returnera det direkt. Under evalueringen av x sätter
 vi även x till ett BLACKHOLE, detta sker av två anledningar. 

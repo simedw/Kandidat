@@ -1,77 +1,41 @@
 \documentclass[../Optimise]{subfiles}
 \begin{document}
 
-
 \subsection{Call by Value semantik}
-Vi har använd ett par olika semantiker för att beskriva optimeringsskeded
-i vårt språk, vi ska nu förklara var och ett av dessa i kronologisk
-ordning.
 
+\NOTE{
+Dessa regler är listade lite fult samt det förklaras inte riktigt varför
+de ser ut som de gör eller varför de fungerar 
+}
 
-Detta optimeringspass arbetar sig igenom träded på ett sätt inte
-helt olikt stg-maskinen, dock kan vi bland annat gå in och evaluera
-funktion utan att känna till alla argument, s.k. evaluera under lambdat.
-För att inte duplicera för mycket av stg funktionallitet så anropas
-optimise stg för dvs uppgifter.
+Det finns tre delar i denna form av optimise semantik. De är som följer:
 
-
-\paragraph{Det finns tre delar i optimeringen}
-
-
-\paragraph{Omega, Ingångspunkten till optimeringsfunktionen, anropas från maskinen
-när något har blivit annoterat för optimering. Omega bryter ner träded
-och delegerar vidare vem och vad som ska ske, samt lägger ut kontinuations
-för att senare bygga upp ett förhoppningsvis ny träd. }
+\textbf{Omega} $\Omega$, är ingångspunkten till optimeringsfunktionen, anropas från maskinen
+när något har blivit annoterat för optimering. Omega bryter ner trädet
+och delegerar vidare vem och vad som ska ske, samt lägger ut continuations
+för att senare bygga upp ett förhoppningsvis nytt träd.
 
 \begin{align*}
 \OMEGA sH{\eCase e{brs}} & \Rightarrow & \OMEGA{\oCase{brs}s}He\\
 \OMEGA sH{f\,\bar{k}} & \Rightarrow & \mc{f\,\bar{k}}sH\\
 \OMEGA sH{f\,\bar{x}\, k\,\bar{y}} & \Rightarrow & \mc{f\,\bar{x}\, k\,\bar{y}}{\oInline s}H\\
 \OMEGA sH{\eLet x{\THUNK e}{e'}} & \Rightarrow & \OMEGA{\oLet x{e'}s}He\\
-\OMEGA s{\nheap x{\,}}{\bullet} & \Rightarrow & \IRR sH{\bullet}\end{align*}
+\OMEGA s{\nheap x{\,}}{\bullet} & \Rightarrow & \IRR sH{\bullet}
+\end{align*}
 
 
-
-\paragraph{Irr, kortform för Irreducable. Anropas när Omega eller Psi inte längre
-kan optimeringa vidare. Irr kan då utifrån nuvarande continuations
-bygga träded eller byta continuation och fortsätta optimera på en
-andra delar i uttrycket. Där är här vi kan tillslut fly tillbaka till
-stgmaskinen.}
-
-\begin{align*}
-\IRR{\oLet xes}H{e'} & \Rightarrow & \OMEGA{\oLetObj x{\THUNK{e'}}s}He\\
-\IRR{\oCase{brs}s}He & \Rightarrow & \IRR sH{ECase\, e\, brs}\end{align*}
-
-
-Istället för att skapa en ECase e brs har vi även testat att gå in
-och optimera varje branch, detta brytter dock semantiken, vi kan fastna
-i oändliga loopar i brancher vi aldrig hade hamnat i. 
-
-\begin{codeEx}
-case x of
-    True  -> 5 : Nil
-    False -> repeat 1
-\end{codeEx}
-%\selectlanguage{english}%
-Om x är okänd och vi försöker optimera False branchen kommer vi fastna
-i en oändlig loop, dock är det möjligt att när programet körs kommer
-x bara anta värdet True. 
-
-\begin{align*}
-\IRR{\oLetObj x{OBJ}s}He & \Rightarrow & \IRR sH{\eLet x{OBJ}e}\\
-\IRR{\cOFUN{\bar{x}}{\alpha}s}He & \Rightarrow & \mc{\alpha}s{\heap{\alpha}{\FUN{\bar{x}}e}}\end{align*}
-
-
-
-\paragraph{Psi, anropas från när optimise har lagt ut något åt maskinen och
+\textbf{Psi} $\Psi$, anropas från när optimise har lagt ut något åt maskinen och
 maskinen inte kan komma längre. Psi kommer använda värdet från maskinen
-och sedan delegera vidare optimeringen.}
+och sedan delegera vidare optimeringen.
 
 \begin{align*}
-\PSI{\oLet xes}Hv & \Rightarrow & \PSI sH{e[v/x]}\end{align*}
+\PSI{\oLet xes}Hv & \Rightarrow & \OMEGA sH{e[v/x]}
+\end{align*}
 
+\NOTE{Viktigt att nämna att substitute är långsamt?
+eller skall detta vara mer generellt och inte bry sig om hur e[a/x] fungerar}
 
-Här byter vi ut alla x mot värdet v som maskinen har arbetat fram.
+Här byter vi ut x mot värdet v som maskinen har arbetat fram let-uttrycket.
 Här använder vi en substitute funktion som går igenom hela e uttrycksträd
 vilket är väldigt kostsamt. Något som vi bytte ut i senare versioner.
 
@@ -85,12 +49,45 @@ värdet som maskinen arbetat fram. Detta är troligtvis en av de viktigaste
 stegen i vår optimering då kan skala bort alla onödiga brancher, minska
 koden och oftast fortsätta optimera en bit in det nya uttrycket.
 
+\textbf{Irr} $\Phi$, kortform för Irreducible. Anropas när Omega eller Psi inte längre
+kan optimeringa vidare. Irr kan då utifrån nuvarande continuations
+bygga trädet eller byta continuation och fortsätta optimera på en
+andra delar i uttrycket. Det är här vi kan tillslut gå tillbaka till
+STG-maskinen.
 
-\paragraph*{Stg, då vi interagerar med stg maskinen måste vi har tydliga regler
+\begin{align*}
+\IRR{\oLet xes}H{e'} & \Rightarrow & \OMEGA{\oLetObj x{\THUNK{e'}}s}He\\
+\IRR{\oCase{brs}s}He & \Rightarrow & \IRR sH{\eCase e brs}
+\end{align*}
+
+
+Istället för att skapa en $\eCase e brs$ har vi även testat att gå in
+och optimera varje branch, detta brytter dock semantiken, vi kan fastna
+i oändliga loopar i brancher vi aldrig hade hamnat i. 
+
+\begin{codeEx}
+case x of
+    { True  -> 5 : Nil
+    ; False -> repeat 1
+    }
+\end{codeEx}
+Om x är okänd och vi försöker optimera False branchen kommer vi fastna
+i en oändlig loop, dock är det möjligt att när programet körs kommer
+x bara anta värdet True. 
+
+\begin{align*}
+\IRR{\oLetObj x{OBJ}s}He & \Rightarrow & \IRR sH{\eLet x{OBJ}e}\\
+\IRR{\cOFUN{\bar{x}}{\alpha}s}He & \Rightarrow & \mc{\alpha}s{\heap{\alpha}{\FUN{\bar{x}}e}}
+\end{align*}
+
+
+
+
+\textbf{STG}, då vi interagerar med STG maskinen måste vi har tydliga regler
 för när maskien ska sluta evaluera och börja optimera. Detta sker
-antingen då den stöter på en OPT(t) för första gången, eller när den
-inte längre kan evaluera ett uttryck och har en Optimise kontinuation
-på stacken.}
+antingen då den stöter på en $\OPT t$ för första gången, eller när den
+inte längre kan evaluera ett uttryck och har en Optimise continuation
+på stacken.
 
 \begin{align*}
 \mc as{\heap a{\OPT t}} & \Rightarrow\\
@@ -98,43 +95,57 @@ på stacken.}
 \mc x{\cOPT as}{\heapp x{\PAP f{a_{1}\cdots a_{n}}}f{\FUN{x_{1}\cdots x_{m}}e}} & \Rightarrow\\
 \OMEGA{\cOFUN{x_{n+1}\cdots x_{m}}as}H{e[a_{1}/x_{1}\cdots a_{n}/x_{n}]}\\
 \mc v{O.\star\,:\, s}{\nheap v{\THUNK e}} & \Rightarrow\\
-\PSI{O.\star\,:\, s}Hv\end{align*}
+\PSI{O.\star\,:\, s}Hv
+\end{align*}
 
+\subsubsection{Problem med CBV semantiken}
 
-Oturligt nog bröt ovanstående optimise semantik mot stgs egna semantik. Som bekant forceras evaluering av thunkar endast i case-granskaren. Om funktionen som optimeras hade forcerat en
-thunk under vanlig körning så är opimise också tillåten att göra detta. Det finns ibland anledning att focera även vid andra tillfällen, men vårt naiva tillvägagångsätt höll inte måttet.
+Oturligt nog bröt ovanstående optimise semantik mot STGs egna semantik. 
+Som bekant forceras evaluering av thunkar endast i case-granskaren. 
+Om funktionen som optimeras hade forcerat en thunk under vanlig körning så är
+ opimise också tillåten att göra detta. Det finns ibland anledning att focera
+ även vid andra tillfällen, men vårt naiva tillvägagångsätt höll inte måttet.
 
 \begin{codeEx}
-        take n list = if (n == 0) Nil (head list : take (n-1) (tail list))
+take n list = if (n == 0) Nil (head list : take (n-1) (tail list))
 \end{codeEx}
 Här vill man först evaluera n == 0 innan någon av argumenten till if.
 If är defienierad med en case sats på det första argumentet. Även om
 if inlinas så ligger inte casen-först i funktionen. För att bättre förstå varför kan vi observera hur take koden ser ut osockrad. 
 
 \begin{codeEx}
-  take n list = let t1 = THUNK (n == 0)
-                    t2 = THUNK (head list)
-                    t3 = THUNK (n - 1)
-                    t4 = THUNK (tail list)
-                    t5 = THUNK (take t3 t4)
-                in  if t1 Nil t5
+take n list = let 
+    { t1 = THUNK (n == 0)
+    ; t2 = THUNK (head list)
+    ; t3 = THUNK (n - 1)
+    ; t4 = THUNK (tail list)
+    ; t5 = THUNK (take t3 t4)
+    } in  if t1 Nil t5;
 \end{codeEx}
 
-Vi evaluerar varje ny thunk efter vi passerat den, när vi kommer till t5 görs ett rekursivt anrop till take och processen börjar om. `if t1 Nil t5' får aldrig en chans att avbryta loopen och optimeringen terminerar aldrig.
+Vi evaluerar varje ny thunk efter vi passerat den, när vi kommer till 
+\miniCode{t5} görs ett rekursivt anrop till take och processen börjar om.
+\miniCode{if t1 Nil t5} får aldrig en chans att avbryta loopen och optimeringen terminerar aldrig.
 
 Definierades take istället på följande sättet terminerar optimise:
 
 \begin{codeEx}
-  take n list = case n == 0 of
-                    True -> Nil
-                    False -> let t2 = THUNK (head list)
-                                 t3 = THUNK (n - 1)
-                                 t4 = THUNK (tail list)
-                             in  take t3 t4
+take n list = case n == 0 of
+    { True -> Nil
+    ; False -> let 
+        { t2 = THUNK (head list)
+        ; t3 = THUNK (n - 1)
+        ; t4 = THUNK (tail list)
+        } in  take t3 t4
+    };
 \end{codeEx}
 
+\NOTE{oeftersträvansvärt var ordet}
+
 Och det är oeftersträvansvärt att tvinga användarna att skriva all funktioner
-de vill optimera med detta i åtanke. Användaren behöver inte bara hålla reda på hur sina funktioner är skrivan, men också hur alla funktioner han använder är skrivna. Detta arbetar emot principen om abstraktion vilket är orimligt. Detta leder oss in på vår strävan
+de vill optimera med detta i åtanke. Användaren behöver inte bara hålla reda på 
+hur sina funktioner är skrivan, men också hur alla funktioner han använder är skrivna. 
+Detta arbetar emot principen om abstraktion vilket är orimligt. Detta leder oss in på vår strävan
 efter en lat optimeringssemantik.
 
 

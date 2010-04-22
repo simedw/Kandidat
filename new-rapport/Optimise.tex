@@ -5,6 +5,19 @@
 \section{Optimise}
 
 \subfile{Optimise/Intro}
+\NOTE{
+Vi har använd ett par olika semantiker för att beskriva optimeringsskeded
+i vårt språk, vi ska nu förklara var och ett av dessa i kronologisk
+ordning.
+
+
+Detta optimeringspass arbetar sig igenom träded på ett sätt inte
+helt olikt STG-maskinen, dock kan vi bland annat gå in och evaluera
+funktion utan att känna till alla argument, s.k. evaluera under lambdat.
+För att inte duplicera för mycket av stg funktionallitet så anropas
+optimise STG för diverse uppgifter.
+}
+
 \subfile{Optimise/CBV}
 
 \subfile{Optimise/With}
