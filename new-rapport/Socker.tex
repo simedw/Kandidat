@@ -48,19 +48,19 @@ i motsatt riktning. Sockerspråket är också designat så, att det är lätt at
 
 \begin{equation*}
 \begin{aligned}
-program &::=& \overline{function} \\
-function &::=& v \; \overline{v} \mathtt{=} expr \mathtt{;} \\
-expr &::=& v \\
-       &|& v \; \overline{expr}  \\
-       &|& \mathtt{let \{} \overline{function} \mathtt{\} in }\; expr \\
-       &|& \mathtt{letrec \{} \overline{function} \mathtt{\} in} \; expr \\
-       &|& \mathtt{case}\,expr\,\mathtt{of \{} \overline{branch} \mathtt{\}} \\
-       &|& \mathtt{\lambda } v \mathtt{.} expr \\
-       &|& expr \oplus expr \\
-       &|& K \; \overline{expr} \\
-       &|& primitive \\
-branch &::=& K \; \overline{v} \; \mathtt{\rightarrow} \; expr \mathtt{;} \\
-         &|& v \; \mathtt{\rightarrow} \; expr \mathtt{;}
+program ::=&\; \overline{function} \\
+function ::=&\; v \; \overline{v} \mathtt{=} expr \mathtt{;} \\
+expr ::=&\;  v \\
+       |&\; v \; \overline{expr}  \\
+       |&\; \mathtt{let \{} \overline{function} \mathtt{\} in }\; expr \\
+       |&\; \mathtt{letrec \{} \overline{function} \mathtt{\} in} \; expr \\
+       |&\; \mathtt{case}\,expr\,\mathtt{of \{} \overline{branch} \mathtt{\}} \\
+       |&\; \mathtt{\lambda } v \mathtt{.} expr \\
+       |&\; expr \oplus expr \\
+       |&\; K \; \overline{expr} \\
+       |&\; primitive \\
+branch ::=&\; K \; \overline{v} \; \mathtt{\rightarrow} \; expr \mathtt{;} \\
+         |&\; v \; \mathtt{\rightarrow} \; expr \mathtt{;}
 \end{aligned}
 \end{equation*}
 
