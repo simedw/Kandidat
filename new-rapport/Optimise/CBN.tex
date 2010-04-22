@@ -1,5 +1,94 @@
 \documentclass[../Optimise]{subfiles}
 \begin{document}
-\subsection{Call by Name semantik}
+
+\global\long\def\subst#1#2#3{#1[#2/#3]}
+\global\long\def\abyss#1#2{A[#1\mapsto#2]}
+
+\global\long\def\cUpd#1#2{Upd\,#1\,:\,#2}
+\global\long\def\cOInstant#1#2{OInstant\,#1\,:\,#2}
+\global\long\def\cOApp#1#2{OApp\,#1\,:\,#2}
+\global\long\def\cOUpd#1#2{OUpd\,#1\,:\,#2}
+
+
+\global\long\def\objCon#1{CON(#1)}
+\global\long\def\eLet#1#2#3{\mathtt{let}\,#1=#2\,\mathtt{in}\,#3}
+
+\global\long\def\Arg#1#2{Arg\,#1\,:\,#2}
+
+
+
+\subsection{Call-by-name-semantik}
+För att lösa problemet med call-by-value-semantiken så har vi skapat en latare semantik.
+Det är en svår balansgång mellan att optimera för mycket och för lite, men vi har
+försökt lösa lathetsproblemet på samma sätt som STG själv gör det.
+\subsubsection{Abyss}
+Det stora problemet med den förgående semantiken var thunkar optimerades där
+de definerades och och inte där de används, om de används, vilket kunnde leda
+till onödig optimering eller till och med icke-terminering!
+
+Vår lösning går ut på att let-uttryck allokerar sina objekt på heapen även när vi
+optimerar. Men för att kunna skilja på objekt som kan innehålla okända variabler
+och de vanliga heap objekten som aldrig innehåller något okänt, har vi introducerat
+en ny slags heap som vi kallar för `Abyss'. I reglerna kommer denna att denoteras
+med stort A, och användas på liknande sätt som Heapen H.
+
+
+\subsubsection{Funktionsapplikationer}
+
+\begin{align*}
+\CBNOMEGA s{\heap f{\FUN{x_{1}\cdots x_{n}}e}}A{f\, a_{1}\cdots a_{n}} & \Rightarrow & \mc f{\Arg{a_{1}}{\cdots\,:\,\Arg{a_{n}}{\cOInstant 1s}}}HA\\
+\CBNOMEGA s{\heap f{\THUNK e}}A{f\, a_{1}\cdots a_{n}} & \Rightarrow & \mc e{\cUpd f{\cOApp{a_{1}\cdots a_{n}}s}}HA\\
+\CBNOMEGA sH{\abyss f{\THUNK e}}{f\, a_{1}\cdots a_{n}} & \Rightarrow & \CBNOMEGA{\cOApp{a_{1}\cdots a_{n}}s}HAe\\
+\CBNOMEGA sHA{f\, a_{1}\cdots a_{n}} & \Rightarrow & \CBNIRR sHA{f\, a_{1}\cdots a_{n}}\\
+\CBNOMEGA sHA{\oplus\, a_{1}\cdots a_{n}} & \Rightarrow & \mc{\oplus\, a_{1}\cdots a_{n}}{\cOInstant 2s}HA\\
+\CBNIRR{\cOApp{a_{1}\cdots a_{n}}s}HAe & \Rightarrow & \CBNIRR sHA{\eLet v{\THUNK e}{v\, a_{1}\cdots a_{n}}}\\
+ &  & v\mbox{ fresh}\\
+\CBNPSI{\cOApp{a_{1}\cdots a_{n}}s}HA{lbs}v & \Rightarrow & \CBNOMEGA sHA{v\, a_{1}\cdots a_{n}\mbox{ with the let bindings from \ensuremath{lbs} added}}
+\end{align*}
+
+Värt att notera är att primitiva operationer så som \miniCode{+\# *\# ==\#} betecknas $\oplus$.  
+
+\subsubsection{let-uttryck}
+\begin{align*}
+\CBNOMEGA s{\heap{a_{1}\cdots a_{n}}{h_{1}\cdots h_{n}}}A{\eLet x{\objCon{C\, a_{1}\cdots a_{n}}}r} & \Rightarrow & \CBNOMEGA s{\heap{x'}{C\, a_{1}\cdots a_{n}}}A{\subst r{x'}x}\\
+ &  & x'\mbox{ fresh}\\
+\CBNOMEGA sHA{\eLet x{obj}r} & \Rightarrow & \CBNOMEGA{\oLet{x'}s}H{\abyss{x'}{obj}}{\subst r{x'}x}\\
+ &  & x'\mbox{ fresh} \\
+ \CBNIRR{\oLet xs}H{\abyss xo}e & \Rightarrow & \CBNIRR sHA{\eLet xoe}\\
+ \CBNIRR{\cOUpd vs}HAe & \Rightarrow & \CBNIRR sH{\abyss v{\THUNK e}}e \\
+\CBNPSI{\oLet xs}H A{lbs}v & \Rightarrow & \CBNPSI sHA{x\,:\, lbs}v \\
+\CBNPSI{\cOUpd xs}{\heap vo}A{lbs}v,\,\CBNPSI{\cOUpd xs}H{\abyss vo}{lbs}v & \Rightarrow & \CBNPSI sH{\abyss xo}{lbs}v\\
+\CBNPSI{\cUpd xs}{\heap vo}A{lbs}v & \Rightarrow & \CBNPSI sH{\abyss xo}{lbs}v 
+\end{align*}
+
+\subsubsection{case-satser}
+\begin{align*}
+\CBNOMEGA sHA{\eCase e{brs}} & \Rightarrow & \CBNOMEGA{\oCase{brs}s}HAe\\
+\CBNIRR{\oCase{brs'}s}HA{\eCase e{brs}} & \Rightarrow & \CBNOMEGA sHA{\eCase{(\eCase e{brs})}{brs}'}\\
+\CBNIRR{\oCase{brs}s}HAe & \Rightarrow & \CBNIRR sHA{\eCase e{brs}}\\
+\CBNPSI{\oCase{brs}s}HA{lbs}v & \Rightarrow & \CBNOMEGA sHA{\mbox{instantiate correct \ensuremath{brs}with \ensuremath{v}and add the let bindings from \ensuremath{lbs}}}\\
+\end{align*}
+
+
+\subsubsection{Atoms}
+\begin{align*}
+\CBNOMEGA s{\heap v{\THUNK e}}Av & \Rightarrow & \mc e{\cUpd vs}HA\\
+\CBNOMEGA sH{\abyss v{\THUNK e}}v & \Rightarrow & \CBNOMEGA{\cOUpd vs}HAe\\
+\CBNOMEGA s{\heap v{\objCon{C\, a_{1}\cdots a_{n}}}}Av,\,\CBNOMEGA sH{\abyss v{CON(C\, a_{1}\cdots a_{n})}}v & \Rightarrow & \PSI sHA{\epsilon}v\\
+\end{align*}
+
+\subsubsection{Övrigt}
+
+%\subsubsection{CBNOMEGA $\CBNOMEGA$}
+
+%\subsubsubsection{Funtionsapplikationer}
+%\subsubsubsection{let-applikationer}
+%\subsubsubsection{Atoms}
+
+
+%\subsubsection{CBNPSI $\CBNPSI$}
+
+%\subsubsection{CBNIRR $\Phi$}
+
 
 \end{document}

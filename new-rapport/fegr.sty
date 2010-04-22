@@ -13,8 +13,7 @@
 {\verbatim}
 {\endverbatim}
 
-\newcommand{\miniCode}[1] {
-    \textit{#1}
+\newcommand{\miniCode}[1] {\tt#1\rm
 }
 
 \newcommand{\NOTE}[1] {
@@ -97,3 +96,11 @@ Notering!
 
 
 \global\long\def\eLet#1#2#3{\mathtt{let}\,#1=#2\,\mathtt{in}\,#3}
+
+
+% CBN %
+\global\long\def\CBNMC#1#2#3#4{#1;#2;#3;#4}
+
+\global\long\def\CBNOMEGA#1#2#3#4{\Omega_{#1;#2;#3}(#4)}
+\global\long\def\CBNPSI#1#2#3#4#5{\Psi_{#1;#2;#3;#4}(#5)}
+\global\long\def\CBNIRR#1#2#3#4{\Phi_{#1;#2;#3}(#4)}

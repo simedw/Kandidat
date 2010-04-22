@@ -3,6 +3,12 @@
 
 \subsection{Dödkods eliminering}
 
+\NOTE{
+\begin{align*}
+\CBNPSI{\oLet xs}{\heap vh}A{lbs}v & \Rightarrow & \CBNPSI sHA{lbs}v\\
+\end{align*}
+}
+
 När diverse optimeringar har körts och det är dags att bygga upp träded igen kommer
 så kallad "död kod" att förekomma. Det vill säga, kod som inte längre behövs eftersom
 den inte kan nås.
