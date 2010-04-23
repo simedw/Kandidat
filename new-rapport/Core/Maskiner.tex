@@ -2,23 +2,25 @@
 \begin{document}
 
 \subsection{Olika maskiner}
-\NOTE{Referenser till de olika maskirnerna, tex Boquists GRIN-avhandling,
+\NOTE{Här ska finnas referenser till de olika maskinerna, tex Boquists GRIN-avhandling,
 eller Implementing Functional Languages: A Tutorial av Peyton-Jones}
 För att evaluera program skrivna i ett funktionellt programmeringsspråk
 behövs en evalueringsmodell. Det finns olika abstrakta maskiner utvecklade för
 detta ändamål, till exempel G-maskinen, TIM (Three Instruction Machine), GRIN och STG.
-Dessa går att dels tolka, det vill säga att i något programmeringsspråk, exempelvis
-Haskell, skriva ett program som kopierar maskinens funktionalitet. Det går också att
-kompilera dem till något lågniva-språk som C, assembly eller LLVM.
+Dessa går att dels tolka, det vill säga att i något programmeringsspråk (exempelvis
+Haskell) skriva ett program som kopierar maskinens funktionalitet. Det går också att
+kompilera dem till något lågnivåspråk som C, assembly eller LLVM.
 
 Att skriva en kompilator hade varit ett delikat arbete i sig, även utan
-optimering. Vi ville fokusera mer på optimeringen och valde därför att skriva en tolk.
+optimering. Vi ville fokusera på optimeringen och valde därför att skriva en tolk.
 
-Av de olika maskiner vi undersökte när vi valde vilken vi skulle tolka
+Av de olika maskiner vi undersökte
 ansåg vi att STG var lämpligast. I de andra ovan nämnda maskinerna är
 instruktionerna på låg nivå, liknande assemblerinstruktioner men för att manipulera
 ett tänkt syntaxträd. STG, å andra sidan, ser ut som ett funktionellt
 programmeringsspråk vilket skulle underlätta arbetet på optimeringen.
 
+\NOTE{GRIN liknar också ett programmeringsspråk, dock vi ansåg att det skulle vara enklare
+att gör tolk för STG}
 
 \end{document}

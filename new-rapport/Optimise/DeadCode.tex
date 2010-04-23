@@ -42,15 +42,16 @@ main = 15;
 
 Denna process kan mer formellt skrivas som
 
-\begin{codeEx}
- t ej i freevars(e2)
-----------------------
-let t = e1 in e2 => e2
-\end{codeEx}
+\begin{mathpar}
+\inferrule
+  {t\,not\,in\,freevars(e_2)}
+  {\mathtt{let}\,t\,=\,e_1\,\mathtt{in}\,e_2 \Rightarrow e_2}
+\;
+\end{mathpar}
 
 Detta är en kontroll som utförs varje gång vi bygger upp en \miniCode{let} 
 i Irr och Psi. Dock är freevars ganska kostsam 
-\NOTE{bör stå om det här någon annanstans}.
+\NOTE{bör stå om det här någon annanstans, kanske i gc?}.
 
 
 \end{document}

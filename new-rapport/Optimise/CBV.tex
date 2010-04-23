@@ -6,6 +6,10 @@
 \NOTE{
 Dessa regler är listade lite fult samt det förklaras inte riktigt varför
 de ser ut som de gör eller varför de fungerar 
+
+Att lyfta ut Omega, Psi och Irr texten då den är samma för alla semantikerna.
+Och sedan skriva om det CBV till att likna CBN mer. 
+
 }
 
 Det finns tre delar i denna form av optimise semantik. De är som följer:
@@ -116,8 +120,8 @@ Om funktionen som optimeras hade forcerat en thunk under vanlig körning så är
 \begin{codeEx}
 take n list = if (n == 0) Nil (head list : take (n-1) (tail list))
 \end{codeEx}
-Här vill man först evaluera n == 0 innan någon av argumenten till if.
-If är defienierad med en case sats på det första argumentet. Även om
+Här vill man först evaluera \ic{n == 0} innan någon av argumenten till \ic{if}.
+If är defienierad med en \kw{case} sats på det första argumentet. Även om
 if inlinas så ligger inte casen-först i funktionen. För att bättre förstå varför kan vi observera hur take koden ser ut osockrad. 
 
 \begin{codeEx}
@@ -147,12 +151,12 @@ take n list = case n == 0 of
     };
 \end{codeEx}
 
-\NOTE{oeftersträvansvärt var ordet}
+%\NOTE{oeftersträvansvärt var ordet}
 
 Och det är oeftersträvansvärt att tvinga användarna att skriva all funktioner
 de vill optimera med detta i åtanke. Användaren behöver inte bara hålla reda på 
 hur sina funktioner är skrivan, men också hur alla funktioner han använder är skrivna. 
-Detta arbetar emot principen om abstraktion vilket är orimligt. Detta leder oss in på vår strävan
+Detta arbetar emot principen om abstraktion vilket är oturligt. Detta leder oss in på vår strävan
 efter en lat optimeringssemantik.
 
 

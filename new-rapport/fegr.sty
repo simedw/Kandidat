@@ -9,12 +9,20 @@
 \usepackage{fancyheadings}
 \usepackage{mathpartir}
 
+% Used for code examples
 \newenvironment{codeEx}
 {\verbatim}
 {\endverbatim}
 
+% Used for code inside text
 \newcommand{\miniCode}[1] {\tt#1\rm}
+\newcommand{\ic}[1] {\miniCode{#1}}
 
+
+% Used for keywords
+\newcommand{\kw}[1]{\texttt{#1}}
+
+% Used for continuations
 \newcommand{\cont}[1] {\tt#1\rm}
 
 \newcommand{\NOTE}[1] {

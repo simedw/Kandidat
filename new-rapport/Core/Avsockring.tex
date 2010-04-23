@@ -1,11 +1,11 @@
 \documentclass[../Core]{subfiles}
 \begin{document}
 \subsection{Avsockring till STG}
-STG är ett ganska primitivt språk med tex att man kan bara anropa funktioner
-och skapa konstruktorer med argument från atomer, samt att alla objekt måste
-explicit annoteras om de är thunkar eller konstruktörer. För att underlätta
-att skriva kod skapade vi ett sockerspråk för att underlätta detta, och ett
-pass över koden som avsockrar.
+STG är ett ganska primitivt språk där man t.ex. bara kan anropa funktioner
+och skapa konstruktorer med argument som är atomer. Alla objekt måste även
+explicit annoteras med information om huruvida de är thunkar eller konstruktorer. För att underlätta
+att skriva mycket kod skapade vi ett sockerspråk, och ett
+pass som går igenom koden och avsockrar den till STG.
 
 \begin{codeEx}
 isPrimer n t = case t * t >= n of
@@ -16,8 +16,8 @@ isPrimer n t = case t * t >= n of
 
 Den här koden kommer från testsviten och är del i ett program som testar
 primalitet. Här används sockerspråket flitigt för att göra koden läsbar
-och hanterlig. I exemplet ovan är \miniCode{isPrimer} är ett funktionsobjekt och i 
-STG och skrivs det i en stil mer lik en lambdafunktion:
+och hanterlig. I exemplet är \miniCode{isPrimer} är ett funktionsobjekt som i 
+STG skulle skrivas mer i stil med en lambdafunktion:
 
 \begin{codeEx}          
 isPrimer = FUN (n t -> ...)
@@ -25,7 +25,7 @@ isPrimer = FUN (n t -> ...)
 
 
 I STG tar funktioner endast atomer som argument. Detta gör att 
-i jämförelsen \miniCode{t * t >= n} behövs först kvadreringen sparas bindas
+jämförelsen \miniCode{t * t >= n} först behöver binda kvadreringen
 till en temporär variabel:
 
 \begin{codeEx}
@@ -33,33 +33,33 @@ let temp = THUNK (t * t)
 in  (>=) temp n
 \end{codeEx}
 
-Liknande för if-satsen: ifs argument \miniCode{(n \% t == 0)} och 
-\miniCode{isPrimer n (t + 1)} är inte atomer så de behövs bindas och i
-sin tur är \miniCode{n \% t} och \miniCode{t + 1} inte atomer till dessa 
-funktionsanrop till \miniCode{==} och \miniCode{isPrimer}.
+Liknande för \ic{if}-funktionen: \ic{if}s argument \miniCode{(n \% t == 0)} och 
+\miniCode{isPrimer n (t + 1)} är inte atomer så de behövs bindas och vidare
+är \miniCode{n \% t} och \miniCode{t + 1} inte atomer i  
+funktionsanropen till \miniCode{==} och \miniCode{isPrimer}.
 
 
 Allt med inledande versal i sockerspråket tolkas som konstruktorer,
-precis som i Haskell. Så \miniCode{True} ovan i koden behöver allokeras med
-en let. Den första grenen blir i så fall
+precis som i Haskell. Så \miniCode{True} i koden ovan behöver allokeras med
+en \kw{let}. Den första grenen blir i så fall
   \miniCode{True -> let temp = CON (True) in temp}.
-Faktum är att de nullära konstruktorerna \miniCode{True}, \miniCode{False}, \miniCode{Nil}, finns 
+Faktum är att alla nullära konstruktorer som \miniCode{True}, \miniCode{False}, \miniCode{Nil}, finns 
 allokerade på toppnivå i tolken och instantieras endast en gång. 
-Men i alla andra fall behövs de let-bindas.
+Men i alla andra fall behöver de \kw{let}-bindas.
 
 Detta gäller även heltal och andra primitiver. $0$ avsockras till
     \miniCode{let temp = CON (I\# 0) in  temp}
-Notera att alla temporära variabler som skapas är unika.
+. Notera att alla temporära variabler som skapas är unika.
             
     
 För att göra det lättare att operera på listor och göra booleska
-jämförelser finns infixoperatorerna \&\&, || som alias för and och or
-respektive, och ++ och : för append och cons. Funnes någon av dessa
-infixvarianter byts de ut under avsockringen. 
+jämförelser finns infixoperatorerna \ic{\&\&} och \ic{||} som alias för and respektive or
+samt \ic{++} och \ic{:} för append och cons. Under avsockringen byts dessa
+infixvarianter ut mot motsvarande vanliga funktioner. 
 
 
-I haskell används också \$ flitigt som funktionsapplikation med låg
-högerfixitet, exempelvis i denna kod som testar quicksort med en
+I Haskell används också \$ flitigt som funktionsapplikation med låg
+högerfixitet, exempelvis i denna kod som kör quicksort på en
 lista sorterad i fallande ordning:
 
 \begin{codeEx}
@@ -85,7 +85,7 @@ att det är rimligare att göra det till funktionsanrop direkt.
 
 
 \NOTE{Detta kanske borde vara i optimise-avsnittet} 
-Avsockring av optimise with
+\subsubsection{Avsockring av optimise with}
 
 \begin{codeEx}
 let f = optimise foo x y with { caseBranches, inlinings = n * n } 
@@ -103,15 +103,15 @@ in map f zs
 \end{codeEx}
 
     I sockerspråket är optimise ett nyckelord som ser ut som en 
-    funktionsapplikation, men avsockras till ett OPT-objekt. Dessutom så 
-    forceras alla dess inställningar med hjälp av en casesats.
+    funktionsapplikation, men avsockras till ett OPT-objekt. Dessutom
+    forceras alla dess inställningar med hjälp av \kw{case}-satser.
 
 
 \subsubsection{Lambdalyftare}
 
-I tolkandet av koden underlättar det om man inte har några let-bundna funktioner.
-Dessa behöver lyftas ut tilkl toppnivå. I sockret kan dessa uppstå antingen
-av att man skriver lambdafunktioner eller let-bundna funktioner. Ett exempel
+I tolkandet av koden underlättar det om man inte har några \kw{let}-bundna funktioner.
+Dessa behöver lyftas ut till toppnivå. I sockret kan dessa uppstå antingen
+av att man skriver lambdafunktioner eller \kw{let}-bundna funktioner. Ett exempel
 från quicksort:
 
 \begin{codeEx}
@@ -123,7 +123,7 @@ från quicksort:
       in  qsort listLess ++ x : qsort ListMore
 \end{codeEx}
 
-Först översätts let-satsen med hjälp av avsockraren
+Först översätts \kw{let}-satsen med hjälp av avsockraren
 
 \begin{codeEx}
   .. let { lesser = FUN (y -> let t = THUNK (y < x) in t)
@@ -133,27 +133,27 @@ Först översätts let-satsen med hjälp av avsockraren
          } ..
 \end{codeEx}
       
-När dessa funktioner, lesser och lambda0, lambdalyfts, skapas nya funktioner
-på toppnivå. En sak att ha i åtanke då är att de fria variablerna i funktions-
-kroppen nödvändigtvis kommer från ursprungsfunktionen. Dessa måste skickas med
-som extra parametrar. I det här fallet rör det sig om variabeln x i båda fall.
+När dessa funktioner \ic{lesser} och \ic{lambda0} lambdalyfts, skapas nya funktioner
+på toppnivå. En sak att ha i åtanke då är att de fria variablerna i funktionskroppen 
+kan komma från ursprungsfunktionen. Dessa måste skickas med
+som extra parametrar. I det här fallet rör det sig om variabeln \ic{x} i båda fallen.
 Dessa parametrar måste också skickas med när de anropas.
-
+%s/kan/nödvändigtvis
 \begin{codeEx}
-lesserLifted = FUN(x y -> let t = THUNK (y < x) in t)
+lesserLifted  = FUN(x y -> let t = THUNK (y <  x) in t)
 lambda0Lifted = FUN(x y -> let t = THUNK (y >= x) in t)
 
-    .. let { lesser = THUNK (lesserLifted x)
-           ; listLess = THUNK (filter lesser xs)
-           ; lambda0 = THUNK (lambda0Lifted x)
+    .. let { lesser   = THUNK (lesserLifted   x)
+           ; listLess = THUNK (filter lesser  xs)
+           ; lambda0  = THUNK (lambda0Lifted  x)
            ; listMore = THUNK (filter lambda0 xs)
            } ..
 \end{codeEx}
 
-En sak att poängtera är att \miniCode{listLess} och \miniCode{listMore} 
-inte behövs modifieras för att de lyftna funktionerna partialevalueras 
-med samma namn. Här \miniCode{lesser} som blir \miniCode{lesserLifted}
-partiellt applicerat på \miniCode{x}.
+Notera att \miniCode{listLess} och \miniCode{listMore} 
+inte behöver modifieras eftersom de lyftna funktionerna partialevalueras 
+med samma namn. Här är \miniCode{lesser} \miniCode{lesserLifted}
+partiellt applicerad på \miniCode{x}.
 
 
 \end{document}

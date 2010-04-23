@@ -5,13 +5,14 @@
 \subsubsection{Boxing}
 
 För att få en uniform representation av användardefinierade datatyper, skapade
-med en konstruktor, och primitiva datatyper som Int, Double och Char, ges även 
-de sistanämnda konstruktorer. \miniCode{I\#} för Int, \miniCode{D\#} för Double, 
-\miniCode{C\#} för Char. De har invarianten, till skillnad från egna datatyper, 
-att de inte pekar på en thunk utan är fullt evaluerade. 
-Detta kallas för att boxa primitiven.
-    För att utföra addition skapas den här funktionen som avboxar primitiven,
-forcerar och utför primitiv addition och sen boxar igen:
+med en konstruktor, och primitiva datatyper som \ic{Int}, \ic{Double} och \ic{Char}, ges även 
+de sistnämnda konstruktorer. \miniCode{I\#} för \ic{Int}, \miniCode{D\#} för \ic{Double} och 
+\miniCode{C\#} för \ic{Char}. De har invarianten, till skillnad från icke-primitiva datatyper, 
+att deras argument inte pekar på en thunk utan alltid måste vara fullt evaluerade. 
+Detta kallas för att `boxa' primitiven.
+
+    För addition skapas en funktion som avboxar primitiven,
+forcerar och utför primitiv addition och sedan boxar igen:
 
 \begin{codeEx}
 x + y = case x of 
@@ -20,14 +21,16 @@ x + y = case x of
             { r -> let r' = CON (I# r) in  r'}}};
 \end{codeEx}
 
-Så + är additionen som användaren av vårt språk får använda och $ +\# $ är den
-primitiva additionen som inte exporteras för användaren. Notera att $ x' +\# y' $
-forceras med hjälp av case för att den ska vara fullt evaluerad.
+Funktionen \ic{+} är den operator för addition som användaren av vårt språk får använda medan $ +\# $ är den
+primitiva additionen som inte exporteras till användaren. Notera att $ x' +\# y' $
+forceras med hjälp av en \kw{case}-sats för att det resulterande talet ska vara fullt
+evaluerat före det boxas igen.
 
 \subsubsection{IO}
+\NOTE{Oh Hi, vi borde förklara skillnad mellan NF och WHNF}
 Tolken har en primitiv form av IO: den har konstant indata vid körning och
-skriver ut det main returnerar, som behöver vara en konstruktor. Dessutom
-forceras hela konstruktorn till reducerad normalform.
+skriver ut det som \ic{main}-funktionen returnerar. Dessutom
+forceras hela värdet om det är en konstruktor till normalform.
 
 Funktionerna getInt, getIntList, getDouble, getDoubleList och getString finns
 till hands under körning om användaren har angett någon eller några av dessa
@@ -37,13 +40,13 @@ källkoden.
 
 \subsubsection{Print continuation}
 \NOTE{Finns lite arbete och göra på dessa}
-Utdata fås genom att main evalueras fullt. Två till continuations behövs - 
-Print och PrintCont. Uttrycksdatatypen utökas med en ny typ av värden, 
+Utdata fås genom att \ic{main} evalueras fullt. % Ytterligare två continuations behövs - \cont{Print} och \cont{PrintCont}. 
+Uttrycksdatatypen utökas med en ny typ av värden, 
 s-värden, som antingen är en evaluerad primitiv (betecknas \emph{n})
-, tex en int, eller en konstruktor (betecknas \emph{K C [sval]}, där
+, t.ex. ett heltal, eller en konstruktor (betecknas \emph{K C [sval]}, där
 C är konstruktorns namn och sen listan av dess s-värden) .
-Om någon som ska skrivas ut evalueras till en (partiellt evaluerad)
-funktion så skrivs \emph{FUN} istället ut. Detta är också ett s-värde.
+Om något som ska skrivas ut har evaluerats till en (partiellt evaluerad)
+funktion så skrivs \kw{FUN} istället ut. Detta är också ett s-värde.
 
 
 %\begin{codeEx}  
@@ -57,8 +60,8 @@ funktion så skrivs \emph{FUN} istället ut. Detta är också ett s-värde.
 %* PrintCont C [sval] [atom]
 
 
-Två nya continuations behövs, \emph{Print} och \emph{PrintCont C [sval] [atom]}.
-Print betyder att det som evalueras ska skrivas ut. PrintCont består av ett
+Två nya continuations behövs, \cont{Print} och \cont{PrintCont C [sval] [atom]}.
+\cont{Print} betyder att det som evalueras ska skrivas ut. \cont{PrintCont} består av ett
 konstruktorsnamn C, och först en lista på färdiga s-värden och en lista med
 atomer som maskinen har kvar att evaluera.
 
@@ -75,7 +78,7 @@ Om x har evaluerats till en konstruktor C så finns två fall. Antingen att C ä
 en nullär konstruktor och i det fallet är vi klara och ger s-värdet bestående
 av konstruktorn C.
     är det inte en nullär konstruktor behövs alla dess konstruerande atomer
-evalueras, med start på a1. Den läggs ut på maskinen med en print-continuation
+evalueras, med start på $a_1$. Den läggs ut på maskinen med en \cont{Print}-continuation
 och under denna en contiunation som säger att de andra atomerna också ska
 evalueras.
  
@@ -87,7 +90,7 @@ x ; Print : s ; H , x
 
 x är alltså här ett värde, men ej ett s-värde.
 Om x är en primitiv datatyp, tex en int eller double, så skapa detta s-värde
-\emph{n x}.
+\ic{n x}.
 
 
 \[
