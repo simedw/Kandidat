@@ -6,6 +6,7 @@ module Stg.Substitution
   , subtractLocal
   , inltP
   , inltM
+  , localsE
   ) where
 
 import "syb" Data.Generics
@@ -136,3 +137,44 @@ inlBr :: Variable t => (Atom t -> Atom t) -> (Var t -> Var t) -> Branch t -> Bra
 inlBr fa fv b = case b of
     BCon v vs e -> BCon v vs (inlE fa fv e)
     BDef v    e -> BDef v    (inlE fa fv e)
+    
+    
+    
+    
+    
+localsVar :: Variable t => Var t -> [Var t]
+localsVar v = case v of
+    Local _ _ -> [v]
+    _         -> []
+
+localsAtom :: Variable t => Atom t -> [Var t]
+localsAtom a = case a of
+    AVar l -> localsVar l
+    _      -> []
+   
+localsE :: Variable t => Expr t -> [Var t]
+localsE e = case e of
+    EAtom a    -> localsAtom a
+    ECall v as -> localsVar v ++ concatMap localsAtom as
+    EPop op as -> concatMap localsAtom as
+    ELet b e   -> localsBind b ++ localsE e
+    ECase e bs -> localsE e ++ concatMap localsBr bs
+    _          -> []
+
+localsO :: Variable t => Obj t -> [Var t]
+localsO o = case o of
+    OPap v as     -> concatMap localsAtom as
+    OCon c as     -> concatMap localsAtom as
+    OThunk as i e -> concatMap localsAtom as
+    OOpt a sets   -> localsAtom a
+    _             -> []
+
+localsBind :: Variable t => Bind t -> [Var t]
+localsBind b = case b of
+    NonRec v obj -> localsO obj
+    Rec xs       -> concatMap (localsO . snd) xs
+
+localsBr :: Variable t => Branch t -> [Var t]
+localsBr b = case b of
+    BCon v vs e -> localsE e
+    BDef v    e -> localsE e

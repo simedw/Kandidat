@@ -195,14 +195,14 @@ omega stack astack heap code set = case code of
                     , StgState
                         { code     = e
                         , cstack   = CtUpd f' : CtOApp args : stack
-                        , astack   = astack
+                        , astack   = duplicateFrame astack
                         , heap     = heap
                         , settings = set
                         }
                     )
             -- Unevaluated, abyssimal function, omega the thunk!
             Just (OThunk _as _i e, OnAbyss) -> 
-                omega' (ROmega "function abyss thunk") (CtOApp args : stack) astack heap (EAtom $ AVar f) set
+                omega' (ROmega "function abyss thunk") (CtOApp args : stack) (duplicateFrame astack) heap (EAtom $ AVar f) set
             
             -- PAP cases??
             _ -> irreducible
@@ -289,7 +289,7 @@ irr (CtOCase brs     : ss) ast h e  set =
             _   -> irr' (RIrr "case continuation") ss ast h (ECase e2 brs) set
     
 irr (CtOLet t        : ss) ast h e set = case H.lookupAnywhere t h of
-    Just o  -> case mkExpr h e [t] of
+    Just o  -> case mkExpr ast h e [t] of
      {-   ELet (NonRec v (OThunk e')) (ECase (EAtom (AVar v')) brs) | v == v'
      --       -> omega' (RIrr "?") (CtOLet t : ss) h (ECase e' brs) set 
      -}
@@ -358,7 +358,7 @@ psi ss'@(CtOCase branch   : ss) ast h v@(Heap v') lbs set = case H.lookupAnywher
     om e as = omega' (RPsi "KnownCase") ss (popFrame ast) h (inltM as (getCurrentSP (popFrame ast)) e) set
     --om e as = omega' (RPsi "KnownCase") ss (pushArgs as (popFrame ast)) h e set
     def = case findDefaultBranch (AVar v) branch of
-        Nothing -> irr' (RPsi "psi couldn't inst branch") ss' ast h (mkExprVar h v lbs) set
+        Nothing -> irr' (RPsi "psi couldn't inst branch") ss' ast h (mkExprVar ast h v lbs) set
         Just expr -> om expr [AVar v]
 
 psi (CtOUpd t   : ss) ast h v@(Heap v') lbs set = case H.lookupAnywhere v' h of
@@ -373,10 +373,10 @@ psi (CtUpd t   : ss) ast h (Heap v) lbs set = case H.lookupHeap v h of
     
                
 psi ss@(CtOBranch e brdone brleft : _) ast h v lbs set = 
-   irr' (RPsi "branch continuation") ss ast h (mkExprVar h v lbs) set
+   irr' (RPsi "branch continuation") ss ast h (mkExprVar ast h v lbs) set
 psi ss@(CtOFun args i alpha : _) ast h v lbs set =
-    irr' (RPsi "fun continuation") ss ast h (mkExprVar h v lbs) set
-psi (CtOApp as : ss) ast h v lbs set = omega' (RPsi "App continutation") ss ast h (mkExpr h (ECall v as) lbs) set
+    irr' (RPsi "fun continuation") ss ast h (mkExprVar ast h v lbs) set
+psi (CtOApp as : ss) ast h v lbs set = omega' (RPsi "App continutation") ss (popFrame ast) h (mkExpr ast h (ECall v as) lbs) set
 
 psi s ast h v _ _ = error $ "Psi: I don't know what to do with this stack: " 
      ++ show (unsafeCoerce s :: ContStack String)
@@ -418,14 +418,22 @@ substing xr brs = case brs of
     f c vs e = e 
 -} 
 
-mkExprVar :: Ord t => Heap t -> Var t -> [t] -> Expr t
-mkExprVar h v = mkExpr h (EAtom (AVar v)) 
+mkExprVar :: Variable t => ArgStack t -> Heap t -> Var t -> [t] -> Expr t
+mkExprVar astack h v = mkExpr astack h (EAtom (AVar v)) 
 
-mkExpr :: Ord t => Heap t -> Expr t -> [t] -> Expr t
-mkExpr heap = foldr addBindings
+mkExpr :: Variable t => ArgStack t -> Heap t -> Expr t -> [t] -> Expr t
+mkExpr astack heap = foldr addBindings
   where
     addBindings var exp = case H.lookupAbyss var heap of
-        Just obj -> case True of -- var `S.member` freeVars exp of
+        Just obj -> case getCurrentSP astack - 1 `elem` map rm (localsE exp) of
             True -> ELet (NonRec var (trUnknown obj)) exp
-            False -> exp
-        Nothing  -> ELet (NonRec var OBlackhole) exp --exp
+            False -> inltM [error "mkExpr did something wrong :("] (getCurrentSP astack - 1) exp
+        Nothing  -> case getCurrentSP astack - 1 `elem` map rm (localsE exp) of
+            True -> ELet (NonRec var OBlackhole) exp
+            False -> inltM [error "mkExpr did something wrong :("] (getCurrentSP astack - 1) exp
+        
+        
+        --ELet (NonRec var OBlackhole) exp --exp
+    rm (Local i _) = i
+    rm _           = error "mkExpr: localsE returned a non-local!"
+    
