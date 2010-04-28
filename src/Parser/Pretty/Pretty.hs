@@ -142,7 +142,7 @@ mkPretty (Syntax {..})  = PPrinters {..}
         ANum n -> num $ integer n
         ADec f -> num $ double f
         AChr c -> chr c
-        AUnknown t -> mbraces $ var t
+        AUnknown i t -> mbraces $ ppVar (Local i t)
 
     ppVar :: Var t -> Doc
     ppVar v = case v of

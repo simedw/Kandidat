@@ -4,6 +4,8 @@ module Stg.Substitution
   , substList
   , removeOPT
   , subtractLocal
+  , inltP
+  , inltM
   ) where
 
 import "syb" Data.Generics
@@ -11,6 +13,8 @@ import Data.Generics.Biplate
 import Data.Generics.Uniplate
 import Stg.AST
 import Stg.Variable
+
+import qualified Data.Map as M
 
 {-
 var = EAtom . AVar
@@ -65,3 +69,70 @@ subtractLocalAtom :: Variable t => t -> Int -> Atom t -> Atom t
 subtractLocalAtom _ n a = case a of
     AVar (Local i v) -> AVar (Local (i - n) v)
     _                -> a
+
+inltM :: Variable t => [Atom t] -> Int -> Expr t -> Expr t
+inltM as sp = inlt (>= sp) 0 sp as
+
+inltP :: Variable t => [Atom t] -> Int -> Expr t -> Expr t
+inltP as sp = inlt (const True) sp 0 as
+
+{-
+inlt g s st as = transformBi (ct aux) . transformBi (ct' aux')
+  where
+    aux i t | g i = case M.lookup i m of
+        Nothing -> AVar $ Local (s + i - length as) t
+        Just a  -> a
+    aux i t = AVar (Local i t)
+    aux' i t | g i = case M.lookup i m of
+        Just (AVar v) -> v
+        _             -> Local (s + i - length as) t
+    aux' i t = Local i t
+    m       = M.fromList $ zip [st..] as
+-}
+
+inlt :: Variable t 
+     => (Int -> Bool) -- ^ guard
+     -> Int           -- ^ add
+     -> Int           -- ^ start (atoms)
+     -> [Atom t]      -- ^ subst atoms
+     -> Expr t -> Expr t
+inlt g s st as = inlE atom var
+  where
+    atom a = case a of
+        AVar (Local i t) | g i -> case M.lookup i m of
+            Just a  -> a
+            Nothing -> AVar $ Local (i + s - length as) t
+        _ -> a
+    var v  = case v of
+        Local i t | g i -> case M.lookup i m of
+            Just (AVar v) -> v
+            Nothing       -> Local (i + s - length as) t
+        _ -> v
+    m         = M.fromList $ zip [st..] as
+
+inlE :: Variable t => (Atom t -> Atom t) -> (Var t -> Var t) -> Expr t -> Expr t
+inlE fa fv e = case e of
+    EAtom a    -> EAtom (fa a)
+    ECall v as -> ECall (fv v) (map fa as)
+    EPop op as -> EPop op (map fa as)
+    ELet b e   -> ELet (inlBind fa fv b) (inlE fa fv e)
+    ECase e bs -> ECase (inlE fa fv e) (map (inlBr fa fv) bs)
+    _          -> e
+
+inlO :: Variable t => (Atom t -> Atom t) -> (Var t -> Var t) -> Obj t -> Obj t
+inlO fa fv o = case o of
+    OPap v as     -> OPap v (map fa as)
+    OCon c as     -> OCon c (map fa as)
+    OThunk as i e -> OThunk (map fa as) i e
+    OOpt a sets   -> OOpt (fa a) sets
+    _             -> o
+
+inlBind :: Variable t => (Atom t -> Atom t) -> (Var t -> Var t) -> Bind t -> Bind t
+inlBind fa fv b = case b of
+    NonRec v o -> NonRec v (inlO fa fv o)
+    Rec vs     -> Rec  [(v, inlO fa fv o) | (v, o) <- vs]
+
+inlBr :: Variable t => (Atom t -> Atom t) -> (Var t -> Var t) -> Branch t -> Branch t
+inlBr fa fv b = case b of
+    BCon v vs e -> BCon v vs (inlE fa fv e)
+    BDef v    e -> BDef v    (inlE fa fv e)

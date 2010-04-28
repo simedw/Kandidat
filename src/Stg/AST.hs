@@ -2,7 +2,6 @@
 {-# LANGUAGE PackageImports #-}
 module Stg.AST where 
 -- The data type of the language, and auxilliary functions.
---
 
 import "syb" Data.Generics
 import Data.Generics.PlateData
@@ -38,41 +37,6 @@ mkELet True  = ELet . Rec
 mkELet False = flip $ foldr (ELet . uncurry NonRec)
  
 
-{-
-
-data Pop t    = PBinOp t
-                  (Integer -> Integer -> Integer)
-                  (Double  -> Double  -> Double)
-              | PUnOp t
-                  (Integer -> Integer)
-                  (Double  -> Double)
-              | PBinBool t
-                  (Integer -> Integer -> Bool)
-                  (Double  -> Double  -> Bool)
-  deriving (Data, Typeable)
-
-getOp :: Pop t -> t
-getOp o = case o of
-    PBinOp op _ _   -> op
-    PUnOp  op _ _   -> op
-    PBinBool op _ _ -> op
-
-instance Show t => Show (Pop t) where
-    show p = show (getOp p) ++ "#"
-
-instance Eq t => Eq (Pop t) where
-  PBinOp   op1 _ _ == PBinOp   op2 _ _ = op1 == op2
-  PUnOp    op1 _ _ == PUnOp    op2 _ _ = op1 == op2
-  PBinBool op1 _ _ == PBinBool op2 _ _ = op1 == op2
-  _ == _ = False
-
-instance Ord t => Ord (Pop t) where
-  PBinOp op1 _ _   `compare` PBinOp op2 _ _   = op1 `compare` op2
-  PUnOp  op1 _ _   `compare` PUnOp op2 _ _    = op1 `compare` op2
-  PBinBool op1 _ _ `compare` PBinBool op2 _ _ = op1 `compare` op2
-  
-  -}
-
 data Var t = Heap t
            | Local Int t
   deriving (Show, Eq, Ord, Data, Typeable)
@@ -91,7 +55,7 @@ data Atom t   = AVar (Var t)
               | ANum Integer
               | ADec Double
               | AChr Char
-              | AUnknown t
+              | AUnknown Int t
   deriving (Data, Eq, Ord, Show, Typeable)
 
 

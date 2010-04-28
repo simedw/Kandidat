@@ -27,6 +27,9 @@ pushArgs args (f : as) = (f ++ args) : as
 popArg :: ArgStack t -> ArgStack t
 popArg (f : as) = (: as) . reverse . drop 1 . reverse $ f
 
+getCurrentSP :: ArgStack t -> Int
+getCurrentSP (f : as) = length f
+
 {-
 data StackFrame t = StackFrame 
     { lock :: Int

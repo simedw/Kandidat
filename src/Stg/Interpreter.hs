@@ -133,7 +133,7 @@ step st@(StgState {..})   = step' $ st {cstack = decTop cstack}
        ECase expr branch     -> case expr of
            EAtom a -> case lookupAtom a of
                a'@(AVar (Heap var)) -> case H.lookup var heap of
-                   Nothing             -> error "var not in heap" -- return Nothing
+                   Nothing             -> error "var not in heap (maybe on abyss)" -- return Nothing
                    Just (OThunk _ _ _)   -> rcase expr branch
                    Just (OCon c atoms) -> case instantiateBranch c atoms branch of
                        Nothing   -> rany expr a' branch
@@ -343,13 +343,13 @@ step st@(StgState {..})   = step' $ st {cstack = decTop cstack}
               Just (OFun args i e) ->
                   let (argsA, argsL) = splitAt (length atoms) args
                       CtOpt alpha : stack' = cstack
-                      astack' = pushArgs (atoms ++ map AUnknown argsL) (newFrame astack) 
+                      astack' = pushArgs (zipWith AUnknown [0..] argsL) (newFrame astack) 
                       --e' = subtractLocal var (length atoms) $ substList argsA (map lookupAtom atoms) e
-                  in omega' ROptPap (CtOFun argsL (i - length atoms) alpha:stack') astack' heap e settings
+                  in omega' ROptPap (CtOFun argsL (i - length atoms) alpha:stack') astack' heap (inltM atoms 0 e) settings
               _ -> error "OPTPAP: pap doesn't point to FUN"
       roptfun st@(StgState {..}) args i expr = do
           let CtOpt alpha : cstack' = cstack
-              astack'               = pushArgs (map AUnknown args) (newFrame astack)
+              astack'               = pushArgs (zipWith AUnknown [0..] args) (newFrame astack)
           omega' (ROmega "from machine found fun to optimise") (CtOFun args i alpha : cstack') astack' heap expr settings
       
       

@@ -28,6 +28,12 @@ test str = case parseSugar str of
     Right funs -> show $ map prFun $ localise $ Diabetes.run [] funs
     Left err   -> error (show err)
 
+test2 :: String -> [Function String]
+test2 str = case parseSugar str of
+    Right funs -> localise $ Diabetes.run [] funs
+    Left err   -> error (show err)
+
+
 run :: Variable t => Local t (a t) -> a t
 run = flip runReader M.empty . flip evalStateT 0
 
