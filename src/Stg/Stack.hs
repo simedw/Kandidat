@@ -27,6 +27,11 @@ pushArgs args (f : as) = (f ++ args) : as
 popArg :: ArgStack t -> ArgStack t
 popArg (f : as) = (: as) . reverse . drop 1 . reverse $ f
 
+popArgs :: Int -> ArgStack t -> ArgStack t
+-- popArgs i as = foldr (const popArg) as $ replicate i ()
+
+popArgs i as = iterate popArg as !! i
+
 getCurrentSP :: ArgStack t -> Int
 getCurrentSP (f : as) = length f
 

@@ -13,6 +13,7 @@ import System.Console.GetOpt
 import System.Directory
 import System.FilePath
 import qualified Text.PrettyPrint.ANSI.Leijen as PP
+import Text.PrettyPrint.ANSI.Leijen(Doc)
 
 import System.Console.Haskeline (InputT, outputStrLn, getInputLine) 
 import qualified System.Console.Haskeline as Hl
@@ -96,7 +97,7 @@ data InterpreterState = IS
 
 testInterpreter :: Settings -> FilePath -> IO ()
 testInterpreter set file = do
-    fs <- loadFile (lset set) file 
+    fs <- loadFileSpecifyOutput True (lset set) file 
     let st = initialState fs
     evalStateT (Hl.runInputT Hl.defaultSettings (loop st)) IS
             { settings = set
@@ -213,7 +214,7 @@ loop originalState  = do
                 printCode   $ code  st
                 printCStack  $ cstack st
                 outputStrLn $ "heap("  ++ show (M.size $ heap st) ++ ")"
-                outputStrLn $ "astack\n" ++ show (prAStack PP.text $ astack st)
+                outputStrLn $ "astack\n" ++ showDoc (prAStack PP.text $ astack st)
                 loop st
                 
 
@@ -299,6 +300,9 @@ loop originalState  = do
             , ""
             , "Happy Hacking !!"
             ]
+
+showDoc :: Doc -> String
+showDoc x = PP.displayS (PP.renderPretty 0.8 80 x) ""
 
 main :: IO ()
 main = do

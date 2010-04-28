@@ -33,7 +33,7 @@ import Util
 benchmarklist :: [(String, (Integer,[Integer]))]
 benchmarklist = 
    [ --"Shapes.hls"   --> [(0,[1])]
-     "OptTest7.hls" -->  (100,list)
+     "OptTest7.hls" -->  (10,list)
 {-    , "OptTest1.hls" --> [(0,[])]
     , "OptTest2.hls" -->  [(0,list)]
     , "OptTest3.hls" -->  [(0,list)]
@@ -42,7 +42,7 @@ benchmarklist =
     , "RSA.hls"      -->  [(0,list)] -}
     ]
  where
-   list  = [1..200]
+   list  = [1..100]
    (-->) = (,)
 
 {- We load and parse all test before invoking the actual benchmark.

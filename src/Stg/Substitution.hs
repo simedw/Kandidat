@@ -6,7 +6,8 @@ module Stg.Substitution
   , subtractLocal
   , inltP
   , inltM
-  , localsE
+  , inlt -- :( this special one needs in case branches
+  , localsE  
   ) where
 
 import "syb" Data.Generics
@@ -90,6 +91,8 @@ inlt g s st as = transformBi (ct aux) . transformBi (ct' aux')
     aux' i t = Local i t
     m       = M.fromList $ zip [st..] as
 -}
+
+
 
 inlt :: Variable t 
      => (Int -> Bool) -- ^ guard

@@ -44,7 +44,9 @@ isKnownStack s h a = case lookupAtomStack s a of
 lookupAtomStack astack (AVar v) = case v of
     Heap x    -> AVar v
     Local x _ -> lookupStackFrame x astack
-lookupAtomStack astack (AUnknown i t) = lookupStackFrame i astack
+                    -- det har ar farligt sager daniel
+                    -- for det kan vara i en annan frame
+-- lookupAtomStack astack (AUnknown i t) = lookupStackFrame i astack
 lookupAtomStack astack    a     = a
 
 
@@ -133,12 +135,24 @@ omega stack astack heap code set = case code of
                         , settings = set
                         }
                     )
+                    --omega' (ROpt ORInline) stack astack heap
+                    --     (inltP (map lookupAtom args) (getCurrentSP astack) e)
+                    --     (inline f' set)
+            -- Thunk on abyss, inline
+            -- abyss till BLACKHOLE
+            -- iaf, sa att den dodkodseliminerar
+            -- forstor alla chanser till sharing och ett vardigt bemotande
+            -- ocksa alla chanser att fa en CtOUpd
             Just (OThunk fv _size e, OnAbyss) -> omega' 
-                (ROmega "Thunk on abyss") (CtOUpd t : stack) (pushArgs fv $ callFrame astack) heap e set        
+                (ROmega "Thunk on abyss") stack -- (CtOUpd t : stack) 
+                astack heap (inltP fv (getCurrentSP astack) e) set        
             Just (OCon _ _, _) -> case a of
                 AVar x -> do 
                     psi' (ROmega "Atom point at Con") stack astack heap x [] set
-                _ -> error "impossible, tell me how you did that"
+                
+                _ -> error $ "an unknown variable points to an ocon" ++ show a
+            Just (OFun _ _ _ , _) -> psi' (ROmega "Atom point at Fun") stack astack heap (Heap t) [] set
+            Just (OPap _ _   , _) -> psi' (ROmega "Atom point at Pap") stack astack heap (Heap t) [] set
             _ -> irreducible
         AUnknown _ _ -> irreducible
         _ -> case stack of
@@ -147,12 +161,13 @@ omega stack astack heap code set = case code of
                 Just expr -> omega' (ROmega "atom default branch") ss (popFrame astack) heap 
                                     (inltM [a] (getCurrentSP (popFrame astack)) expr) set
         --    om e as = omega' (RPsi "KnownCase") ss (pushArgs as (popFrame ast)) h (inltM as (getCurrentSP (popFrame ast)) e) set
-            _ -> error "omega, EATom found that isn't var, and have no case"
+            _ -> error "fjorton. typist. (skrivmaskinist) omega, EATom found that isn't var, and have no case"
     {-ECase (ECase e brs1) brs2 -> do
         code' <- reshuffle code
         omega' (ROmega "case reshuffling") stack heap code' set
     -}
-    ECase expr brs -> omega' (ROmega "case") (CtOCase brs : stack) (duplicateFrame astack) heap expr set
+    ECase expr brs -> omega' (ROmega "case") (CtOCase brs : stack) 
+                             (duplicateFrame astack) heap expr set
 
     -- Function application with all known arguments,
     -- and with known function.
@@ -193,25 +208,31 @@ omega stack astack heap code set = case code of
                 returnJust
                     ( ROpt ORAppThunk
                     , StgState
-                        { code     = e
-                        , cstack   = CtUpd f' : CtOApp args : stack
-                        , astack   = duplicateFrame astack
+                        { code     = EAtom (AVar f)
+                        , cstack   = CtOApp args : stack
+                        , astack   = duplicateFrame astack -- <-
                         , heap     = heap
                         , settings = set
                         }
                     )
             -- Unevaluated, abyssimal function, omega the thunk!
-            Just (OThunk _as _i e, OnAbyss) -> 
-                omega' (ROmega "function abyss thunk") (CtOApp args : stack) (duplicateFrame astack) heap (EAtom $ AVar f) set
+            Just (OThunk as _i e, OnAbyss) -> 
+                omega' (ROmega "function abyss thunk") (CtOApp args : stack) 
+                       (duplicateFrame astack) heap (EAtom $ AVar f) set -- hellre lattare regler
+                      -- astack heap (inltP as (getCurrentSP astack) e) set
             
             -- PAP cases??
             _ -> irreducible
     ELet (NonRec x o@(OCon _ as)) e' | all (isKnown heap) as -> do
         x' <- newVar
-        omega' (ROmega "let known con") (CtOLet x' : stack) (pushArgs [AVar $ Heap x'] astack) (H.insert x' o heap) e' set
+        omega' (ROmega "let known con") (CtOLet x' : stack) 
+               (pushArgs [AVar $ Heap x'] astack) (H.insert x' o heap) e' set
     ELet (NonRec x o) e' -> do
         x' <- newVar
-        omega' (ROmega "let, allocate on abyss") (CtOLet x' : stack) (pushArgs [AVar $ Heap x'] astack) (H.insertAbyss x' (allocObjStack astack o) heap) e' set
+        omega' (ROmega "let, allocate on abyss") 
+               (CtOLet x' : stack) 
+               (pushArgs [AVar $ Heap x'] astack) 
+               (H.insertAbyss x' o heap) e' set
     
     c@(EPop p as) | all (isKnown heap) as -> returnJust 
         ( ROpt ORPOp
@@ -248,8 +269,10 @@ omega stack astack heap code set = case code of
 beta :: Variable t => ContStack t -> ArgStack t -> Heap t -> 
                            [StgSettings t] -> StgM t (Maybe (Rule, StgState t))
 beta cstack@(CtOBranch e brdone brleft:ss) astack h set = case brleft of
-    BDef x e   :_ -> omega cstack (pushArgs [AUnknown (getCurrentSP astack) x] astack) h e set
-    BCon c as e:_ -> omega cstack (pushArgs (zipWith AUnknown [getCurrentSP astack..] as) astack) h e set
+    BDef x e   :_ -> omega' (ROmega "from beta bdef") cstack 
+                            (pushArgs [AUnknown (getCurrentSP astack) x] astack) h e set
+    BCon c as e:_ -> omega' (ROmega "from beta bcon") cstack 
+                            (pushArgs (zipWith AUnknown [getCurrentSP astack..] as) astack) h e set
     []            -> case e of
         -- ECase _ _ -> omega' (RIrr "case in case (from beta)") ss astack h (ECase e brdone) set
         _         -> irr' (RIrr "case expression finished (from beta)") ss (popFrame astack) h (ECase e brdone) set
@@ -265,6 +288,7 @@ irr' rule st ast h e set = returnJust
         }
     )
 
+{- OBSOLETE!!
 findCase :: Variable t => Expr t -> Branch t -> Branch t
 findCase e b = case b of 
     BCon c vs expr  -> BCon c vs $ findCaseX b e expr 
@@ -275,6 +299,7 @@ findCase e b = case b of
         Just x  -> x
         Nothing -> e'
     findCaseX _ _ e = e
+-}
 
 irr :: Variable t => ContStack t -> ArgStack t -> Heap t -> Expr t -> 
                           [StgSettings t] -> StgM t (Maybe (Rule, StgState t))
@@ -283,7 +308,8 @@ irr (CtOCase brs     : ss) ast h e  set =
     if caseBranches (head set) 
        then beta (CtOBranch e [] brs:ss) ast h set
        else case e of
-        ECase _ _ -> omega' (RIrr "cases in case") ss ast h (ECase e brs) set
+        -- requires case in case
+        --ECase _ _ -> omega' (RIrr "cases in case") ss ast h (ECase e brs) set
         e2 -> case brs of
             [_] -> beta (CtOBranch e [] brs : ss) ast h set
             _   -> irr' (RIrr "case continuation") ss ast h (ECase e2 brs) set
@@ -293,7 +319,7 @@ irr (CtOLet t        : ss) ast h e set = case H.lookupAnywhere t h of
      {-   ELet (NonRec v (OThunk e')) (ECase (EAtom (AVar v')) brs) | v == v'
      --       -> omega' (RIrr "?") (CtOLet t : ss) h (ECase e' brs) set 
      -}
-        exp -> irr' (RIrr "let continuation") ss (popArg ast) h exp set -- ELet (NonRec t o) e) set
+        (ast',exp) -> irr' (RIrr "let continuation") ss ast' h exp set -- ELet (NonRec t o) e) set
     Nothing -> error "irr on CtOLet, variable not in abyss!"
   
 
@@ -310,13 +336,17 @@ irr (CtOFun xs i a : ss) as h e set = do
                )
 
 irr (CtOBranch e brdone (BDef x _   :brleft) : ss) ast h e' set = 
-        beta (CtOBranch e (brdone ++ [BDef x    e']) brleft:ss) ast h set
+        beta (CtOBranch e (brdone ++ [BDef x    e']) brleft:ss) 
+             (popArg ast) h set
 irr (CtOBranch e brdone (BCon c as _:brleft) : ss) ast h e' set =
-        beta (CtOBranch e (brdone ++ [BCon c as e']) brleft:ss) ast h set
+        beta (CtOBranch e (brdone ++ [BCon c as e']) brleft:ss) 
+             (popArgs (length as) ast) h set
 
 irr (CtOApp as : ss) ast h e' set = do
     v <- newVar
-    irr' (RIrr "app continuation") ss ast h (ELet (NonRec v (OThunk [] 0 {- naive assumptions -} e')) (ECall (Local (getCurrentSP ast) v) as)) set
+    irr' (RIrr "app continuation") ss ast h 
+         (ELet (NonRec v (OThunk [] 0 {- naive assumptions -} e')) 
+               (ECall (Local (getCurrentSP ast) v) as)) set
 
 irr (CtOUpd v : ss) ast h e set = do
     let h' = H.insertAbyss v (OThunk [] 0 {- naive assumptions -} e) h
@@ -346,25 +376,40 @@ psi (CtOLet t : ss) ast h v@(Heap v') lbs set = case H.lookup v' h of
 
 psi (CtOLet t : ss) ast h v lbs set = psi' (RPsi "add let, on abyss") ss ast h v (t:lbs) set
 
-psi ss'@(CtOCase branch   : ss) ast h v@(Heap v') lbs set = case H.lookupAnywhere v' h of
-    Just (OCon c atoms) -> 
-        case instantiateBranch c atoms branch of 
-            Nothing -> def
-            Just expr -> om expr atoms
-    Just o -> def
-    Nothing -> err
+psi ss'@(CtOCase branch   : ss) ast h (lookupAtomStack ast . AVar -> AVar (Heap v')) lbs set = 
+    case H.lookupAnywhere v' h of
+        Just (OCon c atoms) -> 
+            case instantiateBranch c atoms branch of 
+                Nothing -> def
+                Just expr -> om expr atoms
+        Just o -> def
+        Nothing -> err
   where
+    v = Heap v'
     err = error "psi couldn't instantiate that :'/"
-    om e as = omega' (RPsi "KnownCase") ss (popFrame ast) h (inltM as (getCurrentSP (popFrame ast)) e) set
+                -- daniels ide om att oka shiftningen till let
+    om e as = let ast' = head ast : drop 2 ast
+              in  omega' (RPsi "KnownCase") (map CtOLet lbs ++ ss) ast' h 
+                     ( inlt (>= (getCurrentSP ast')) (length lbs) 0 []
+                     $ inltM as (getCurrentSP ast') e) set
+
+    -- THIS IS SZISSLYING TIME, shizzle time, shizzle time, now we have
+    -- a shizzle time, chisel time, let's do this thing
+
     --om e as = omega' (RPsi "KnownCase") ss (pushArgs as (popFrame ast)) h e set
     def = case findDefaultBranch (AVar v) branch of
-        Nothing -> irr' (RPsi "psi couldn't inst branch") ss' ast h (mkExprVar ast h v lbs) set
+        Nothing -> case mkExprVar ast h v lbs of 
+            (ast',e) -> irr' (RPsi "psi couldn't inst branch") ss' ast' h e set
         Just expr -> om expr [AVar v]
 
-psi (CtOUpd t   : ss) ast h v@(Heap v') lbs set = case H.lookupAnywhere v' h of
-    Just o -> let h' = H.insertAbyss t o h
-               in psi' (RPsi "OUpd thunk") ss ast h' v lbs set
-    Nothing -> error $ "psi didn't find that OUpd "
+-- is this obsolete??
+psi (CtOUpd t   : ss) ast h (lookupAtomStack ast . AVar -> AVar (Heap v')) lbs set = 
+    let v = Heap v' in case H.lookupAnywhere v' h of
+        Just o -> let h' = H.insertAbyss t o h
+                  in psi' (RPsi "OUpd thunk") ss ast h' v lbs set
+        Nothing -> error $ "psi didn't find that OUpd "
+
+psi (CtOUpd t   : ss) ast h v@(Local i x) lbs set = error "psi on CtOUpd and Local"
 
 psi (CtUpd t   : ss) ast h (Heap v) lbs set = case H.lookupHeap v h of
     Just o -> let h' = H.insertAbyss t o h
@@ -373,13 +418,16 @@ psi (CtUpd t   : ss) ast h (Heap v) lbs set = case H.lookupHeap v h of
     
                
 psi ss@(CtOBranch e brdone brleft : _) ast h v lbs set = 
-   irr' (RPsi "branch continuation") ss ast h (mkExprVar ast h v lbs) set
+    irr' (RPsi "branch continuation") ss ast' h e set
+  where (ast', e) = mkExprVar ast h v lbs
 psi ss@(CtOFun args i alpha : _) ast h v lbs set =
-    irr' (RPsi "fun continuation") ss ast h (mkExprVar ast h v lbs) set
-psi (CtOApp as : ss) ast h v lbs set = omega' (RPsi "App continutation") ss (popFrame ast) h (mkExpr ast h (ECall v as) lbs) set
+     irr' (RPsi "fun continuation") ss ast' h e set
+  where (ast', e) = mkExprVar ast h v lbs
+psi (CtOApp as : ss) ast h v lbs set = omega' (RPsi "App continutation") ss ast' h e set
+    where (ast', e) = mkExpr (popFrame ast) h (ECall v as) lbs
 
 psi s ast h v _ _ = error $ "Psi: I don't know what to do with this stack: " 
-     ++ show (unsafeCoerce s :: ContStack String)
+     ++ show s -- (unsafeCoerce s :: ContStack String)
 
 {-
 afterburner :: (Data t, Ord t) => ContStack t -> Heap t -> 
@@ -418,18 +466,18 @@ substing xr brs = case brs of
     f c vs e = e 
 -} 
 
-mkExprVar :: Variable t => ArgStack t -> Heap t -> Var t -> [t] -> Expr t
+mkExprVar :: Variable t => ArgStack t -> Heap t -> Var t -> [t] -> (ArgStack t, Expr t)
 mkExprVar astack h v = mkExpr astack h (EAtom (AVar v)) 
 
-mkExpr :: Variable t => ArgStack t -> Heap t -> Expr t -> [t] -> Expr t
-mkExpr astack heap = foldr addBindings
+mkExpr :: Variable t => ArgStack t -> Heap t -> Expr t -> [t] -> (ArgStack t, Expr t)
+mkExpr astack heap exp = foldr addBindings (astack, exp)
   where
-    addBindings var exp = case H.lookupAbyss var heap of
+    addBindings var (astack,exp) = (,) (popArg astack) $ case H.lookupAbyss var heap of
         Just obj -> case getCurrentSP astack - 1 `elem` map rm (localsE exp) of
-            True -> ELet (NonRec var (trUnknown obj)) exp
+            True ->  ELet (NonRec var (trUnknown obj)) exp
             False -> inltM [error "mkExpr did something wrong :("] (getCurrentSP astack - 1) exp
         Nothing  -> case getCurrentSP astack - 1 `elem` map rm (localsE exp) of
-            True -> ELet (NonRec var OBlackhole) exp
+            True ->  ELet (NonRec var OBlackhole) exp
             False -> inltM [error "mkExpr did something wrong :("] (getCurrentSP astack - 1) exp
         
         

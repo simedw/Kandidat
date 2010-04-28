@@ -34,10 +34,14 @@ data LoadSettings = LSettings
 
 
 loadFile :: LoadSettings -> FilePath -> IO [Function String]
-loadFile settings file = do
+loadFile = loadFileSpecifyOutput False
+
+loadFileSpecifyOutput :: Bool -> LoadSettings -> FilePath -> IO [Function String]
+loadFileSpecifyOutput output settings file = do
     dir     <- getCurrentDirectory
     prelude <- readFile (dir </>  "prelude" </> prelude settings)
     res     <- readFile (dir </>  "testsuite" </> file)
+    when output (putStrLn res)
     case parseSugar (res ++ "\n" ++ prelude) of
         Right fs -> let code = (Locals.localise $ run (createGetFuns (input settings)
                               ++ prePrelude) fs)
@@ -45,7 +49,7 @@ loadFile settings file = do
                                     True  -> return $ map removeOPT code
                                     False -> return $ code
         Left  r  -> putStrLn ("fail: " ++ show r) >> return []
-
+        
 -- note that PrintCt must be the first thing on the stack
 forceInterpreter :: [Function String] -> Either String (SValue String)
 forceInterpreter fs = do
