@@ -188,31 +188,4 @@ om de är samma. Detta är den effekten man vill eftersträva rent abstrakt,
 men det finns också andra sätt att implementera substitution, genom
 att t.ex. göra ett uppslag i en tabell varje gång evalueringen kommer till en fri variabel. 
 
-\subsubsection{Partiell evaluering}
-Detta arbete handlar till stor del om partiell evaluering. Men vad innebär det?
-I funktionella språk är funktioner första klassens objekt och kan t.ex.
-skickas med som argument till andra funktioner eller returneras från
-andra funktioner. Tag t.ex. funktinoen \miniCode{zipWith}, här skriven i Haskell:
-
-\begin{codeEx}
-zipWith :: (a -> b -> c) -> [a] -> [b] -> [c]
-zipWith f (x:xs) (y:ys) = f x y : zipWith f xs ys
-zipWith _ _      _      = []
-\end{codeEx}
-
-Vad kan \miniCode{f} vara här? Den skulle kunna vara en unär funktion som returnerar en ny
-funktion. Den kan också vara en funktion som tar tre argument och redan har ett
-applicerat:
-
-\begin{codeEx}
-let f = \x y z -> x * y - z
-in  zipWith (f 3) list1 list2
-\end{codeEx}
-
-
-Funktioner som har några, men inte alla argument applicerade kallas 
-partiellt applicerade. Att börja evaluera en sådan funktion, partialevaluera,
-är inget som vanligtvis görs i Haskellimplementationer, 
-men är vad som undersöks i detta projekt. 
-
 \end{document}
