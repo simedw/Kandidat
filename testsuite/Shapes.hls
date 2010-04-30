@@ -5,41 +5,41 @@ posFun f p q = case p of
         { Pos x2 y2 -> Pos (f x1 x2) (f y1 y2) 
         } };
 
-posAdd = posFun (+);
-posSub = posFun (-);
-posMul = posFun (*);
-posDiv = posFun (/);
+posAdd = posFun (+.);
+posSub = posFun (-.);
+posMul = posFun (*.);
+posDiv = posFun (/.);
 
 -- absSqr :: Pos -> Double
 absSqr p = case p of
-    { Pos x y -> x * x + y * y };
+    { Pos x y -> x *. x +. y *. y };
 
 -- abs :: Pos -> Double
 abs = sqrt . absSqr;
 
 -- arg :: Pos -> Double
 arg p = case p of
-    { Pos x y -> case x > 0.0 of
-        { True  -> atan (y / x)
-        ; False -> case x < 0.0 of
-            { True -> pi + atan (y / x)
-            ; False -> case y > 0.0 of
-                { True  -> pi / 2.0
-                ; False -> case y < 0.0 of
-                    { True  -> pi / -2.0
-                    ; False -> 0.0 
+    { Pos x y -> case x >. 0.0 of
+        { True  -> atan (y /. x)
+        ; False -> case x <. 0.0 of
+            { True -> pi +. atan (y /. x)
+            ; False -> case y >. 0.0 of
+                { True  -> pi /. 2.0
+                ; False -> case y <. 0.0 of
+                    { True  -> pi /. -2.0
+                    ; False -> 0.0
                     } } } } };
 
 -- polar :: Double -> Double -> Pos
-polar r theta = Pos (r * cos theta) (r * sin theta);
+polar r theta = Pos (r *. cos theta) (r *. sin theta);
 
 -- type Shape = Pos -> Bool
 
 -- circle, square :: Shape
-circle p = absSqr p < 1.0;
+circle p = absSqr p <. 1.0;
 square p = case p of
-    { Pos x y -> x > -1.0 && x < 1.0
-              && y > -1.0 && y < 1.0
+    { Pos x y -> x >. -1.0 && x <. 1.0
+              && y >. -1.0 && y <. 1.0
     };
 
 -- complement :: Shape -> Shape
@@ -50,7 +50,7 @@ translate dp s p = s $ posSub p dp;
 scale     dp s p = s $ posDiv p dp;
 
 -- rotate :: Double -> Shape -> Shape
-rotate theta s p = s $ polar (abs p) (arg p + theta);
+rotate theta s p = s $ polar (abs p) (arg p +. theta);
 
 -- union, minus, intersect :: Shape -> Shape -> Shape
 union     s t p = s p || t p;
@@ -64,15 +64,15 @@ shapes c ss p = case filter (\sc . fst sc p) ss of
     ; Cons sc rest -> snd sc
     };
 
-fromTo x step y = takeWhile (\z . z <= y) $ iterate (\z . z + step) x;
+fromTo x step y = takeWhile (\z . z <=. y) $ iterate (\z . z +. step) x;
 
 -- screen :: Double -> Double -> [[Pos]]
-screen szX szY = let { xs = fromTo -1.0 (2.0 / (szX - 1.0)) 1.0
-                     ; ys = fromTo -1.0 (2.0 / (szY - 1.0)) 1.0
+screen szX szY = let { xs = fromTo -1.0 (2.0 /. (szX -. 1.0)) 1.0
+                     ; ys = fromTo -1.0 (2.0 /. (szY -. 1.0)) 1.0
                      } 
                  in map (\x . map (\y . Pos x y) ys) xs;
 
-program1 = Tuple ((scale (Pos 0.6 0.8) circle)) 'X' : 
+program1 = Tuple ((scale (Pos 0.6 0.8) circle)) 'X' :
            Tuple ((scale (Pos 1.3 1.3) $ translate (Pos 0.5 0.5) circle)) 'O' : Nil;
 
 program2 = Tuple (scale (Pos 0.6 0.6) $ rotate (pi / 7.0) square) 'X' : Nil;
