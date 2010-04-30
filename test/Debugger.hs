@@ -132,11 +132,13 @@ loop originalState  = do
   --          [":force", var] -> forceit st var >> loop st
             [":h"] -> printHelp >> loop st
             [":help"] -> printHelp >> loop st
+            [":popFrame"] -> loop st
             input -> do
                 outputStrLn $ "oh hoi: " ++ unwords input
                 loop st
   where
     gc = mkGC ["$True", "$False"]
+
 
     bp :: [BreakPoint] -> Result -> Maybe BreakPoint
     bp [] _ = Nothing

@@ -4,8 +4,12 @@ module Types
   , runTests -- [Test] -> IO ()
   ) where
 
+import Prelude hiding (catch)
+
 import Data.Ratio
 import Test.QuickCheck
+
+import Control.Exception
 
 data Test where
   QCTest 
@@ -49,6 +53,7 @@ runTest test = do
        I'make'my'own'test name action -> action
    putStrLn $ ""
    return res
+
 
 runTests :: [Test] -> IO ()
 runTests ts = do

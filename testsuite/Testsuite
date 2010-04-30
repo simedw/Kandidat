@@ -1,0 +1,380 @@
+#!/usr/bin/runhaskell
+
+import Data.List
+import Data.Function
+import Control.Arrow
+import Control.Monad
+import System.Environment
+
+main = do 
+     foo <- readFile =<< getProgName
+     let fs = files foo
+     mapM_ (uncurry writeFile) fs
+     putStrLn "optTests = ["
+     -- mapM_ putStrLn $ intercalate  $ map fst fs
+     mapM_ putStrLn $ map (\x -> "    , \"" ++ x ++ "\"" ++ " ---> (5 :: Integer)") $ map fst fs
+     putStrLn "    ]"
+files :: String -> [(FilePath,String)]
+files = uncurry zip 
+      . first (zipWith pad [0..])               -- add OC**_.hls to filename
+      . unzip
+      . drop 1                                  -- remove this script
+      . filenameContents                        -- filenames start with #, 
+                                                -- followed by content
+      . groupBy ((==) `on` ("#" `isPrefixOf`))  -- separate by start on #
+      . init                                    -- remove last comment
+      . lines
+  where
+    pad n f = "OC" ++ padding ++ show n ++ f ++ ".hls"
+        where 
+            padding | n < 10    = "0"
+                    | otherwise = ""
+
+    filenameContents :: [[String]] -> [(String,String)]
+    filenameContents ([f]:c:r) = (drop 1 f,unlines c):filenameContents r
+    filenameContents _         = []
+
+
+{-
+#function
+
+-- Should return 5
+-- Inlines const with one of two arguments
+main = let f = optimise (const 5) in f 2;
+#functionPAP
+
+-- Should return 5
+-- inline of flip with 2 of 3 arguments
+main = let f = optimise (flip const 2) in f 5;
+
+#function
+
+-- Should return 5
+main = let f = optimise (const3 5) in f 3 2;
+const3 x y z = x;
+
+#function
+
+--Should return 5
+main = let f = optimise (const3 5 3) in f 2;
+const3 x y z = x;
+
+#function
+
+-- Should return 5
+-- inline of id with two arguments
+main = let f = optimise (id const 5) in f 2;
+
+
+
+#function
+
+-- Should return 5
+main = let f = optimise (join eat 2) in f 5;
+
+join f x = f x x;
+
+eat x y z = z;
+
+#function
+
+--Should return 5
+
+foo x y z = const y;
+
+main = let opt = optimise (foo 1 5) in opt 3 8;
+
+#function
+
+-- Should return 5
+
+bar x y z = const z;
+
+main = let opt = optimise (bar 1 3) in opt 5 8;
+
+#function
+
+-- Should return [2,2,2] 
+main = let 
+    { opt1 = optimise (secondOfFour 1)
+    ; opt2 = optimise (secondOfFour 1 2)
+    ; opt3 = optimise (secondOfFour 1 2 3)
+    ; a = opt1 2 3 4 5
+    ; b = opt2 3 4 5
+    ; c = opt3 4 5
+    } in a : b : c : Nil;
+
+secondOfFour x y z = const3 y;
+
+const3 x y z = x;
+
+#unknownCall
+-- should be a function that takes a function and aplies it to all elements
+-- let a1 = f 0; a2 = f 1; .. ; in Cons bla..
+
+main = let opt = optimise (flip map (1 : 2 : 3 : 4 : Nil)) in opt (const 5);
+
+-- should be [5,5,5,5]
+
+#CtOApp
+-- Test CtoApp that we evaluate another function.
+
+f x y = let
+    { g z = case x > 0 of
+        { True -> z + 1
+        ; False -> z
+        }
+    } in g y;
+
+main = let opt = optimise (f 3) in opt 4;
+
+-- should be 5
+
+#CtOApp
+
+-- Entuples two functions, and should inline one of them, (+).
+-- Returns 5.
+
+main = let { tup = Tuple (+) id
+           ; opt = optimise (foo tup 2)
+           } in opt 3;
+
+foo t1 x y = let f = fst t1 
+             in  f x y; 
+
+#CtOApp
+
+-- minor difference
+
+-- Entuples two functions, and should inline one of them, (+).
+-- Returns 5.
+
+main = let { tup = Tuple (+) id
+           ; opt = optimise (foo tup 2)
+           } in opt 3;
+
+foo t1 x y = let f = fst t1 x 
+             in  f y; 
+
+#CtOApp
+
+-- minor difference... more pap-style
+
+-- Entuples two functions, and should inline one of them, (+).
+-- Returns 5.
+
+main = let { tup = Tuple (+) id
+           ; opt = optimise (foo tup 2)
+           } in opt 3;
+
+foo t1 x = let f = fst t1 
+           in  f x; 
+
+
+#caseselection
+
+-- Adds 1 to input list if input integer is positive,
+-- otherwise decrements each element in list by 1.
+
+main = map (optimise (foo getInt)) getIntList;
+
+foo x y = case x > 0 of
+            { True -> y + 1
+            ; False -> y - 1
+            };
+
+#caseselection
+
+-- Adds 1 to input list if input integer is positive,
+-- otherwise decrements each element in list by 1.
+
+main = map (optimise (foo getInt)) getIntList;
+
+foo x y = if (x > 0) (y + 1) (y - 1) ;
+
+#caseselection
+
+-- Adds 1 to input list if input integer is positive,
+-- otherwise decrements each element in list by 1.
+
+main = map (optimise (foo getInt)) getIntList;
+
+foo x = case x > 0 of
+          { True -> incr
+          ; False -> decr
+          };
+          
+incr x = x + 1;
+decr x = x - 1;
+
+#caseselection
+
+-- Adds 1 to input list if input integer is positive,
+-- otherwise decrements each element in list by 1.
+
+main = map (optimise (foo getInt)) getIntList;
+
+foo x = if (x > 0) incr decr;
+
+incr x = x + 1;
+decr x = x - 1;
+
+#caseunrolling
+-- Tests a simple arithtest, should be 5
+
+
+foo x y = case x > 0 of
+    { True  -> foo (x - 1) (y + 1)
+    ; False -> y
+    };
+
+main = let opt = optimise (foo 2) in opt 3;
+
+#letincase
+-- Tests let in scrutinee, should be 5
+p x y = case (let { r = x + 9
+          } in C r) of
+    { C p -> p - y
+    };
+
+main = let opt = optimise (p 5) in opt 9;
+
+#letincase
+
+-- Difficult identity function
+-- KRUBBDAGS?!??!?! :--------D
+-- should return 5
+main = let opt = optimise identity in opt 5;
+
+identity x = case Cons x Nil of
+  { Cons a b -> a 
+  };
+
+
+#letincase
+
+-- Difficult identity function
+-- Should be independent of construktor.
+-- should return 5
+main = let opt = optimise identity in opt 5;
+
+identity x = case A B C D x E F of
+  { A b c d wee e f -> wee
+  };
+
+#casedPAP
+
+-- Should return 5
+-- The optimised function should be the identity function
+-- inline of flip with 2 of 3 arguments
+-- the if branch returns a function.
+main = let f = optimise (let g x = if (toBool x) 
+                                        (flip const 2) 
+                                        (flip const 3) 
+                         in g) with { casebranches } 
+       in f 8 5;
+
+toBool x = x == 0;
+
+#casedPAP
+
+-- Adds 5 to input list if input integer is positive,
+-- otherwise decrements each element in list by 5.
+
+-- This is an example of an inline that could be made if we
+-- could push more arguments on the OFun
+
+main = let 
+    { f = optimise (\x . foo getInt 5)
+    ; g = f Unit
+    } in map g getIntList;
+
+foo x = if (x > 0) (+) (subtract);
+
+subtract x y = y - x;
+
+#abyssCon
+
+-- minimalt exempel pa ett problem vi har
+
+-- borde returnera X 2
+
+-- optimerade funktionen borde bli \y. let z = X y in z
+
+main = let opt = optimise (foo 1) in opt 2;
+
+foo x y = let 
+    { z = X y
+    } in z;
+
+#abyssConAlt
+
+-- minimalt exempel pa ett problem vi har, skriven utan let
+-- (fungerar)
+
+-- borde returnera X 2
+
+-- optimerade funktionen borde bli \y. let z = X y in z
+
+main = let opt = optimise (alt_foo 1) in opt 2;
+
+alt_foo x y = X y;
+
+#abyssConSimon
+
+-- should return [4,6]
+
+main = let f = optimise (foo 2)
+       in  f (4:6:Nil);
+
+-- essentially id on lists
+foo x y = let z = Cons x y
+          in  bar z; 
+
+-- essentially tail
+bar z = case z of
+            { Cons a b -> b 
+            ; Nil      -> Nil
+            };
+
+#power
+
+-- power, fast multiplikation.
+
+main = let f = optimise (mult (abs getInt))
+       in  map f getIntList;
+
+mult x y = if (x <= 0) 0 (y + mult (x - 1) y);
+
+#power
+
+-- power, fast addition.
+
+main = let f = optimise (addi (abs getInt))
+       in  map f getIntList;
+
+addi x y = if (x <= 0) y (1 + addi (x - 1) y);
+
+#filter
+
+-- Filtrerar bort alla fran inputstrangen som ar inputdbl.
+main = let p = optimise (\x . not $ x ==. getDouble)
+       in filter p getDoubleList;
+
+#filter
+
+-- Filtrerar bort alla fran inputintlistan som ar 
+-- mindre an 2 * inputinten eller storre an 3 * inputinten
+main = let p = optimise (\x . x > getInt * 2 && x < getInt * 3) 
+       in filter p getIntList;
+
+#zipWith
+
+-- zippingly adds [0..] to the input list
+
+enumFrom x = x : enumFrom (x + 1);
+
+main = let f = optimise (zipWith (+) getIntList)
+       in  f $ enumFrom 0;
+
+-- -}

@@ -25,7 +25,7 @@ data Cont t
   | CtPrintCon t [SValue t] [Atom t]
   | CtOpt t
   | CtOFun [t] Int t
-  | CtOApp [Atom t]
+  | CtOApp (Var t) [Atom t]
   | CtOCase [Branch t]
   | CtOLet t
   | CtOBranch (Expr t) [Branch t] [Branch t]  
@@ -96,8 +96,8 @@ decrementInline :: Ord t => t -> StgSettings t -> StgSettings t
 decrementInline f s = s 
     { inlines = M.update (Just . (subtract 1)) f (inlines s)  }
 
-makeSettings :: Ord t => Heap t -> [Setting t] -> StgSettings t
-makeSettings h = foldr
+makeSettings :: Ord t => ArgStack t -> Heap t -> [Setting t] -> StgSettings t
+makeSettings astack h = foldr
     (\setting s -> case setting of
           Inlinings a  -> s { globalInline = lookupInteger a }
           Inline f a   -> s { inlines = M.insert f (lookupInteger a) (inlines s) }
@@ -108,7 +108,8 @@ makeSettings h = foldr
     lookupInteger (AVar (Heap v)) = case H.lookup v h of
         Just (OCon _ [ANum x]) -> x
         Nothing -> error "makeSettings, invalid arguments to optimise with"
-    lookupInteger (AVar (Local i v)) = error "måste ta in callstacken också, TODO :)"
+    lookupInteger (AVar (Local i v)) = lookupInteger (lookupStackFrame i astack)
+
 
 data StgMState t = StgMState
     { nameSupply :: [t]

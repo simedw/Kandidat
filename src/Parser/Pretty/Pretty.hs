@@ -195,7 +195,7 @@ mkPretty (Syntax {..})  = PPrinters {..}
                        <+> mparens (hsep (map ppAtom ne)) 
         CtOFun xs i a -> key "OFun" <+> int i <+> bindVar a 
                        <+> mparens (hsep (map bindVar xs) <+> operator "->" <+> ppHole)
-        CtOApp app  -> key "OApp" <+> ppHole <+> hsep (map ppAtom app)
+        CtOApp f app  -> key "OApp" <+> ppVar f <+> ppHole <+> hsep (map ppAtom app)
         CtOCase brs -> key "OCase" <+> ppCont (CtCase brs)
         CtOLet x -> key "Olet" <+> bindVar x <+> operator "=" <+> operator "?" <+> key "in" <+> ppHole 
         CtOBranch e brdone brleft ->

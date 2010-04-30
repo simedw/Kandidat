@@ -77,4 +77,4 @@ program1 = Tuple ((scale (Pos 0.6 0.8) circle)) 'X' :
 
 program2 = Tuple (scale (Pos 0.6 0.6) $ rotate (pi / 7.0) square) 'X' : Nil;
 
-main = map (map (optimise (shapes ' ' program1))) $ screen 4.0 4.0;
+main = map (map (id (shapes ' ' program1))) $ screen 4.0 4.0;

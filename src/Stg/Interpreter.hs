@@ -63,7 +63,7 @@ topIsO (cont : _) = case cont of
     CtOCase _       -> True
     CtOLet _        -> True
     CtOBranch{}     -> True
-    CtOApp _        -> True
+    CtOApp _ _      -> True
     _               -> False
 topIsO _          = False
 
@@ -119,15 +119,15 @@ initialHeap = H.fromList . map (\(Function name obj) -> (name, obj))
 
 step :: Variable t => StgState t -> StgM t (Maybe (Rule, StgState t))
 
-step st@(OmegaState {..}) = omega cstack astack heap code settings
-step st@(IrrState {..})   = irr cstack astack heap code settings
+step st@(OmegaState {..}) = omega' cstack astack heap code settings
+step st@(IrrState {..})   = irr' cstack astack heap code settings
 step st@(PsiState {..})   = case code of
-    EAtom (AVar code) -> psi cstack astack heap code letBinds settings
+    EAtom code -> psi' cstack astack heap code letBinds settings
 
 step st@(StgState {..})   = step' $ st {cstack = decTop cstack}
   where
     step' st'@(StgState {..}) = case code of
-       _ | topOInstant cstack -> omega' (ROmega "from machine after OInstant") 
+       _ | topOInstant cstack -> omega (ROmega "from machine after OInstant") 
                                         (drop 1 cstack) astack heap code settings -- for inlining
      
        ECase expr branch     -> case expr of
@@ -151,12 +151,17 @@ step st@(StgState {..})   = step' $ st {cstack = decTop cstack}
             | not (isVar a) && topUpd cstack   -> rupdate st (OThunk [] 0 code)
             | not (isVar (lookupAtom a)) && topCase cstack  -> rret st
             | not (isVar (lookupAtom a)) && topPrint cstack -> rprintval st a
+            | not (isVar (lookupAtom a)) && topIsO cstack 
+                -> psi (RPsi "Machine found atom and can continue to optmise")
+                       cstack astack heap a [] settings
        EAtom a -> case lookupAtom a of
          (AVar (Heap var)) -> case H.lookup var heap of  
            Nothing  -> return Nothing
            Just obj -> case obj of
                OThunk fv size expr       -> rthunk st (map lookupAtom fv) size expr var
-               _ | topIsO cstack  -> psi cstack astack heap (Heap var) [] settings
+               _ | topIsO cstack  
+                    -> psi (RPsi "machine found non-thunk, continue optimise")
+                            cstack astack heap a [] settings
                OOpt alpha sets   -> roptimise st alpha sets var
                _ | topUpd  cstack -> rupdate st obj
                _ | topCase cstack -> rret st
@@ -182,7 +187,13 @@ step st@(StgState {..})   = step' $ st {cstack = decTop cstack}
        -- if there is no rule to apply, do nothing
        _              -> return Nothing
      where
-      lookupAtom = lookupAtomStack astack
+      lookupAtom (AVar v) = case v of
+        Heap x    -> AVar v
+        Local x _ -> lookupStackFrame x astack
+                    -- det har ar farligt sager daniel
+                    -- for det kan vara i en annan frame
+      lookupAtom (AUnknown i t) = lookupStackFrame i astack
+      lookupAtom a              = a
       allocObj o = case o of
         OCon c atoms    -> OCon c (map lookupAtom atoms)
         OThunk fv s exp -> OThunk (map lookupAtom fv) s exp
@@ -334,7 +345,7 @@ step st@(StgState {..})   = step' $ st {cstack = decTop cstack}
                   { code = EAtom omeg
                   , cstack = CtOpt alpha : cstack
                   , heap  = H.insert alpha OBlackhole heap
-                  , settings = makeSettings heap sets : settings 
+                  , settings = makeSettings astack heap sets : settings 
                   }
               )
       roptpap st@(StgState {..}) var atoms =
@@ -345,12 +356,12 @@ step st@(StgState {..})   = step' $ st {cstack = decTop cstack}
                       CtOpt alpha : stack' = cstack
                       astack' = pushArgs (zipWith AUnknown [0..] argsL) (newFrame astack) 
                       --e' = subtractLocal var (length atoms) $ substList argsA (map lookupAtom atoms) e
-                  in omega' ROptPap (CtOFun argsL (i - length atoms) alpha:stack') astack' heap (inltM atoms 0 e) settings
+                  in omega ROptPap (CtOFun argsL (i - length atoms) alpha:stack') astack' heap (inltM atoms 0 e) settings
               _ -> error "OPTPAP: pap doesn't point to FUN"
       roptfun st@(StgState {..}) args i expr = do
           let CtOpt alpha : cstack' = cstack
               astack'               = pushArgs (zipWith AUnknown [0..] args) (newFrame astack)
-          omega' (ROmega "from machine found fun to optimise") (CtOFun args i alpha : cstack') astack' heap expr settings
+          omega (ROmega "from machine found fun to optimise") (CtOFun args i alpha : cstack') astack' heap expr settings
       
       
 

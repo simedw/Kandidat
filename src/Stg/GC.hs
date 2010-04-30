@@ -128,7 +128,7 @@ instance FV Cont where
     freeVars (CtOBranch e brs brs') = freeVars e `S.union` freeVarsList brs `S.union` freeVarsList brs'
     freeVars (CtOLet v)             = S.singleton v 
     freeVars (CtOInstant _)         = S.empty
-    freeVars (CtOApp as)            = freeVarsList as
+    freeVars (CtOApp f as)          = freeVars f `S.union` freeVarsList as
 {-    
 instance FV StackFrame where
     freeVars (StackFrame _ p args)  = freeVarsList (take p args) -- ... bad ...

@@ -1,7 +1,7 @@
-cons x xs cc cn = cc x (xs cc cn);
-nil cc cn = cn;
+consla x xs cc cn = cc x (xs cc cn);
+nilla cc cn = cn;
 
-add x y = x + y;
-sum list = list add 0;
+addla x y = x + y;
+sumla list = list addla 0;
 
-main = sum (cons 2 (cons 4 (cons 3 nil))); 
+main = sumla (consla 2 (consla 4 (consla 3 nilla))); 
