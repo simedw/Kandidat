@@ -122,7 +122,7 @@ omega' stack astack heap code set = case code of
                     , StgState
                         { code     = EAtom a
                         , cstack   = stack
-                        , astack   = astack
+                        , astack   = duplicateFrame astack
                         , heap     = heap
                         , settings = set
                         }
@@ -149,6 +149,18 @@ omega' stack astack heap code set = case code of
         _ -> psi (ROmega "Atom is a value") 
                       stack astack heap a [] set
 
+    ECase (ECase expr ibrs) obrs | length ibrs <= 100 -> do
+        let e' = ECase expr [ re br obrs | br <- ibrs]
+            re (BDef x e)      brs 
+            	= BDef x (ECase e $ map (inltbr 1) brs)
+            re (BCon c args e) brs 
+                = BCon c args (ECase e $ map (inltbr $ length args) brs)
+            sp = getCurrentSP astack
+            inltbr n = brt $ shift (>= sp) n
+            brt f (BDef x e)      = BDef x $ f e
+            brt f (BCon c args e) = BCon c args $ f e
+        omega (ROmega "wellknown case-law") stack astack heap e' set 
+
     ECase expr brs -> omega (ROmega "case") (CtOCase brs : stack) 
                             (duplicateFrame astack) heap expr set
 
@@ -159,13 +171,14 @@ omega' stack astack heap code set = case code of
         , StgState
             { code  = code
             , cstack = stack
-            , astack = astack
+            , astack = duplicateFrame astack
             , heap  = heap
             , settings = set
             }
         )
 
     -- Function application
+    -- What has happened here?! This is an overlapped branch says GHC
     ECall (lookupAtom . AVar &&& id -> (AVar (Heap f'), v)) args | canInline f' set -> let f = Heap f' in
         case H.locatedLookup f' heap of
             -- Known function, inline it!
@@ -173,8 +186,8 @@ omega' stack astack heap code set = case code of
                   omega (ROpt ORInline) stack astack heap
                         (inltP args (getCurrentSP astack) e)
                         (inline f' set)
-            Just (OPap f as, OnHeap) ->
-                omega (ROmega "apply a pap") stack astack heap (ECall (Heap f) (as ++ args)) set
+            Just (OPap fun as, OnHeap) ->
+                omega (ROmega "apply a pap") stack astack heap (ECall (Heap fun) (as ++ args)) set
 {-                returnJust
                     ( ROpt ORInline
                     , StgState
@@ -193,7 +206,9 @@ omega' stack astack heap code set = case code of
                     , StgState
                         { code     = EAtom (AVar f)
                         , cstack   = CtOApp v args : stack
-                        , astack   = duplicateFrame astack -- <-
+                        -- This makes sense! one duplicate for machine, one because we
+                        -- evaluate the function. CtOApp is like a case in that regard
+                        , astack   = duplicateFrame $ duplicateFrame astack -- <-
                         , heap     = heap
                         , settings = set
                         }
@@ -223,7 +238,7 @@ omega' stack astack heap code set = case code of
         , StgState
             { code     = c
             , cstack   = stack
-            , astack   = astack
+            , astack   = duplicateFrame astack
             , heap     = heap
             , settings = set
             }
@@ -244,12 +259,14 @@ beta :: Variable t => ContStack t -> ArgStack t -> Heap t ->
                            [StgSettings t] -> StgM t (Maybe (Rule, StgState t))
 beta cstack@(CtOBranch e brdone brleft:ss) astack h set = case brleft of
     BDef x e   :_ -> omega (ROmega "from beta bdef") cstack 
-                            (pushArgs [AUnknown (getCurrentSP astack) x] astack) h e set
+                            (pushArgs [AUnknown (getCurrentSP astack) x] 
+                                      (duplicateFrame astack)) h e set
     BCon c as e:_ -> omega (ROmega "from beta bcon") cstack 
-                            (pushArgs (zipWith AUnknown [getCurrentSP astack..] as) astack) h e set
+                            (pushArgs (zipWith AUnknown [getCurrentSP astack..] as) 
+                                      (duplicateFrame astack)) h e set
     []            -> case e of
         -- ECase _ _ -> omega (RIrr "case in case (from beta)") ss astack h (ECase e brdone) set
-        _         -> irr (RIrr "case expression finished (from beta)") ss (popFrame astack) h (ECase e brdone) set
+        _         -> irr (RIrr "case expression finished (from beta)") ss astack h (ECase e brdone) set
 
 irr :: Variable t => Rule -> ContStack t -> ArgStack t -> Heap t -> Expr t -> 
                           [StgSettings t] -> StgM t (Maybe (Rule, StgState t))
@@ -269,12 +286,15 @@ irr' :: Variable t => ContStack t -> ArgStack t -> Heap t -> Expr t ->
 irr' (cont : stack) astack heap expr settings = case cont of
     CtOCase brs -> 
        if caseBranches (head settings) 
-        then beta (CtOBranch expr [] brs : stack) astack heap settings
+                            -- need to pop frame, or the scrutinee will be left
+        then beta (CtOBranch expr [] brs : stack) (popFrame astack) heap settings
         else case expr of
         -- requires case in case
-        --ECase _ _ -> omega (RIrr "cases in case") ss ast h (ECase e brs) set
+            ECase _ ibrs | length ibrs <= 100 ->
+                         omega (RIrr "cases in case") stack (popFrame astack) heap 
+                               (ECase expr brs) settings
             expr' -> case brs of
-                [_] -> beta (CtOBranch expr [] brs : stack) astack heap settings
+                [_] -> beta (CtOBranch expr [] brs : stack) (popFrame astack) heap settings
                 _   -> irr  (RIrr "case continuation") stack (popFrame astack) 
                             heap (ECase expr' brs) settings
     CtOLet t -> case H.lookupAnywhere t heap of
@@ -293,10 +313,10 @@ irr' (cont : stack) astack heap expr settings = case cont of
                    )
     CtOBranch e brdone (BDef x _ : brleft) ->
         beta (CtOBranch e (brdone ++ [BDef x expr]) brleft : stack)
-             (popArg astack) heap settings
+             (popFrame astack) heap settings
     CtOBranch e brdone (BCon c as _ : brleft) ->
         beta (CtOBranch e (brdone ++ [BCon c as expr]) brleft : stack)
-             (popArgs (length as) astack) heap settings
+             (popFrame astack) heap settings
     CtOApp f atoms -> do
         v <- newVar
         -- Nånting är ruttet här
@@ -341,7 +361,7 @@ psi' (cont : stack) astack heap atom lbs settings = case cont of
         omg e as = do
             let astack' = popFrame astack
             omega (RPsi "KnownCase") 
-                  (map CtOLet lbs ++ stack) 
+                  (map CtOLet (reverse lbs) ++ stack) 
                   (pushArgs (map (AVar . Heap) lbs) astack') heap
                   (inlt (>= (getCurrentSP astack')) (length lbs)
                         (getCurrentSP astack') as e)
@@ -489,13 +509,15 @@ mkExprVar astack h v = mkExpr astack h (EAtom (AVar v))
 mkExpr :: Variable t => ArgStack t -> Heap t -> Expr t -> [t] -> (ArgStack t, Expr t)
 mkExpr astack heap exp = foldr addBindings (astack, exp)
   where
-    addBindings var (astack,exp) = (,) (popArg astack) $ case H.lookupAbyss var heap of
+    addBindings var (astack,exp) = (,) (popArg astack) $ case H.lookupAnywhere var heap of
         Just obj -> case getCurrentSP astack - 1 `elem` map rm (localsE exp) of
-            True ->  ELet (NonRec var (trUnknown obj)) exp
-            False -> inltM [error "mkExpr did something wrong :("] (getCurrentSP astack - 1) exp
+            True  -> ELet (NonRec var (trUnknown obj)) exp
+            False -> inltM [error "mkExpr did something wrong :("] 
+                           (getCurrentSP astack - 1) exp
         Nothing  -> case getCurrentSP astack - 1 `elem` map rm (localsE exp) of
-            True ->  ELet (NonRec var OBlackhole) exp
-            False -> inltM [error "mkExpr did something wrong :("] (getCurrentSP astack - 1) exp
+            True  -> ELet (NonRec var OBlackhole) exp
+            False -> inltM [error "mkExpr did something wrong :("] 
+                           (getCurrentSP astack - 1) exp
         
         
         --ELet (NonRec var OBlackhole) exp --exp

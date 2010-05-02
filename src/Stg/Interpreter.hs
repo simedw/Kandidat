@@ -152,8 +152,8 @@ step st@(StgState {..})   = step' $ st {cstack = decTop cstack}
             | not (isVar (lookupAtom a)) && topCase cstack  -> rret st
             | not (isVar (lookupAtom a)) && topPrint cstack -> rprintval st a
             | not (isVar (lookupAtom a)) && topIsO cstack 
-                -> psi (RPsi "Machine found atom and can continue to optmise")
-                       cstack astack heap a [] settings
+                -> psi (RPsi "Machine found atom and can continue to optimise")
+                       cstack (popFrame astack) heap (lookupAtom a) [] settings
        EAtom a -> case lookupAtom a of
          (AVar (Heap var)) -> case H.lookup var heap of  
            Nothing  -> return Nothing
@@ -161,7 +161,7 @@ step st@(StgState {..})   = step' $ st {cstack = decTop cstack}
                OThunk fv size expr       -> rthunk st (map lookupAtom fv) size expr var
                _ | topIsO cstack  
                     -> psi (RPsi "machine found non-thunk, continue optimise")
-                            cstack astack heap a [] settings
+                            cstack (popFrame astack) heap (lookupAtom a) [] settings
                OOpt alpha sets   -> roptimise st alpha sets var
                _ | topUpd  cstack -> rupdate st obj
                _ | topCase cstack -> rret st

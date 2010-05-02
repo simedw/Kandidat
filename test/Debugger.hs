@@ -208,13 +208,13 @@ loop originalState  = do
             [] -> do
                 outputStrLn $ "Rule: " ++ show RInitial
                 printCode  $ code  st
-                printCStack $ cstack st
+                printCStack True $ cstack st
                 outputStrLn $ "heap("  ++ show (M.size $ heap st) ++ ")"
                 loop st
             (rule, st) : _ -> do
                 outputStrLn $ "Rule: " ++ show rule
                 printCode   $ code  st
-                printCStack  $ cstack st
+                printCStack True $ cstack st
                 outputStrLn $ "heap("  ++ show (M.size $ heap st) ++ ")"
                 outputStrLn $ "astack\n" ++ showDoc (prAStack PP.text $ astack st)
                 loop st
@@ -228,8 +228,8 @@ loop originalState  = do
             "h":fs -> mapM_ (printHeapLookup (heap st)) fs
             ["set"]  -> printSetting =<< lift (gets settings)
             ["settings"] -> printSetting =<< lift (gets settings)
-            ["s"]     -> printCStack (cstack st)
-            ["stack"] -> printCStack (cstack st)
+            ["s"]     -> printCStack False (cstack st)
+            ["stack"] -> printCStack False (cstack st)
             ["c"]     -> printCode (code st)
             ["code"]  -> printCode (code st)
             ["rules"] -> printRules
@@ -253,8 +253,12 @@ loop originalState  = do
 
     printCode code = outputStrLn $ "code: " ++ show (prExpr PP.text code)
 
-    printCStack cstack = outputStrLn $ "stack(" ++ show (length cstack) ++ "):\n" 
-                                  ++ show (prCStack PP.text cstack) 
+    printCStack b cstack = do
+         outputStrLn $ "stack(" ++ show (length cstack) ++ "):" 
+         outputStrLn $ show (prCStack PP.text (if b then take 5 cstack else id cstack)) 
+         if b && length cstack >= 5
+            then outputStrLn "..."
+            else return ()
 
     printHeapLookup heap f = outputStrLn $ printHeapFunctions $ M.filterWithKey (\k _ -> k == f) heap
 

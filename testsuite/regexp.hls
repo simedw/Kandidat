@@ -5,7 +5,7 @@ concatMap f y = case y of
 
 parse cs = case parse' cs Nil of
     { Cons x ys -> x
-    ; ys   -> "too long"
+    ; ys        -> Empty
     };
 
 parse' cs stack = case cs of
@@ -56,18 +56,18 @@ magic x y = case x of
 	};
 
 splitAt' p xs ys = case xs of
-						{ Nil -> Tuple ys Nil
-						; Cons z zs -> if (p z) (Tuple ys zs) 
-						                        (splitAt' p zs (ys ++ Cons z Nil))
-						};
+	{ Nil -> Tuple ys Nil
+	; Cons z zs -> if (p z) (Tuple ys zs) 
+	                        (splitAt' p zs (ys ++ Cons z Nil))
+	};
 
 splittingAt p xs ys = case xs of
-						{ Nil -> Cons ys Nil
-						; Cons z zs -> if (p z) (Cons ys (splittingAt p zs Nil)) 
-						                        (splittingAt p zs (ys ++ Cons z Nil))
-						};
+	{ Nil -> Cons ys Nil
+	; Cons z zs -> if (p z) (Cons ys (splittingAt p zs Nil)) 
+		                (splittingAt p zs (ys ++ Cons z Nil))
+	};
 
-main = let sp = optimise (\x . splittingAt (\x . x ==: ' ') x Nil) 
+main = let sp = id (\f . splittingAt (\x . x ==: ' ') f Nil) 
         in case sp getString of
 	{Cons a b -> let optM =  optimise mothermatch (match (parse a)) in
 	    map (optM) b};

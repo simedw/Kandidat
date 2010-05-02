@@ -377,4 +377,120 @@ enumFrom x = x : enumFrom (x + 1);
 main = let f = optimise (zipWith (+) getIntList)
        in  f $ enumFrom 0;
 
+#appWithAThunk
+main = let o = optimise foo 1 in o 4;
+
+foo x y = let
+    { val = x
+    ; b   = bar x
+    } in b x;
+
+bar x = case x > 0 of
+    { True  -> \z . z + 1 
+    ; False -> \y . y - 1
+    };
+
+#miniShapes
+-- should return Tuple 1 2
+test y x = case x of
+    { Tuple a b -> Tuple (a + y) (b + y) };
+
+main = let o = optimise (test 2 . test -3) in o $ Tuple 2 3;
+
+#miniShapes
+
+test y x = case x of
+    { X z -> X (y + z)};
+
+main = let o = optimise (test 2 . test 3) in o (X 0);
+
+#miniShapes
+
+-- should return A (A (A 0))
+
+testa x = case x of
+    { a -> A a };
+
+main = let o = optimise (testa . testa) in o (A 0);
+
+#miniShapes
+
+-- should return X (X (A 0))
+
+testa x = X x;
+
+main = let o = optimise (testa . testa) in o (A 0);
+
+
+
+#caseExplosion
+-- कुपगाकतच चचदकवलम   गो(सोू) रेरततच  को  चो केर्मोतगग 
+-- Is no case explosion due to thunks
+
+foo a b c d e =
+    if a (if b (if d 3 2) 1) (if c 1 (if e 1 0));
+    
+main = let f = optimise (foo True) 
+       in  f True False True False;
+
+#caseExplosion
+-- δσκλ'δσφσ ηιε ρρ α μβχψχωβ -- شسيشسي بلسهةخى سيبمن!!لفسقللاغفسابيس :) -سيبسيب 
+-- inline eval 4 does not work.
+-- tries to lookup the local four from the main stack frame in some
+-- arbitrary (wrong) stack frame
+
+eval r p = case p of
+    { Add n q -> eval r q -- + n
+    ; Mul n q -> eval r q -- * n
+    ; Sub n q -> eval r q -- - n
+    ; Ret z   -> r
+    };
+    
+main = let f = optimise eval 8 with { inline eval 4 ; casebranches }
+       in  f (Add 4 (Mul 3 (Sub 2 (Ret 429580374444444444444))));
+
+
+#justInCase
+-- ыролых ыфвалдлжд ывыджэ Case фвыав выалдо! (сфг жмф жмщпюф дфгыл нфдпгл) ☜
+
+foo r x = case x of 
+    { A -> bar r x
+    ; B -> bar r x
+    ; C -> bar r x
+    ; D -> bar r x
+    ; E -> bar r x
+    ; F -> r
+    };
+
+bar r x = case x of 
+    { A -> baz r x
+    ; B -> baz r x
+    ; C -> baz r x
+    ; D -> baz r x
+    ; E -> r + 2
+    ; F -> r + 1
+    };
+    
+baz r x = case x of 
+    { A -> goo r x
+    ; B -> goo r x
+    ; C -> goo r x
+    ; D -> r + 5
+    ; E -> r + 4
+    ; F -> r + 3
+    ; G -> foo r A
+    };
+    
+goo r x = case x of 
+    { A -> r - 1
+    ; B -> r - 2
+    ; C -> r - 3
+    ; D -> r - 4
+    ; E -> r - 5
+    ; F -> r * 2
+    };
+
+main = let f = optimise foo 1 with { casebranches } in map f $ A:B:C:D:E:F:Nil;
+
+
 -- -}

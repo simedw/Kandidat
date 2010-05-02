@@ -55,7 +55,9 @@ run prelude fs = conses ++ funs
         nullCon <- gets emptyCons
         let dt = S.fromList (map (\(AST.Function t _) -> t) (ds ++ prelude)) `S.union` nullCon
         lds <- mapM (llift dt) ds
-        return $ prelude ++ concat lds
+        return $ prelude ++ concat lds ++ map (\t@(_:ts) -> 
+            AST.Function t $ AST.OCon ts [] 
+            ) (S.toList nullCon)
         
     defaultState = DiaState
         { nameSupply = map ("t." ++) $ [1..] >>= flip replicateM ['a'..'z']
@@ -137,7 +139,9 @@ desugarE (ST.ECase expr branches) =
 
 
 desugarB :: Variable t => ST.Branch t -> Dia t (AST.Branch t)
-desugarB (ST.BCon t binds exp) = liftM (AST.BCon t binds) (desugarE exp)
+desugarB (ST.BCon t binds exp) = do
+    when (null binds) $ modify $ \st -> st { emptyCons = S.insert t (emptyCons st) }
+    liftM (AST.BCon t binds) (desugarE exp)
 desugarB (ST.BDef t exp) = liftM (AST.BDef t) (desugarE exp)
 
 magic :: Variable a => [ST.Expr a] -> Dia a ([AST.Atom a], [(a, AST.Obj a)])

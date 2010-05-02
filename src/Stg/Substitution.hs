@@ -7,6 +7,7 @@ module Stg.Substitution
   , inltP
   , inltM
   , inlt -- :( this special one needs in case branches
+  , shift
   , localsE  
   ) where
 
@@ -93,6 +94,8 @@ inlt g s st as = transformBi (ct aux) . transformBi (ct' aux')
 -}
 
 
+shift :: Variable t => (Int -> Bool) -> Int -> Expr t -> Expr t
+shift p d = inlt p d 0 []
 
 inlt :: Variable t 
      => (Int -> Bool) -- ^ guard

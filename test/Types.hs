@@ -54,7 +54,6 @@ runTest test = do
    putStrLn $ ""
    return res
 
-
 runTests :: [Test] -> IO ()
 runTests ts = do
     res <- mapM runTest ts
