@@ -8,15 +8,96 @@
 
 \newcommandx\rangem[1][usedefault, addprefix=\global, 1=]{#1_{1}\,\ldots\,#1_{m}}
 
-Språket som vi har definerat är en utökning av STG-maskinen, med några
+
+Så här ser BNF-grammatiken ut för corespråket:
+
+
+\begin{equation*}
+\begin{aligned}
+\text{Variables} \quad & x,f \\
+\text{Constructors} \quad & C \\
+\defBNF{Literals}{lit}{i \; | \;  d \;|\; c}{Primitiv datatyp} \\
+\defBNF{Atoms}{a, v}{lit \; | \; x}{Atomer för funktionsanrop etc} \\
+\defBNF{Expressions}{e}{a}{Atom} \\
+    \defaltBNF{f \; \overline{a}}{Funktionsanrop} \\
+    \defaltBNF{\oplus \; \overline{a}}{Primitiv operation} \\
+    \defaltBNF{\mathtt{let \{} \overline{x = obj} \mathtt{ \} in } \; e}{Lokal allokering} \\
+    \defaltBNF{\mathtt{letrec \{} \overline{x = obj} \mathtt{ \} in } \; e}{Lokal rekursiv allokering} \\
+    \defaltBNF{\mathtt{case} \; e \;  \mathtt{ of \{ } \overline{alt} \mathtt{\}}}{Evaluering av uttryck} \\
+\defBNF{Alternative}{alt}{C \; \overline{x} \rightarrow e}{Matcha mot konstruktor} \\
+    \defaltBNF{x \rightarrow e}{Matcha med en variabel} \\
+\defBNF{Heap Object}{obj}{FUN(\overline{x} \rightarrow e)}{Funktionsobjekt} \\
+    \defaltBNF{PAP(f \; \overline{a})}{Partielltapplicerad funktion} \\
+    \defaltBNF{CON(C \; \overline{a})}{Konstruktorer} \\
+    \defaltBNF{THUNK \; e}{Senarelagt uttryck} \\
+    \defaltBNF{BLACKHOLE}{Används för evaluering} \\
+\defBNF{Programs}{prog}{\overline{f=obj}}{}
+\end{aligned}
+\end{equation*}
+
+STG språket är som en mer primitiv form av vårat sockerspråk, där fler saker är mer explicita
+än vad de är i sockret. Anledningen till att de är så är för att göra det enklare
+att förstå vad det egentligen betyder och hur de skall tolkas. Kort kan man säga följande om STG:
+
+\begin{itemize}
+\item Atomer är uttryck som antigen är primitiva eller som är variabler. De används ofta
+    där man i sockerspråket kunnde skriva vilket uttryck som helst. Till exempel funktionsapplikationer
+    som i STG är mer restriktiva i hur dess argument ser ut.
+\item Definitioner binder numera variabler till objekt istället för uttryck, anledningen 
+    för detta är att man enklare skall kunna skilja på dem. Till exempel ser man nu skillnad
+    mellan funktionsobjekt och konstruktorer.
+\end{itemize}
+
+\newpage
+
+
+
+
+
+
+Språket som vi har använt är en utökning av STG-maskinen, med några
 nya regler och tillstånd. För att kunna diskutera dessa behövs först
 förståelse för hur maskinen fungerar. Eftersom läsaren inte förväntas
 ha stött på begrepp som används när man beskriver abstrakta maskiner
 och deras semantik, kommer vi att bygga upp förståelsen via ett exempel
 och introducera nya koncept när de behövs. 
 
-En abstrakt maskin kan beskrivas av regler som bestämmer varje steg i en stegvis evaluering. Reglerna
-för STG ska vi visa genom att evaluera följande program:
+En abstrakt maskin kan beskrivas av regler som bestämmer varje steg i en stegvis evaluering.
+Varje regel beskriver, om man är i ett visst tillstånd, vilket tillstånd man skall gå vidare till.
+Med tillstånd så menas för tillfället ett uttryck och en heap, dessa separeras av ett
+; vi kommer senare behöva utöka tillstånden.
+Så vi har en samling regler och man väljer en som matchar mot det tillstånd man har, och om 
+ingen regel matchas så är man klar.
+
+\tikzstyle{every picture}+=[remember picture]
+\everymath{\displaystyle}
+
+
+\tikz\node [baseline,draw] (till1) {Föregånde tillstånd};
+\tikz\node [draw] (tillsep) {Tillstånden separeras av $\Rightarrow$};
+\tikz\node [draw] (till2) {Nästa tillstånd};
+
+\begin{equation*}
+        \tikz[baseline]{\node[draw,anchor=base] (m1) 
+            {$ Expr \; ; \; Heap$};
+        } \tikz[baseline]{\node[anchor=base](msep){$\Rightarrow$};}
+        \tikz[baseline]{
+            \node[draw,anchor=base] (m2)
+            {$ Expr \; ; \; Heap$};
+        } 
+\end{equation*}
+
+%\tikz\node [draw] (esep) {Tillstånd är ett uttryk och en heap som separeras av ;};
+
+\begin{tikzpicture}[overlay]
+        \path[->] (till1) edge [out=-90, in=180] (m1);
+        \path[->] (tillsep) edge [out=-90, in=90] (msep);
+        \path[->] (till2) edge [out=-90, in=0] (m2);
+%        \path[->] (esep) edge [out=90, in=-90] (m1);
+\end{tikzpicture}
+
+För att visa hur reglerna
+för STG  fungerar, ska vi visa hur följande program skulle evalueras med dem.
 
 \begin{codeEx}
 cube x = x * x * x;

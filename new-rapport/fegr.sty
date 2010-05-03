@@ -2,6 +2,10 @@
 \usepackage[utf8]{inputenc}
 \usepackage[swedish]{babel}
 \usepackage{amsmath, amsthm, amssymb}
+\usepackage{stmaryrd}
+\usepackage{tikz}
+\usetikzlibrary{mindmap,trees,arrows,shapes}
+
 \usepackage{graphicx}
 \usepackage{rotating}
 \usepackage{listings}
@@ -34,6 +38,10 @@ Notering!
 #1
 \end{minipage}}
 }
+
+%BNF
+\newcommand{\defBNF}[4] {\text{#1}\quad&#2&::=&\;#3&\text{#4}}
+\newcommand{\defaltBNF}[2] {&&|&\;#1&\text{#2}}
 
 % things defined in Opt1.tex %
 

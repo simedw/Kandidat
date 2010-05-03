@@ -1,6 +1,5 @@
 \documentclass[../Core]{subfiles}
-\newcommand{\defBNF}[4] {\text{#1}\quad&#2&::=&\;#3&\text{#4}}
-\newcommand{\defaltBNF}[2] {&&|&\;#1&\text{#2}}
+
 \begin{document}
 \subsection{STG-språket}
 
@@ -29,5 +28,10 @@ Så här ser BNF-grammatiken ut för corespråket:
 \defBNF{Programs}{prog}{\overline{f=obj}}{}
 \end{aligned}
 \end{equation*}
+
+STG språket är som en mer primitiv form av vårat sockerspråk, där fler saker är mer explicita
+än vad de är i sockret. Anledningen till att de är så är för att göra det enklare
+att förstå vad det egentligen betyder och hur de skall tolkas. Här kommer in kort introduktion
+och senare 
 
 \end{document}
