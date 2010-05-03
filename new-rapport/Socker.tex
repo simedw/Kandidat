@@ -66,19 +66,33 @@ Så här ser BNF-grammatiken ut för sockerspråket:
 
 \begin{equation*}
 \begin{aligned}
-program ::=&\; \overline{function} \\ 
-function ::=&\; v \; \overline{v} \, \mathtt{=} \, expr \mathtt{;} \\
-expr ::=&\;  v \\
-       |&\; v \; \overline{expr}  \\ 
-       |&\; \mathtt{let \{} \overline{function} \mathtt{\} in }\; expr \\
-       |&\; \mathtt{letrec \{} \overline{function} \mathtt{\} in} \; expr \\
-       |&\; \mathtt{case}\,expr\,\mathtt{of \{} \overline{branch} \mathtt{\}} \\
-       |&\; \mathtt{\lambda } v \mathtt{.} expr \\
-       |&\; expr \oplus expr \\ 
-       |&\; K \; \overline{expr} \\
-       |&\; primitive \\
-branch ::=&\; K \; \overline{v} \; \mathtt{\rightarrow} \; expr \mathtt{;} \\
-         |&\; v \; \mathtt{\rightarrow} \; expr \mathtt{;}
+variables \quad & v,f \\
+constructor \quad & K \\
+program \quad&&::=&\; \overline{def} 
+        & \text{Program är flera definitioner}\\ 
+def  \quad && ::=&\; f \; \overline{v} \, \mathtt{=} \, e \mathtt{;} 
+        & \text {Defintionen kan binda variabler för ett uttryck}\\
+expr \quad & e &::=&\;  v \\
+       &&|&\; f \; \overline{e}  
+            & \text{Funktionsanrop} \\ 
+       &&|&\; \mathtt{let \{} \overline{def} \mathtt{\} in }\; e 
+            & \text{Flera lokal definitioner}\\
+       &&|&\; \mathtt{letrec \{} \overline{def} \mathtt{\} in} \; e 
+            & \text{Flera lokala rekursiva defintioner} \\
+       &&|&\; \mathtt{case} \, e \, \mathtt{of \{} \overline{brs} \mathtt{\}} 
+            & \text{Mönstermatchning av uttryck} \\
+       &&|&\; \mathtt{\lambda } v \mathtt{.} e
+            & \text{Anonym funktion} \\
+       &&|&\; e \oplus e 
+            & \text{Primitiv operation}\\ 
+       &&|&\; K \; \overline{e} 
+            & \text{Konstruktorapplikation} \\
+       &&|&\; primitive 
+            & \text{Primitiv datatyp} \\
+branch \quad & brs &::=&\; K \; \overline{v} \; \mathtt{\rightarrow} \; e \mathtt{;} 
+            & \text{Matchning mot konstruktor} \\
+         &&|&\; v \; \mathtt{\rightarrow} \; expr \mathtt{;}
+            & \text{Matchning med en variabel}
 \end{aligned}
 \end{equation*}
 
@@ -202,32 +216,5 @@ för uttrycket och jämföra varje variabel i trädet med variabeln som ska subs
 om de är samma. Detta är den effekten man vill eftersträva rent abstrakt,
 men det finns också andra sätt att implementera substitution, genom
 att t.ex. göra ett uppslag i en tabell varje gång evalueringen kommer till en fri variabel. 
-
-\subsubsection{Partiell evaluering}
-Detta arbete handlar till stor del om partiell evaluering. Men vad innebär det?
-I funktionella språk är funktioner första klassens objekt och kan t.ex.
-skickas med som argument till andra funktioner eller returneras från
-andra funktioner. Tag t.ex. funktinoen \miniCode{zipWith}, här skriven i Haskell:
-
-\begin{codeEx}
-zipWith :: (a -> b -> c) -> [a] -> [b] -> [c]
-zipWith f (x:xs) (y:ys) = f x y : zipWith f xs ys
-zipWith _ _      _      = []
-\end{codeEx}
-
-Vad kan \miniCode{f} vara här? Den skulle kunna vara en unär funktion som returnerar en ny
-funktion. Den kan också vara en funktion som tar tre argument och redan har ett
-applicerat:
-
-\begin{codeEx}
-let f = \x y z -> x * y - z
-in  zipWith (f 3) list1 list2
-\end{codeEx}
-
-
-Funktioner som har några, men inte alla argument applicerade kallas 
-partiellt applicerade. Att börja evaluera en sådan funktion, partialevaluera,
-är inget som vanligtvis görs i Haskellimplementationer, 
-men är vad som undersöks i detta projekt. 
 
 \end{document}

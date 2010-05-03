@@ -1,6 +1,33 @@
 \documentclass[../Core]{subfiles}
+\newcommand{\defBNF}[4] {\text{#1}\quad&#2&::=&\;#3&\text{#4}}
+\newcommand{\defaltBNF}[2] {&&|&\;#1&\text{#2}}
 \begin{document}
-\subsection{Egenskaper av STG-språket}
+\subsection{STG-språket}
 
+Så här ser BNF-grammatiken ut för corespråket:
+
+
+\begin{equation*}
+\begin{aligned}
+\text{Variables} \quad & x,f \\
+\text{Constructors} \quad & C \\
+\defBNF{Literals}{lit}{i \; | \;  d \;|\; c}{Primitiv datatyp} \\
+\defBNF{Atoms}{a, v}{lit \; | \; x}{Atomer för funktionsanrop etc} \\
+\defBNF{Expressions}{e}{a}{Atom} \\
+    \defaltBNF{f \; \overline{a}}{Funktionsanrop} \\
+    \defaltBNF{\oplus \; \overline{a}}{Primitiv operation} \\
+    \defaltBNF{\mathtt{let \{} \overline{x = obj} \mathtt{ \} in } \; e}{Lokal allokering} \\
+    \defaltBNF{\mathtt{letrec \{} \overline{x = obj} \mathtt{ \} in } \; e}{Lokal rekursiv allokering} \\
+    \defaltBNF{\mathtt{case} \; e \;  \mathtt{ of \{ } \overline{alt} \mathtt{\}}}{Evaluering av uttryck} \\
+\defBNF{Alternative}{alt}{C \; \overline{x} \rightarrow e}{Matcha mot konstruktor} \\
+    \defaltBNF{x \rightarrow e}{Matcha med en variabel} \\
+\defBNF{Heap Object}{obj}{FUN(\overline{x} \rightarrow e)}{Funktionsobjekt} \\
+    \defaltBNF{PAP(f \; \overline{a})}{Partielltapplicerad funktion} \\
+    \defaltBNF{CON(C \; \overline{a})}{Konstruktorer} \\
+    \defaltBNF{THUNK \; e}{Senarelagt uttryck} \\
+    \defaltBNF{BLACKHOLE}{Används för evaluering} \\
+\defBNF{Programs}{prog}{\overline{f=obj}}{}
+\end{aligned}
+\end{equation*}
 
 \end{document}
