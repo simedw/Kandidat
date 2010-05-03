@@ -15,7 +15,7 @@ absSqr p = case p of
     { Pos x y -> x *. x +. y *. y };
 
 -- abs :: Pos -> Double
-abs = sqrt . absSqr;
+abs' = sqrt . absSqr;
 
 -- arg :: Pos -> Double
 arg p = case p of
@@ -50,7 +50,7 @@ translate dp s p = s $ posSub p dp;
 scale     dp s p = s $ posDiv p dp;
 
 -- rotate :: Double -> Shape -> Shape
-rotate theta s p = s $ polar (abs p) (arg p +. theta);
+rotate theta s p = s $ polar (abs' p) (arg p +. theta);
 
 -- union, minus, intersect :: Shape -> Shape -> Shape
 union     s t p = s p || t p;
@@ -73,8 +73,21 @@ screen szX szY = let { xs = fromTo -1.0 (2.0 /. (szX -. 1.0)) 1.0
                  in map (\x . map (\y . Pos x y) ys) xs;
 
 program1 = Tuple (optimise (scale (Pos 0.6 0.8) circle)) 'X' :
-           Tuple (optimise (scale (Pos 1.3 1.3) $ translate (Pos 0.5 0.5) circle)) 'O' : Nil;
+           Tuple (optimise (translate (Pos 0.5 0.5) $ (scale (Pos 1.3 1.3) circle))) 'O' : Nil;
 
 program2 = Tuple (scale (Pos 0.6 0.6) $ rotate (pi / 7.0) square) 'X' : Nil;
 
-main = map (map (id (shapes ' ' program1))) $ screen getDouble getDouble;
+red = 'X';
+blue = 'O';
+
+eye = scale (Pos 0.3 0.3) circle;
+
+tuple x y = Tuple (optimise x) y;
+
+smiley = tuple (translate (Pos 0.1 0.2) $ rotate (pi /. 10.0) $ scale (Pos 0.05 0.2) square) blue
+       : tuple (translate (Pos 0.5 0.0) eye) blue 
+       : tuple (translate (Pos -0.5 0.0) eye) blue 
+	   : tuple (translate (Pos 0.0 0.5) $ scale (Pos 0.35 0.25) $ minus circle (translate (Pos 0.0 -1.0) square)) blue 
+	   : tuple (circle) red : Nil;
+
+main = map (map (optimise (shapes ' ' smiley))) $ screen getDouble getDouble;

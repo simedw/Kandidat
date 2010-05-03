@@ -30,7 +30,6 @@ isKnownStack s h a = case lookupAtomStack s a of
     AUnknown _ _  -> False
     _             -> True
 
--- OMG it is copy paste from ze interpreter :)
 lookupAtomStack astack (AVar v) = case v of
     Heap x    -> AVar v
     Local x _ -> lookupStackFrame x astack
@@ -71,42 +70,6 @@ omega rule cst ast h e set = returnJust
         , settings = set 
         }
     )
-{-
-reshuffle :: (Data t, Ord t) => Expr t -> StgM t (Expr t)
-reshuffle (ECase (ECase e brs1) brs2) = 
-        reshuffle =<< (ECase e <$> (mapM
-            (\x -> case x of 
-                BCon c ts exp -> do 
-                    vars <- replicateM (length ts) newVar
-                    BCon c vars <$> (reshuffle (ECase (substList ts (map AVar vars) exp) brs2))
-                BDef t exp    -> do
-                    t' <- newVar
-                    BDef t'  <$> (reshuffle (ECase (subst t (AVar t') exp) brs2))
-            ) brs1)) 
-reshuffle e = return e
--}
-{-
-
-    case (case x of
-            A a -> x'
-            B b -> y'
-         )
-      X -> r
-      Y -> y
-
-
-    <=>
-
-    case x of
-        A a -> case x' of
-                 X -> r
-                 Y -> y
-        B b -> case y' of
-                 X -> r
-                 Y -> y
-
-
--}
 
 omega' :: Variable t => ContStack t -> ArgStack t -> Heap t -> Expr t 
                     -> [StgSettings t] -> StgM t (Maybe (Rule, StgState t))
@@ -150,16 +113,16 @@ omega' stack astack heap code set = case code of
                       stack astack heap a [] set
 
     ECase (ECase expr ibrs) obrs | length ibrs <= 100 -> do
-        let e' = ECase expr [ re br obrs | br <- ibrs]
-            re (BDef x e)      brs 
-            	= BDef x (ECase e $ map (inltbr 1) brs)
-            re (BCon c args e) brs 
-                = BCon c args (ECase e $ map (inltbr $ length args) brs)
-            sp = getCurrentSP astack
-            inltbr n = brt $ shift (>= sp) n
-            brt f (BDef x e)      = BDef x $ f e
-            brt f (BCon c args e) = BCon c args $ f e
-        omega (ROmega "wellknown case-law") stack astack heap e' set 
+        let e' = ECase expr [ reshuffle br obrs | br <- ibrs]
+            reshuffle (BDef x e)
+            	= BDef x . ECase e . map (transformBranch 1)
+            reshuffle (BCon c args e)
+                = BCon c args . ECase e . map (transformBranch $ length args)
+            transformBranch = brt . shift (>= getCurrentSP astack)
+              where
+                brt f (BDef x e)      = BDef x $ f e
+                brt f (BCon c args e) = BCon c args $ f e
+        omega (ROmega "well known case-law") stack astack heap e' set 
 
     ECase expr brs -> omega (ROmega "case") (CtOCase brs : stack) 
                             (duplicateFrame astack) heap expr set
@@ -265,6 +228,7 @@ beta cstack@(CtOBranch e brdone brleft:ss) astack h set = case brleft of
                             (pushArgs (zipWith AUnknown [getCurrentSP astack..] as) 
                                       (duplicateFrame astack)) h e set
     []            -> case e of
+        -- kanske ska kommenteras fram?
         -- ECase _ _ -> omega (RIrr "case in case (from beta)") ss astack h (ECase e brdone) set
         _         -> irr (RIrr "case expression finished (from beta)") ss astack h (ECase e brdone) set
 
@@ -290,7 +254,7 @@ irr' (cont : stack) astack heap expr settings = case cont of
         then beta (CtOBranch expr [] brs : stack) (popFrame astack) heap settings
         else case expr of
         -- requires case in case
-            ECase _ ibrs | length ibrs <= 100 ->
+            ECase _ ibrs | length ibrs == 1 -> -- || explosiveCases settings ->
                          omega (RIrr "cases in case") stack (popFrame astack) heap 
                                (ECase expr brs) settings
             expr' -> case brs of
@@ -302,15 +266,25 @@ irr' (cont : stack) astack heap expr settings = case cont of
             (astack', expr') -> irr (RIrr "let continuation")
                                     stack astack' heap expr' settings
         Nothing -> error "irr on CtOlet, variable not in abyss!"
-    CtOFun args i a -> do
-        returnJust (ROpt ORDone
-                   , StgState { code     = EAtom (AVar (Heap a))
-                              , heap     = H.insert a (OFun args i expr) heap
-                              , cstack   = stack
-                              , astack   = popFrame astack
-                              , settings = settings
-                              }
-                   )
+    CtOFun args i a -> case expr of
+        EAtom at | AVar (Heap v) <- lookupAtomStack astack at
+                 , Just (OPap f as) <- H.lookupAnywhere v heap 
+                 , Just (OFun bs _ _) <- H.lookupAnywhere f heap -> do
+                    let numNewArgs = length bs - length as
+                        newArgs    = drop (length bs - numNewArgs) bs
+                        sp         = getCurrentSP astack
+                    omega (RIrr "papplify") (CtOFun (args ++ newArgs) i a : stack)
+                          (pushArgs (zipWith AUnknown [sp..] newArgs) astack)
+                          heap (ECall ((Heap f)) (as ++ (zipWith AUnknown [sp..] newArgs))) settings
+        _ -> do expr' <- afterburner (getCurrentSP astack) expr
+                returnJust (ROpt ORDone
+                           , StgState { code     = EAtom (AVar (Heap a))
+                                      , heap     = H.insert a (OFun args i expr') heap
+                                      , cstack   = stack
+                                      , astack   = popFrame astack
+                                      , settings = settings
+                                      }
+                           )
     CtOBranch e brdone (BDef x _ : brleft) ->
         beta (CtOBranch e (brdone ++ [BDef x expr]) brleft : stack)
              (popFrame astack) heap settings
@@ -392,116 +366,45 @@ psi' (cont : stack) astack heap atom lbs settings = case cont of
     _ -> error $ "Psi: I don't know what to do with this stack: " 
      ++ show  (cont:stack)
 
-
-
+afterburner :: Variable t => Int -> Expr t -> StgM t (Expr t)
+afterburner = (return .) . flip mergeCases []
+  where -- k :-> v = Map k v 
+    mergeCases :: Variable t => Int -> [(Expr t, (Maybe t, [Atom t]))] -> Expr t -> Expr t
+    mergeCases sp substs e = case e of
+        ECase exp brs -> case lookup exp substs of
+            Nothing -> fun exp brs
+            Just (Nothing, vs) -> case brs of
+                BDef t' e' : _ -> mergeCases sp substs $ inlt (>= sp) 0 sp vs e' -- byt ut t' mot v i e, ingen ecase langre, shifta
+                rest          -> fun exp rest
+            Just (Just c,  vs) -> 
+                let f brs' = case brs' of
+                        BCon c' vs' e' : rest | c == c'  
+                             -> mergeCases sp substs $ inlt (>= sp) 0 sp vs e' -- byt ut vs' mot vs
+                                              | otherwise -> f rest
+                        _ -> fun exp brs
+                in f brs
+        ELet b@(NonRec _ _) e -> ELet b $ mergeCases (sp + 1) substs e
+        ELet b@(Rec bs) e     -> ELet b $ mergeCases (sp + length bs) substs e
+        e -> e
+      where
+        fun exp brs = ECase (mergeCases sp substs exp) 
+                [ case br of
+                     BCon c vs e -> BCon c vs $ mergeCases (sp+length vs) 
+                               ((exp, (Just c, zipWith ((AVar .) . Local) [sp..] vs)) : substs) e
+                     BDef t e -> BDef t $ mergeCases (sp + 1) 
+                                            -- AVar (Local sp t)
+                               ((exp,(Nothing, [AVar (Local sp t)])) : substs) e
+                | br <- brs]
 
 {-
--- Brave assumption: The let is dead code
---psi (CtOLet t : ss) h v set = psi (RPsi "Let continuation") ss h v set
-psi (CtOLet t : ss) ast h v@(Heap v') lbs set = case H.lookup v' h of
-    Just _  -> psi (RPsi "remove let, on heap") ss ast h v (t:lbs) set
-    Nothing -> psi (RPsi "add let, on abyss")   ss ast h v (t:lbs) set
-
-psi (CtOLet t : ss) ast h v lbs set = psi (RPsi "add let, on abyss") ss ast h v (t:lbs) set
- 
-psi ss'@(CtOCase branch   : ss) ast h (lookupAtomStack ast . AVar -> AVar (Heap v')) lbs set = 
-    case H.lookupAnywhere v' h of
-        Just (OCon c atoms) -> 
-            case instantiateBranch c atoms branch of 
-                Nothing -> def
-                Just expr -> om expr atoms
-        Just o -> def
-        Nothing -> err
-  where
-    v = Heap v'
-    err = error "psi couldn't instantiate that :'/"
-                -- daniels ide om att oka shiftningen till let
-    om e as = let ast1:ast2:astrest = ast -- head ast : drop 2 ast
-                  ast' = ast2:astrest
-              in  omega (RPsi "KnownCase") 
-                         (map CtOLet lbs ++ ss) 
-                         (pushArgs (map (AVar . Heap) lbs) ast') h 
-                         (inlt (>= (getCurrentSP [ast2])) (length lbs) 
-                               (getCurrentSP [ast2]) as e)
-                         set
-                      
---                     inlt (>= (getCurrentSP ast')) (length lbs) 0 []
---                     $ inltM as (getCurrentSP ast') e) set
-
-    -- THIS IS SZISSLYING TIME, shizzle time, shizzle time, now we have
-    -- a shizzle time, chisel time, let's do this thing
-
-    --om e as = omega (RPsi "KnownCase") ss (pushArgs as (popFrame ast)) h e set
-    def = case findDefaultBranch (AVar v) branch of
-        Nothing -> case mkExprVar ast h v lbs of 
-            (ast',e) -> irr' (RPsi "psi couldn't inst branch") ss' ast' h e set
-        Just expr -> om expr [AVar v]
-
--- is this obsolete??
-psi (CtOUpd t   : ss) ast h (lookupAtomStack ast . AVar -> AVar (Heap v')) lbs set = 
-    let v = Heap v' in case H.lookupAnywhere v' h of
-        Just o -> let h' = H.insertAbyss t o h
-                  in psi (RPsi "OUpd thunk") ss ast h' v lbs set
-        Nothing -> error $ "psi didn't find that OUpd "
-
-psi (CtOUpd t   : ss) ast h v@(Local i x) lbs set = error "psi on CtOUpd and Local"
-
-psi (CtUpd t   : ss) ast h (Heap v) lbs set = case H.lookupHeap v h of
-    Just o -> let h' = H.insertAbyss t o h
-               in psi (RPsi "OUpd thunk") ss ast h' (Heap v) lbs set
-    _ -> error $ "psi CtUpd, is it on the abyss? or not at all???? :O"
-    
-               
-psi ss@(CtOBranch e brdone brleft : _) ast h v lbs set = 
-    irr' (RPsi "branch continuation") ss ast' h e set
-  where (ast', e) = mkExprVar ast h v lbs
-psi ss@(CtOFun args i alpha : _) ast h v lbs set =
-     irr' (RPsi "fun continuation") ss ast' h e set
-  where (ast', e) = mkExprVar ast h v lbs
-psi (CtOApp as : ss) ast h v lbs set = omega (RPsi "App continutation") ss ast' h e set
-    where (ast', e) = mkExpr (popFrame ast) h (ECall v as) lbs
-
-psi s ast h v _ _ = error $ "Psi: I don't know what to do with this stack: " 
-     ++ show s -- (unsafeCoerce s :: ContStack String)
-
+    case x of
+        I# y -> case x of
+            I# z -> e
+    <=>
+    case x of
+        I# y -> shift -1 (>loc(y)) e[y/z]
 -}
-
-{-
-afterburner :: (Data t, Ord t) => ContStack t -> Heap t -> 
-                                  Expr t -> [StgSettings t] -> StgM t (StgState t)
-afterburner stack heap expr set = do
---    let exp' = mergeCases heap expr
---    error $ show (unsafeCoerce expr :: Expr String)
---    error $ show $ sort [ (unsafeCoerce x :: Expr String) | ECase x brs  <- universe expr] 
-    return
-       (  StgState { cstack   = cstack
-                   , heap     = heap
-                   , code     = mergeCases expr
-                   , settings = set
-                   }
-       )
-
-  where
-    mergeCases :: (Data t, Ord t) => Expr t -> Expr t
-    mergeCases (ECase exp brs) = ECase (mergeCases exp) $ map (\x -> case x of
-                                            a@(BCon c vs e) -> BCon c vs (substing exp a e)
-                                            a@(BDef t e) -> BDef t (substing exp a e)
-                                          ) brs
-    mergeCases (ELet (NonRec t (OThunk b)) x)      = ELet (NonRec t (OThunk $ mergeCases b)) $ mergeCases  x
-    mergeCases (ELet b x)      = ELet b $ mergeCases  x
-    mergeCases  x = x
-
-
-substing :: (Data t, Eq t) => Expr t -> Branch t -> Expr t -> Expr t
-substing xr brs = case brs of
-    BCon c vs expr -> transformBi (f c vs)
-    BDef t expr    -> transformBi (f t [])  
-  where
-    f c vs e'@(ECase x brs) | x ==  xr = case instantiateBranch c (map AVar vs) brs of
-        Just x  -> x
-        Nothing -> e'
-    f c vs e = e 
--} 
+ 
 
 mkExprVar :: Variable t => ArgStack t -> Heap t -> Var t -> [t] -> (ArgStack t, Expr t)
 mkExprVar astack h v = mkExpr astack h (EAtom (AVar v)) 

@@ -20,6 +20,9 @@ import Stg.Input
 import Stg.AST (SValue(..), Atom(..))
 import Util
 
+import Control.Monad.Instances 
+import Control.Monad
+
 {-
  BuildSValue are used to convert haskell datatypes to our datatypes
 -}
@@ -49,9 +52,6 @@ data Construct t = Construct String [t]
 
 cons = Construct
 
--- like maybe but for Tests
-test f g (StaticTest v)  = f v
-test f g (DynamicTest v) = g v
 
 data Tests
     = StaticTest (SValue String) 
@@ -73,7 +73,7 @@ instance Arbitrary Indata where
                   <*> arbitrary 
                   <*> arbitrary
                   <*> arbitrary
-                  <*> arbitrary
+                  <*> arbitrary   -- elements ['0'..'z']
                   
 
 -- For static tests
@@ -89,6 +89,10 @@ infix 0 -->
 
 interpreter = map (\(file, ts) -> test testStatic testDynamic ts file)
   where
+    -- like maybe but for Tests
+    test f g (StaticTest v)  = f v
+    test f g (DynamicTest v) = g v
+
     testStatic value file = I'make'my'own'test 
         { name   = file
         , action = do 
@@ -110,13 +114,7 @@ interpreter = map (\(file, ts) -> test testStatic testDynamic ts file)
     testDynamic f file = QCTest
         { name = file
         , qc   = forAll arbitrary $ \indata ->
-            let input   = defaultInput { inputInteger  = Just (int  indata)
-                                       , inputIntegers = Just (ints indata)
-                                       , inputDouble   = Just (dbl  indata)
-                                       , inputDoubles  = Just (dbls indata)
-                                       , inputString   = Just (str  indata)
-                                       }
-
+            let input   = inputFromIndata indata
                 setting = LSettings { input   = input
                                     , prelude = "Prelude.hls"
                                     , disableOptimise = False
@@ -127,95 +125,39 @@ interpreter = map (\(file, ts) -> test testStatic testDynamic ts file)
                 Right res -> res == f indata
         }
 
+inputFromIndata indata = defaultInput { inputInteger  = Just (int  indata)
+                                      , inputIntegers = Just (ints indata)
+                                      , inputDouble   = Just (dbl  indata)
+                                      , inputDoubles  = Just (dbls indata)
+                                      , inputString   = Just (str  indata)
+                                      }
+        
+ocTests :: IO [Test]
+ocTests = do
+    dir     <- getCurrentDirectory
+    conts   <- getDirectoryContents (dir </>  "testsuite")
+    let (.||.) = liftM2 (||)
+        files = map ((dir </> "testsuite") </>) $ filter (("OC" `isPrefixOf`) .||. ("OptTest" `isPrefixOf`)) conts 
+    return $ map (\file -> QCTest
+        { name = "Optimisation on/off comparison on " ++ file
+        , qc   = forAll arbitrary $ \indata ->
+            let input   = inputFromIndata indata
+                setting = LSettings { input   = input
+                                    , prelude = "Prelude.hls"
+                                    , disableOptimise = False
+                                    }
+                v       = unsafePerformIO (loadFile setting file)
+                v'      = unsafePerformIO (loadFile 
+                                (setting { disableOptimise = True }) file)
+             in case forceInterpreter v of
+                Left err  -> False
+                Right res -> case forceInterpreter v' of
+                    Left err   -> False
+                    Right res' -> res == res'
+        }) files
+        
 main :: IO ()
-main = runTests $ interpreter testsuite
-
-{-
-(--->) :: BuildSValue a => String -> a -> 
-        (String, SValue String)
-file ---> fun = (file, build fun)
-
-
-infix 0 --->
-infix 0 -->
-infix 0 |->
-
--- |-> for working with lists
-(-->), (|->) :: BuildSValue a => String -> (Integer -> [Integer] -> a) -> 
-                (String, Integer -> [Integer] -> SValue String, Bool)
-file --> fun = (file, \x y -> build $ fun x y, False)
-file |-> fun = (file, \x y -> build $ fun x y, True)
-
--- a map between testfunctions and our semantic excepted functions
--- lets make these test only run once! 
-testsuiteStatic = [
-    "ArithmTest4.hls" ---> 3 + (2 * 3 :: Integer)
-  , "FunTest1.hls"    ---> (1 :: Integer)
-  , "FunTest2.hls"    ---> (2 :: Integer)
-  , "FunTest3.hls"    ---> (2 :: Integer)
-  , "FunTest4.hls"    ---> (2 :: Integer)
-  --, "FunTest6.hls"    ---> "(S (S Z))" -- depend on how we render results
-  , "ListTest3.hls"   ---> let list = [5,3,1,8,2]
-                            in (reverse (take 2 list) 
-                                == drop 3 (reverse list))
-  , "PrimeTest1.hls"  ---> True
-  --, "OptTest1.hls"    ---> length (take 3 (repeat 4))
-  --, "OptWithTest1.hls" ---> map (\x -> x*x) [1,2,3,4 :: Integer]
-  , "ListTest6.hls"   ---> sort (reverse (take 3 [(0 :: Integer)..]))
-  , "NegTest1.hls"    ---> (-1) - (-1 :: Integer)
-  , "StringTest1.hls" ---> True
-    ] ++ optTests
-    
-optTests
-  = [
-      "OC00function.hls" ---> (5 :: Integer)
-    , "OC01function.hls" ---> (5 :: Integer)
-    , "OC02function.hls" ---> (5 :: Integer)
-    , "OC03functionPAP.hls" ---> (5 :: Integer)
-    , "OC04functionPAP.hls" ---> (5 :: Integer)
-    , "OC05functionPAP.hls" ---> (5 :: Integer)
-    , "OC06functionPAP.hls" ---> (5 :: Integer)
-    , "OC07functionPAP.hls" ---> (5 :: Integer)
-    , "OC08functionPAP.hls" ---> (5 :: Integer)
-    , "OC09functionUnknownCall.hls" ---> (5 :: Integer)
-    , "OC10functionCtoApp.hls.hls" ---> (5 :: Integer)
-    , "OC11functionCtoApp.hls.hls" ---> (5 :: Integer)
-    , "OC12caseselection.hls" ---> (5 :: Integer)
-    , "OC13caseselection.hls" ---> (5 :: Integer)
-    , "OC14caseselection.hls" ---> (5 :: Integer)
-    , "OC15caseselection.hls" ---> (5 :: Integer)
-    , "OC16caseunrolling.hls" ---> (5 :: Integer)
-    , "OC17letincase.hls" ---> (5 :: Integer)
-    , "OC18letincase.hls" ---> (5 :: Integer)
-    , "OC19letincase.hls" ---> (5 :: Integer)
-    ]
-    
-    
--- note that we are working on a :: Integer -> [Integer] -> String
--- (Filename, function, absolute value?)
-testsuiteDyn =
-  [ "ArithmTest1.hls" --> \x _ -> 1 + x
-  , "ArithmTest2.hls" --> \x _ -> 1 + 2 * x + 4 * 5
-  , "ArithmTest3.hls" --> \x _ -> let twice f = f . f
-                                   in twice twice (+1) x
-  , "ArithmTest5.hls" --> \x _ -> x * (x + 1) `div` 2
-  , "ListTest1.hls"   |-> \x _ -> length (replicate (fromInteger x) 4)
-  , "ListTest2.hls"   |-> \x _ -> length (take (fromInteger x) (repeat 4))
-  , "PrimeTest2.hls"  --> \_ xs -> 
-              let isprime t n = case t * t > n of
-                      True  -> True
-                      False -> if (n `mod` t == 0) 
-                                then False
-                                else isprime (t+1) n
-               in all (isprime 2) xs
-  , "ListTest7.hls"   |-> \x _ -> sort [0,-1.. -x+1] -- A little slow :)
-  , "LetRecTest1.hls" |-> \x _ -> even x
-  ]
-
-
--}
-
-
+main = runTests . (++ (interpreter testsuite)) =<< ocTests
 
 testsuite :: [(FilePath, Tests)]
 testsuite = 
@@ -291,10 +233,13 @@ optTests = [
     , "OC24abyssCon.hls" ---> cons "X" [2 :: Integer]
     , "OC25abyssConAlt.hls" ---> cons "X" [2 :: Integer]
     , "OC26abyssConSimon.hls" ---> [4,6 :: Integer]
-    , "OC27power.hls"  --> \I{..} -> map (* (abs int)) ints
-    , "OC28power.hls"  --> \I{..} -> map (+ (abs int)) ints
+    , "OC27power.hls"  --> \I{..} -> map (* (roof $ abs int)) ints
+    , "OC28power.hls"  --> \I{..} -> map (+ (roof $ abs int)) ints
     , "OC29filter.hls" --> \I{..} -> filter (/= dbl) dbls
     , "OC30filter.hls" --> \I{..} -> filter (\x -> x > int * 2 && x < int * 3) 
                                              ints
     , "OC31zipWith.hls" --> \I{..} -> zipWith (+) [0..] ints 
     ]
+  where
+    roof x | x > 32    = 32
+           | otherwise = x

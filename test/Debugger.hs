@@ -90,8 +90,10 @@ defaultSettings = Settings {
 data InterpreterState = IS
     { settings :: Settings
     , stgm     :: StgMState String
-    , history  :: [Result]
-    , breakPoints  :: [BreakPoint]
+    , history  :: ![Result]
+    , breakPoints  :: ![BreakPoint]
+    , nrRules  :: !Int
+    , saveHist :: !Bool
     }
 
 
@@ -104,6 +106,8 @@ testInterpreter set file = do
             , stgm     = initialStgMState
             , history  = []
             , breakPoints = []
+            , nrRules  = 0
+            , saveHist = False
             } 
 
 
@@ -165,8 +169,9 @@ loop originalState  = do
         case hist of
             [] -> printSummary s
             (_, s') : xs -> do
-                lift . modify $ \set -> set { history = xs }
+                lift . modify $ \set -> set { history = xs, nrRules = nrRules set - 1}
                 evalStep (n + 1) s'
+
                  | otherwise = do
         stg <- lift $ gets stgm
         bps <- lift . gets $ breakPoints
@@ -174,17 +179,23 @@ loop originalState  = do
             (Nothing, stg') -> do
                 outputStrLn "No Rule applied"
                 loop s
-            (Just res@(_, s'), stg') | Just b <- bp bps res -> do
-                addHistory res
-                lift . modify $ \set -> set { stgm = stg' }
-                outputStrLn $ "BreakPoint! " ++ show b
-                printSummary s'
-                                     | otherwise -> do
-                addHistory res
-                lift . modify $ \set -> set { stgm = stg' }
-                evalStep (n - 1) s'
+            (Just res@(_, s'), stg') 
+                | Just b <- bp bps res -> do
+                    addHistory res
+                    lift . modify $ \set -> set { stgm = stg' }
+                    outputStrLn $ "BreakPoint! " ++ show b
+                    printSummary s'
+                | otherwise -> do
+                    addHistory res
+                    lift . modify $ \set -> set { stgm = stg' }
+                    evalStep (n - 1) s'
                 
-    addHistory res = lift . modify $ \set -> set { history = res : history set }
+    addHistory res = do
+        sv <- lift . gets $ saveHist
+        lift . modify $ \set -> set { history = if sv
+                                        then res : history set
+                                        else history set
+                                    , nrRules = nrRules set + 1}
 
     addbp xs = case xs of
         "rule": rs -> case reads (unwords rs) of 
@@ -280,6 +291,8 @@ loop originalState  = do
             
     printRules = do
         ruls <- lift $ gets history
+        nrR  <- lift . gets $ nrRules
+        outputStrLn $ "number of rules: " ++ show (nrR)
         outputStrLn $ "number of rules: " ++ show (length ruls)
         outputStrLn . show . map (\ list -> (head list, length list))
                     . group . sort . map fst $ ruls 

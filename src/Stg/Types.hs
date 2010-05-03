@@ -37,33 +37,33 @@ type ContStack t = [Cont t]
 
 data StgState t 
   = StgState
-      { code     :: Expr  t
-      , cstack   :: ContStack t
-      , astack   :: ArgStack t 
-      , heap     :: Heap  t
-      , settings :: [StgSettings t]
+      { code     :: !(Expr  t)
+      , cstack   :: !(ContStack t)
+      , astack   :: !(ArgStack t)
+      , heap     :: !(Heap  t)
+      , settings :: ![StgSettings t]
       }
   | OmegaState
-      { code     :: Expr  t
-      , cstack   :: ContStack t
-      , astack   :: ArgStack t
-      , heap     :: Heap  t
-      , settings :: [StgSettings t]
+      { code     :: !(Expr  t)
+      , cstack   :: !(ContStack t)
+      , astack   :: !(ArgStack t)
+      , heap     :: !(Heap  t)
+      , settings :: ![StgSettings t]
       }
   | PsiState
-      { code     :: Expr  t
-      , cstack   :: ContStack t
-      , astack   :: ArgStack t
-      , heap     :: Heap  t
-      , letBinds :: [t]
-      , settings :: [StgSettings t]
+      { code     :: !(Expr  t)
+      , cstack   :: !(ContStack t)
+      , astack   :: !(ArgStack t)
+      , heap     :: !(Heap  t)
+      , letBinds :: ![t]
+      , settings :: ![StgSettings t]
       }
   | IrrState
-      { code     :: Expr  t
-      , cstack   :: ContStack t
-      , astack   :: ArgStack t
-      , heap     :: Heap  t
-      , settings :: [StgSettings t]
+      { code     :: !(Expr  t)
+      , cstack   :: !(ContStack t)
+      , astack   :: !(ArgStack t)
+      , heap     :: !(Heap  t)
+      , settings :: ![StgSettings t]
       }
   
 
