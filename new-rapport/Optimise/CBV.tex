@@ -1,6 +1,8 @@
 \documentclass[../Optimise]{subfiles}
 \begin{document}
 
+\numberwithin{equation}{section}
+
 \subsection{Call by Value semantik}
 
 \NOTE{
@@ -12,61 +14,38 @@ Och sedan skriva om det CBV till att likna CBN mer.
 
 }
 
-Det finns tre delar i denna form av optimise semantik. De är som följer:
+\subsubsection{Funktionsapplikationer}
 
-\textbf{Omega} $\Omega$, är ingångspunkten till optimeringsfunktionen, anropas från maskinen
-när något har blivit annoterat för optimering. Omega bryter ner trädet
-och delegerar vidare vem och vad som ska ske, samt lägger ut continuations
-för att senare bygga upp ett förhoppningsvis nytt träd.
-
-\begin{align*}
-\OMEGA sH{\eCase e{brs}} & \Rightarrow & \OMEGA{\oCase{brs}s}He\\
+\begin{align}
 \OMEGA sH{f\,\bar{k}} & \Rightarrow & \mc{f\,\bar{k}}sH\\
 \OMEGA sH{f\,\bar{x}\, k\,\bar{y}} & \Rightarrow & \mc{f\,\bar{x}\, k\,\bar{y}}{\oInline s}H\\
+\IRR{\cOFUN{\bar{x}}{\alpha}s}He & \Rightarrow & \mc{\alpha}s{\heap{\alpha}{\FUN{\bar{x}}e}}
+\end{align}
+
+\subsubsection{let-uttryck}
+
+\begin{align}
 \OMEGA sH{\eLet x{\THUNK e}{e'}} & \Rightarrow & \OMEGA{\oLet x{e'}s}He\\
-\OMEGA s{\nheap x{\,}}{\bullet} & \Rightarrow & \IRR sH{\bullet}
-\end{align*}
-
-
-\textbf{Psi} $\Psi$, anropas från när optimise har lagt ut något åt maskinen och
-maskinen inte kan komma längre. Psi kommer använda värdet från maskinen
-och sedan delegera vidare optimeringen.
-
-\begin{align*}
 \PSI{\oLet xes}Hv & \Rightarrow & \OMEGA sH{e[v/x]}
-\end{align*}
-
-\NOTE{Viktigt att nämna att substitute är långsamt?
-eller skall detta vara mer generellt och inte bry sig om hur e[a/x] fungerar}
-
-Här byter vi ut x mot värdet v som maskinen har arbetat fram let-uttrycket.
-Här använder vi en substitute funktion som går igenom hela e uttrycksträd
-vilket är väldigt kostsamt. Något som vi bytte ut i senare versioner.
-
-\begin{align*}
 \PSI{\oLetObj x{OBJ}s}Hv & \Rightarrow & \IRR sH{\eLet x{OBJ}v}\\
-\PSI{\oCase{brs}s}Hv & \Rightarrow & \OMEGA sH{\text{instantiate correct brs with v}}\end{align*}
-
-
-Instantiate correct branch väljer helt enkelt vilken branch som matchar
-värdet som maskinen arbetat fram. Detta är troligtvis en av de viktigaste
-stegen i vår optimering då kan skala bort alla onödiga brancher, minska
-koden och oftast fortsätta optimera en bit in det nya uttrycket.
-
-\textbf{Irr} $\Phi$, kortform för Irreducible. Anropas när Omega eller Psi inte längre
-kan optimeringa vidare. Irr kan då utifrån nuvarande continuations
-bygga trädet eller byta continuation och fortsätta optimera på en
-andra delar i uttrycket. Det är här vi kan tillslut gå tillbaka till
-STG-maskinen.
-
-\begin{align*}
 \IRR{\oLet xes}H{e'} & \Rightarrow & \OMEGA{\oLetObj x{\THUNK{e'}}s}He\\
-\IRR{\oCase{brs}s}He & \Rightarrow & \IRR sH{\eCase e brs}
-\end{align*}
+\IRR{\oLetObj x{OBJ}s}He & \Rightarrow & \IRR sH{\eLet x{OBJ}e}
+\end{align}
 
+\subsubsection{Case}
+\begin{align}
+\OMEGA sH{\eCase e{brs}} & \Rightarrow & \OMEGA{\oCase{brs}s}He\\
+\label{CBV:Case2} \PSI{\oCase{brs}s}Hv & \Rightarrow & \OMEGA sH{\text{instantiate correct brs with v}} \\
+\label{CBV:Case3} \IRR{\oCase{brs}s}He & \Rightarrow & \IRR sH{\eCase e brs}
+\end{align}
 
-Istället för att skapa en $\eCase e brs$ har vi även testat att gå in
-och optimera varje branch, detta brytter dock semantiken, vi kan fastna
+Instantiate correct branch i regel \eqref{CBV:Case2} väljer helt enkelt vilken branch som matchar
+värdet som maskinen arbetat fram. Detta är troligtvis en av de viktigaste
+stegen i vår optimering då kan skala bort alla onödiga brancher, minska koden 
+och oftast fortsätta optimera en bit in det nya uttrycket.
+
+Istället för att skapa en $\eCase e brs$ i \eqref{CBV:Case3} har vi även testat att gå in
+och optimera varje branch, detta bryter dock semantiken, vi kan fastna
 i oändliga loopar i brancher vi aldrig hade hamnat i. 
 
 \begin{codeEx}
@@ -75,17 +54,52 @@ case x of
     ; False -> repeat 1
     }
 \end{codeEx}
-Om x är okänd och vi försöker optimera False branchen kommer vi fastna
-i en oändlig loop, dock är det möjligt att när programet körs kommer
-x bara anta värdet True. 
+
+\subsubsection{Atoms}
+
+
+\subsubsection{STG interface}
+\textbf{STG}, då vi interagerar med STG maskinen måste vi har tydliga regler
+för när maskien ska sluta evaluera och börja optimera. Detta sker
+antingen då den stöter på en $\OPT t$ för första gången, eller när den
+inte längre kan evaluera ett uttryck och har en Optimise continuation
+på stacken.
+
+\begin{align}
+\mc as{\heap a{\OPT t}} & \Rightarrow\\
+\mc t{\cOPT{a\,}s}{\heap a{\BH}}\\
+\mc x{\cOPT as}{\heapp x{\PAP f{a_{1}\cdots a_{n}}}f{\FUN{x_{1}\cdots x_{m}}e}} & \Rightarrow\\
+\OMEGA{\cOFUN{x_{n+1}\cdots x_{m}}as}H{e[a_{1}/x_{1}\cdots a_{n}/x_{n}]}\\
+\mc v{O.\star\,:\, s}{\nheap v{\THUNK e}} & \Rightarrow\\
+\PSI{O.\star\,:\, s}Hv
+\end{align}
+
+\NOTE {
+\begin{align*}
+\OMEGA sH{\eCase e{brs}} & \Rightarrow & \OMEGA{\oCase{brs}s}He\\
+\OMEGA sH{f\,\bar{k}} & \Rightarrow & \mc{f\,\bar{k}}sH\\
+\OMEGA sH{f\,\bar{x}\, k\,\bar{y}} & \Rightarrow & \mc{f\,\bar{x}\, k\,\bar{y}}{\oInline s}H\\
+\OMEGA sH{\eLet x{\THUNK e}{e'}} & \Rightarrow & \OMEGA{\oLet x{e'}s}He\\
+\OMEGA s{\nheap x{\,}}{\bullet} & \Rightarrow & \IRR sH{\bullet}
+\end{align*}
+
+\begin{align*}
+\PSI{\oLet xes}Hv & \Rightarrow & \OMEGA sH{e[v/x]}
+\end{align*}
+
+\begin{align*}
+\PSI{\oLetObj x{OBJ}s}Hv & \Rightarrow & \IRR sH{\eLet x{OBJ}v}\\
+\PSI{\oCase{brs}s}Hv & \Rightarrow & \OMEGA sH{\text{instantiate correct brs with v}}\end{align*}
+
+\begin{align*}
+\IRR{\oLet xes}H{e'} & \Rightarrow & \OMEGA{\oLetObj x{\THUNK{e'}}s}He\\
+\IRR{\oCase{brs}s}He & \Rightarrow & \IRR sH{\eCase e brs}
+\end{align*}
 
 \begin{align*}
 \IRR{\oLetObj x{OBJ}s}He & \Rightarrow & \IRR sH{\eLet x{OBJ}e}\\
 \IRR{\cOFUN{\bar{x}}{\alpha}s}He & \Rightarrow & \mc{\alpha}s{\heap{\alpha}{\FUN{\bar{x}}e}}
 \end{align*}
-
-
-
 
 \textbf{STG}, då vi interagerar med STG maskinen måste vi har tydliga regler
 för när maskien ska sluta evaluera och börja optimera. Detta sker
@@ -102,6 +116,7 @@ på stacken.
 \PSI{O.\star\,:\, s}Hv
 \end{align*}
 
+}
 
 %\begin{multline}
 %%\mc as{\heap a{\OPT t}} \Rightarrow \mc t{\cOPT{a\,}s}{\heap a{\BH}} \\
