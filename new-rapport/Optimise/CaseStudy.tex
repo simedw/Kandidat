@@ -1,0 +1,38 @@
+\documentclass[../Optimise]{subfiles}
+\begin{document}
+
+\subsection{Fallstudie}
+
+Det finns många platser i kod där optimise kan placeras, alla dessa är tyvärr inte bra val. Det finns flera fallgropar att undvika för få ut så stor prestandavinst som möjligt. Vi ska illusterar detta igenom att undersöka ett något större exempel, en raytracer.
+
+En raytracer är ett program som målar upp en bild genom att från en fixt punkt i ett rum skicka ut ljusstrålar (rays) och sedan notera vad varje stråle träffar\footnote{Att jämföra med hur våra egna ögon fungerar. Fast vi skickar inte ut ljusstrålar.}.
+
+
+
+
+ Den antar en position i rummet och skickar sedan ljusstrålar (rays) och noterar vad varje stråle träffar för att sedan bygga upp en bild. Vi har implementerat en mycket enkel sådan, där rummet består av en djup sorterad lista av 2d objekt. 2d objekten beskrivs av funktioner, $(x,y) \mapsto Bool$, där vi får False om vi inte träffade objectet.
+
+En circle med radie \ic{p} defineras
+\begin{codeEx}
+circle p = absSqr p <. 1.0;
+\end{codeEx}
+
+Vi har sedan en rad kombinatorer för att bygga upp mer komplexa objekt.
+\begin{codeEx}
+
+-- translate, scale :: Pos -> Shape -> Shape
+translate dp s p = s $ posSub p dp;
+scale     dp s p = s $ posDiv p dp;
+
+-- rotate :: Double -> Shape -> Shape
+rotate theta s p = s $ polar (abs' p) (arg p +. theta);
+
+-- union, minus, intersect :: Shape -> Shape -> Shape
+union     s t p = s p || t p;
+minus     s t p = s p && not (t p);
+intersect s t p = s p && t p;
+
+\end{codeEx}
+
+
+\end{document}
