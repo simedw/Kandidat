@@ -18,7 +18,9 @@ import qualified Stg.GC           as GC
 
 import Parser.SugarParser
 
-type Dia a = State (DiaState a) 
+type Dia = Compose State DiaState -- (DiaState a) 
+
+type Compose f g x = f (g x)
 
 data DiaState t = DiaState
     { nameSupply :: [t]

@@ -4,6 +4,28 @@
 
 \section{Optimise}
 
+% svårt att låta bli att alla dessa avsnitt börjar med 
+% 'i det här avsnittet [ ska vi undersöka / beskrivs / förklaras ... ]'
+% plepp, plepp
+
+Nu är sockerpråket förklarat (sektion 2), och corespråket (sektion 3),
+och nu kan vi undersöka själva kärnan i arbetet, nämligen optimeringen.
+I introduktionen i detta avsnitt kan du läsa om vad optimering och 
+optimering under körtid innebär. För att optimera under körtid har 
+olika semantiker tagits fram och undersökts.
+    
+Den första av dem, som kommer refereras till som cbv-semantiken, 
+kan du läsa om i avsnitt 4.2. Den hade vissa nackdelar, så i 
+efterföljande avsitt kommer den uppgradera versionen, cbn-semantiken.
+
+Denna kunde också tjäna på andra optimeringar, som tex
+dödkodseliminering (sektion 4.5), 
+välkänd caselag (sektion 4.6) och 
+afterburner (sektion 4.7).
+
+Hur optimeringen fungerar tillsammans med anropssatcken
+kan du läsa i det sista avsnittet 4.8.
+
 \subfile{Optimise/Intro}
 %\NOTE{
 %Vi har använt ett par olika semantiker för att beskriva optimeringsskedet
@@ -76,6 +98,22 @@ STG-maskinen.
     };
 %    child[concept color=orange] { node[concept] {theoretical} };
 \end{tikzpicture}
+
+\NOTE{
+Den här texten är bra - var ska den in? Något för övergångstexten?
+Eller i introduktionen? /Dan
+
+Vi har använt ett par olika semantiker för att beskriva optimeringsskedet
+i vårt språk, vi ska nu förklara var och ett av dessa i kronologisk
+ordning.
+
+
+Detta optimeringspass arbetar sig igenom trädet på ett sätt inte
+helt olikt STG-maskinen, dock kan vi bland annat gå in och evaluera
+funktion utan att känna till alla argument, s.k. evaluera under lambdat.
+För att inte duplicera för mycket av STGs funktionalitet så anropas
+optimise STG-maskinen för diverse uppgifter.
+}
 
 \subfile{Optimise/CBV}
 

@@ -3,6 +3,29 @@
 
 \section{Corespråk}
 
+\NOTE{ Ett första försök till en övergångstext. }
+
+I förra avsnittet introducerades sockerspråket, ett litet men användbart
+funktionellt programmeringsspråk, det som används genomgående i det här
+arbetet för att skriva lättläst kod.
+    I detta avsitt ska vi se hur koden tolkas. För att underlätta
+tolkningen översätts koden till ett annat språk, corespråket. 
+% här borde man kunna ha någon magisk latex-referens antar jag
+Huvudavsnittet för den här texten är 3.3, \emph{En semantik för STG}
+som förklaras reglerna som används för
+tolkningen. 
+
+Därpå följande avsnitt beskrivs olika verkyg som används för att
+underlätta arbetet med det här språket och hur tolken är uppbyggd,
+som avsitt 3.4 om avsockringeng från sockersrpåket och 3.5 
+om hur lambdafunktioner lyfts upp till toppnivå, därefter
+boxning av primitiva datatyper, samt vilken modell av IO tolken använder.
+
+I avsitt 3.6, beskrivs \emph{anropsstacken}, som förklarar hur tolken
+sparar undar lokala variabler i en funktion. Anropsstacken är en 
+stor prestandahöjare över substitution, och därför är det här också ett
+viktigt avsnitt i den här sektionen.
+
 \subfile{Core/Maskiner}
 
 \subfile{Core/STG}
