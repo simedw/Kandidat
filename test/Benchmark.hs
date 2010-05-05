@@ -41,10 +41,23 @@ benchmarklist =
     ,"OptTest6.hls" -->   [(0,list)]
     , "RSA.hls"      -->  [(0,list)] -}
     --]
-   [ "Shapes.hls"   --> defaultInput {inputDouble = Just n} | n <- [1.0..2.0] ]
-
+   [ "Shapes.hls" --> defaultInput {inputDouble = Just (2 ** n)} | n <- [1.0..maxd] ]
+   ++ [ "Shapes-casebranches.hls" -->
+        defaultInput {inputDouble = Just (2 ** n)} | n <- [1.0..maxd] ]
+   ++ [ "OptTest7.hls" -->
+        defaultInput {inputIntegers = Just [1..powerlistlen]
+                     , inputInteger = Just (2 ^ n)
+                     } | n <- [1..maxi] ]
+   ++ [ "regexp.hls" --> 
+        defaultInput {inputString = 
+            Just $ "ab|*c.ab|. aaaabbbbbbaabbc aaacaaa aaaaabbbbbccccaaa abbbbaaacaaaaaaacccccbbbbbaaaaaabba "
+            ++ (concat $ replicate regexplen "abbbbaaacaaaaaaabbbbbaaaaaabba ") }
+      ]
  where
-   --list  = [1..100]
+   maxd = 2.0 --11
+   maxi = 2   --11
+   powerlistlen = 200
+   regexplen = 3 --30
    (-->) = (,)
 
 {- We load and parse all test before invoking the actual benchmark.

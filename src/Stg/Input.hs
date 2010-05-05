@@ -11,7 +11,17 @@ data Input = Input
   , inputDoubles  :: Maybe [Double]
   , inputString   :: Maybe String
   }
-  deriving Show
+
+instance Show Input where
+    show (Input i is d ds s) = "("
+      ++ showm i  " int: "
+      ++ showm is " ints: "
+      ++ showm d  " double: "
+      ++ showm ds " doubles: "
+      ++ showm s  " string:  "
+      ++ ")"
+      where showm (Just x) t = t ++ show x
+            showm _        _ = ""
 
 defaultInput :: Input
 defaultInput = Input { inputInteger  = Nothing

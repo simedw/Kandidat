@@ -69,7 +69,7 @@ fromTo x step y = takeWhile (\z . z <=. y) $ iterate (\z . z +. step) x;
 -- screen :: Double -> Double -> [[Pos]]
 screen szX szY = let { xs = fromTo -1.0 (2.0 /. (szX -. 1.0)) 1.0
                      ; ys = fromTo -1.0 (2.0 /. (szY -. 1.0)) 1.0
-                     } 
+                     }
                  in map (\x . map (\y . Pos x y) ys) xs;
 
 program1 = Tuple (optimise (scale (Pos 0.6 0.8) circle)) 'X' :
@@ -84,12 +84,12 @@ eye = scale (Pos 0.3 0.3) circle;
 
 tuple x y = Tuple (optimise x) y;
 
-smiley = Tuple (translate (Pos 0.1 0.2) $ rotate (pi /. 10.0) $ scale (Pos 0.05 0.2) square) blue
-       : Tuple (translate (Pos 0.5 0.0) eye) blue 
-       : Tuple (translate (Pos -0.5 0.0) eye) blue 
-	   : Tuple (translate (Pos 0.0 0.5) $ scale (Pos 0.35 0.25) $ minus circle (translate (Pos 0.0 -1.0) square)) blue 
-	   : Tuple (circle) red : Nil;
+smiley = tuple (translate (Pos 0.1 0.2) $ rotate (pi /. 10.0) $ scale (Pos 0.05 0.2) square) blue
+       : tuple (translate (Pos 0.5 0.0) eye) blue
+       : tuple (translate (Pos -0.5 0.0) eye) blue
+       : tuple (translate (Pos 0.0 0.5) $ scale (Pos 0.35 0.25) $ minus circle (translate (Pos 0.0 -1.0) square)) blue
+       : tuple (circle) red : Nil;
 
 smiley2 = map (\x . Tuple (optimise (fst x)) (snd x)) smiley;
 
-main = map (map (optimise (shapes ' ' smiley2))) $ screen getDouble getDouble;
+main = map (map ((shapes ' ' smiley2))) $ screen getDouble getDouble;
