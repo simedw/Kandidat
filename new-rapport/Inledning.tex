@@ -85,7 +85,56 @@ men är vad som undersöks i detta projekt. Funktionen \ic{optimise} är
 tänkt att användas på en funktion som är partiellt applicerad. Då kan optimise göra en
 partiell evaluering av funktionen, så långt det är möjligt utan de okända argumenten.
 
+\subsection{Avgränsningar}
+% vi är fegr
+Detta projekt har gjort ett par avgränsningar i vad som skulle göras, 
+
+Den här rapporten antar att läsaren har en förståelse av funktionella programmeringsspråk
+och vissa kunskaper av programspråk i allmänhet. Vi kommer att introducera de koncept
+vi använder men för en större överblick av området rekomenderas mer grundlägande material.
+
+\NOTE{Den här sektionen är inte klar och jag vet inte vad jag vill med den}
+
 \subsection{Överblick}
+
+\newcommand{\overviewTolk}[0] { node[concept] {Tolk} }
+\newcommand{\overviewFrontend}[0] {
+    child[concept color=green!50!black] {
+      node[concept] {Frontend}
+      [clockwise from=90]
+      child { node[concept] {Parser} }
+      child { node[concept] {Avsockrare} }
+      child { node[concept] {Lambda- lyftare} }
+    }
+}
+\newcommand{\overviewRuntime}[1] {
+    child[concept color=red!50!black] {
+        node[concept] {Runtime}
+        [counterclockwise from=200]
+        child[concept] { node[concept] {STG} }
+        child[concept] { node[concept] {Garbage Collector} }
+        #1
+    };
+}
+\newcommand{\overviewOptimise}[0] {
+    child[concept color=blue!50!black] {
+        node[concept] {Optimise}
+        [clockwise from=20]
+        child { node[concept] {Omega} }
+        child { node[concept] {Psi} }
+        child { node[concept] {Irr} }
+        child { node[concept] {After burner} }
+    }
+}
+
+\begin{tikzpicture}
+\path[mindmap,concept color=black,text=white]
+\overviewTolk
+[clockwise from=30]
+\overviewFrontend
+\overviewRuntime{ \overviewOptimise }
+%    child[concept color=orange] { node[concept] {theoretical} };
+\end{tikzpicture}
 
 För att kunna göra det här arbetet krävs det ett programmeringsspråk
 att arbeta i. Vi har skapat en tolk efter STG, som är en modell för hur
