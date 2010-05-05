@@ -30,7 +30,9 @@ evaluerat före det boxas igen.
 \NOTE{Oh Hi, vi borde förklara skillnad mellan NF och WHNF}
 Tolken har en primitiv form av IO: den har konstant indata vid körning och
 skriver ut det som \ic{main}-funktionen returnerar. Dessutom
-forceras hela värdet om det är en konstruktor till normalform.
+forceras hela värdet om det är en konstruktor till normalform. Med det menas
+att värdet evalueras helt och hållet och inte bara till vilken konstruktor det är
+som man gör i WHNF.
 
 Funktionerna getInt, getIntList, getDouble, getDoubleList och getString finns
 till hands under körning om användaren har angett någon eller några av dessa
@@ -42,9 +44,9 @@ källkoden.
 \NOTE{Finns lite arbete och göra på dessa}
 Utdata fås genom att \ic{main} evalueras fullt. % Ytterligare två continuations behövs - \cont{Print} och \cont{PrintCont}. 
 Uttrycksdatatypen utökas med en ny typ av värden, 
-s-värden, som antingen är en evaluerad primitiv (betecknas \emph{n})
-, t.ex. ett heltal, eller en konstruktor (betecknas \emph{K C [sval]}, där
-C är konstruktorns namn och sen listan av dess s-värden) .
+s-värden, som antingen är en evaluerad primitiv (betecknas $n$)
+, t.ex. ett heltal, eller en konstruktor (betecknas $K C [sval]$, där
+$C$ är konstruktorns namn och sen listan av dess s-värden) .
 Om något som ska skrivas ut har evaluerats till en (partiellt evaluerad)
 funktion så skrivs \kw{FUN} istället ut. Detta är också ett s-värde.
 
@@ -84,8 +86,8 @@ evalueras.
  
 
 \[
-x ; Print : s ; H , x
-\Rightarrow n \; x ; s ; H
+x ; Print : s ; H \;
+\Rightarrow \; n \; x ; s ; H
 \]
 
 x är alltså här ett värde, men ej ett s-värde.
@@ -98,7 +100,8 @@ x ; Print : s ; H[x \mapsto FUN / PAP]
 \Rightarrow FUN ; s ; H
 \]
 
-Om x pekar på en funktion skapa s-värdet \emph{FUN}.
+Om x pekar på en funktion skapa s-värdet $FUN$ för att visa att att värdet har
+evaluerats klart. 
 
 
 \[
@@ -106,16 +109,20 @@ sv ; PrintCon \; C \; ps \; (n : ns) : s ; H
 \Rightarrow n ; Print : PrintCon \; C \; (ps ++ sv) \; ns : s ; H
 \]
 
+Om man har ett s-värde och en \cont{PrintCon}-continuation på stacken som har flera
+atomer som man vill evaluera så sätts nuvarande värdet ihop med de redan färdigevaluerade
+och man väljer nästa atom för att fortsätta att evaluera.
 
-Ett s-värde är fullt evaluerat och då kan nästa atom i konstruktorn evalueras. 
-
+Till slut kommer man komma till att det inte finns fler atomer för denna konstruktor
+att evaluera, då kan Bygga upp konstruktorn igen.
 
 \[
 sv ; PrintCon \; C \; ps \; [] : s ; H
 \Rightarrow K \; C \; (ps ++ sv) ; s ; H
 \]
 
-Konstruktorn är helt evaluerad när den kommit till sista konstruerande atomen.
+Konstruktorn är helt evaluerad när den kommit till sista konstruerande atomen. Så
+man får nu ett nytt s-värde som kan användas för att bygga upp nya kontstruktorer.
 
 
 

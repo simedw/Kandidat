@@ -107,49 +107,49 @@ på stacken.
 \PSI{O.\star\,:\, s}Hv
 \end{align}
 
-\NOTE {
-\begin{align*}
-\OMEGA sH{\eCase e{brs}} & \Rightarrow & \OMEGA{\oCase{brs}s}He\\
-\OMEGA sH{f\,\bar{k}} & \Rightarrow & \mc{f\,\bar{k}}sH\\
-\OMEGA sH{f\,\bar{x}\, k\,\bar{y}} & \Rightarrow & \mc{f\,\bar{x}\, k\,\bar{y}}{\oInline s}H\\
-\OMEGA sH{\eLet x{\THUNK e}{e'}} & \Rightarrow & \OMEGA{\oLet x{e'}s}He\\
-\OMEGA s{\nheap x{\,}}{\bullet} & \Rightarrow & \IRR sH{\bullet}
-\end{align*}
+%\NOTE {
+%\begin{align*}
+%\OMEGA sH{\eCase e{brs}} & \Rightarrow & \OMEGA{\oCase{brs}s}He\\
+%\OMEGA sH{f\,\bar{k}} & \Rightarrow & \mc{f\,\bar{k}}sH\\
+%\OMEGA sH{f\,\bar{x}\, k\,\bar{y}} & \Rightarrow & \mc{f\,\bar{x}\, k\,\bar{y}}{\oInline s}H\\
+%\OMEGA sH{\eLet x{\THUNK e}{e'}} & \Rightarrow & \OMEGA{\oLet x{e'}s}He\\
+%\OMEGA s{\nheap x{\,}}{\bullet} & \Rightarrow & \IRR sH{\bullet}
+%\end{align*}
+%
+%\begin{align*}
+%\PSI{\oLet xes}Hv & \Rightarrow & \OMEGA sH{e[v/x]}
+%\end{align*}
+%
+%\begin{align*}
+%\PSI{\oLetObj x{OBJ}s}Hv & \Rightarrow & \IRR sH{\eLet x{OBJ}v}\\
+%\PSI{\oCase{brs}s}Hv & \Rightarrow & \OMEGA sH{\text{instantiate correct brs with v}}\end{align*}
+%
+%\begin{align*}
+%\IRR{\oLet xes}H{e'} & \Rightarrow & \OMEGA{\oLetObj x{\THUNK{e'}}s}He\\
+%\IRR{\oCase{brs}s}He & \Rightarrow & \IRR sH{\eCase e brs}
+%\end{align*}
+%
+%\begin{align*}
+%\IRR{\oLetObj x{OBJ}s}He & \Rightarrow & \IRR sH{\eLet x{OBJ}e}\\
+%\IRR{\cOFUN{\bar{x}}{\alpha}s}He & \Rightarrow & \mc{\alpha}s{\heap{\alpha}{\FUN{\bar{x}}e}}
+%\end{align*}
+%
+%När vi interagerar med STG maskinen måste vi har tydliga regler
+%för när maskien ska sluta evaluera och börja optimera. Detta sker
+%antingen då den stöter på en $\OPT t$ för första gången, eller när den
+%inte längre kan evaluera ett uttryck och har en Optimise continuation
+%på stacken.
 
-\begin{align*}
-\PSI{\oLet xes}Hv & \Rightarrow & \OMEGA sH{e[v/x]}
-\end{align*}
-
-\begin{align*}
-\PSI{\oLetObj x{OBJ}s}Hv & \Rightarrow & \IRR sH{\eLet x{OBJ}v}\\
-\PSI{\oCase{brs}s}Hv & \Rightarrow & \OMEGA sH{\text{instantiate correct brs with v}}\end{align*}
-
-\begin{align*}
-\IRR{\oLet xes}H{e'} & \Rightarrow & \OMEGA{\oLetObj x{\THUNK{e'}}s}He\\
-\IRR{\oCase{brs}s}He & \Rightarrow & \IRR sH{\eCase e brs}
-\end{align*}
-
-\begin{align*}
-\IRR{\oLetObj x{OBJ}s}He & \Rightarrow & \IRR sH{\eLet x{OBJ}e}\\
-\IRR{\cOFUN{\bar{x}}{\alpha}s}He & \Rightarrow & \mc{\alpha}s{\heap{\alpha}{\FUN{\bar{x}}e}}
-\end{align*}
-
-När vi interagerar med STG maskinen måste vi har tydliga regler
-för när maskien ska sluta evaluera och börja optimera. Detta sker
-antingen då den stöter på en $\OPT t$ för första gången, eller när den
-inte längre kan evaluera ett uttryck och har en Optimise continuation
-på stacken.
-
-\begin{align*}
-\mc as{\heap a{\OPT t}} & \Rightarrow\\
-\mc t{\cOPT{a\,}s}{\heap a{\BH}}\\
-\mc x{\cOPT as}{\heapp x{\PAP f{a_{1}\cdots a_{n}}}f{\FUN{x_{1}\cdots x_{m}}e}} & \Rightarrow\\
-\OMEGA{\cOFUN{x_{n+1}\cdots x_{m}}as}H{e[a_{1}/x_{1}\cdots a_{n}/x_{n}]}\\
-\mc v{O.\star\,:\, s}{\nheap v{\THUNK e}} & \Rightarrow\\
-\PSI{O.\star\,:\, s}Hv
-\end{align*}
-
-}
+%\begin{align*}
+%\mc as{\heap a{\OPT t}} & \Rightarrow\\
+%\mc t{\cOPT{a\,}s}{\heap a{\BH}}\\
+%\mc x{\cOPT as}{\heapp x{\PAP f{a_{1}\cdots a_{n}}}f{\FUN{x_{1}\cdots x_{m}}e}} & \Rightarrow\\
+%\OMEGA{\cOFUN{x_{n+1}\cdots x_{m}}as}H{e[a_{1}/x_{1}\cdots a_{n}/x_{n}]}\\
+%\mc v{O.\star\,:\, s}{\nheap v{\THUNK e}} & \Rightarrow\\
+%\PSI{O.\star\,:\, s}Hv
+%\end{align*}
+%
+%}
 
 %\begin{multline}
 %%\mc as{\heap a{\OPT t}} \Rightarrow \mc t{\cOPT{a\,}s}{\heap a{\BH}} \\

@@ -85,52 +85,19 @@ men är vad som undersöks i detta projekt. Funktionen \ic{optimise} är
 tänkt att användas på en funktion som är partiellt applicerad. Då kan optimise göra en
 partiell evaluering av funktionen, så långt det är möjligt utan de okända argumenten.
 
-\subsection{Avgränsningar}
+%\subsection{Avgränsningar}
 % vi är fegr
-Detta projekt har gjort ett par avgränsningar i vad som skulle göras, 
+%Detta projekt har gjort ett par avgränsningar i vad som skulle göras, 
+%
+%Den här rapporten antar att läsaren har en förståelse av funktionella programmeringsspråk
+%och vissa kunskaper av programspråk i allmänhet. Vi kommer att introducera de koncept
+%vi använder men för en större överblick av området rekomenderas mer grundlägande material.
 
-Den här rapporten antar att läsaren har en förståelse av funktionella programmeringsspråk
-och vissa kunskaper av programspråk i allmänhet. Vi kommer att introducera de koncept
-vi använder men för en större överblick av området rekomenderas mer grundlägande material.
-
-\NOTE{Den här sektionen är inte klar och jag vet inte vad jag vill med den}
+%\NOTE{Den här sektionen är inte klar och jag vet inte vad jag vill med den}
 
 \subsection{Överblick}
 
-\newcommand{\overviewTolk}[0] { node[concept] {Tolk} }
-\newcommand{\overviewFrontend}[0] {     
-    child[concept color=green!50!black] {
-      node[concept] {Frontend}
-      [clockwise from=90]
-      child { node[concept] {Parser} }
-      child { node[concept] {Avsockrare} }
-      child { node[concept] {Lambda- lyftare} }
-    }  
-}
-\newcommand{\overviewRuntime}[0] {
-
-}
-\begin{tikzpicture}
-  \path[mindmap,concept color=black,text=white]
-    \overviewTolk
-    [clockwise from=30]
-    \overviewFrontend
-    child[concept color=red!50!black] {
-      node[concept] {Runtime}
-      [clockwise from=-30]
-    child[concept color=blue!50!black] {
-      node[concept] {Optimise}
-      [clockwise from=0]
-      child { node[concept] {Omega} }
-      child { node[concept] {Psi} }
-      child { node[concept] {Irr} }
-      child { node[concept] {After burner} }
-    }
-    child[concept color=red] { node[concept] {STG} }
-    child[concept color=red] { node[concept] {Garbage Collector} }
-    };
-%    child[concept color=orange] { node[concept] {theoretical} };
-\end{tikzpicture}
+\overviewIntro
 
 För att kunna göra det här arbetet krävs det ett programmeringsspråk
 att arbeta i. Vi har skapat en tolk efter STG, som är en modell för hur
