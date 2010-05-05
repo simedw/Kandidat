@@ -4,7 +4,7 @@
 \usepackage{amsmath, amsthm, amssymb}
 \usepackage{stmaryrd}
 \usepackage{tikz}
-\usetikzlibrary{mindmap,trees,arrows,shapes}
+\usetikzlibrary{mindmap,trees}
 
 \usepackage{graphicx}
 \usepackage{rotating}
@@ -123,3 +123,79 @@ Notering!
 \global\long\def\CBNOMEGA#1#2#3#4{\Omega_{#1;#2;#3}(#4)}
 \global\long\def\CBNPSI#1#2#3#4#5{\Psi_{#1;#2;#3;#4}(#5)}
 \global\long\def\CBNIRR#1#2#3#4{\Phi_{#1;#2;#3}(#4)}
+
+% pixxX %
+
+\newcommand{\overviewIntro}
+{
+\begin{center}
+\begin{tikzpicture}
+\path[mindmap,concept color=black,text=white]
+node[concept] {Tolk}
+[clockwise from=30]
+child[concept color=green!50!black] {
+  node[concept] {Frontend}
+  [clockwise from=90]
+  child { node[concept] {Parser} }
+  child { node[concept] {Avsockrare} }
+  child { node[concept] {Lambda- lyftare} }
+}
+child[concept color=red!50!black] {
+    node[concept] {Core}
+    [counterclockwise from=200]
+    child[concept] { node[concept] {STG} }
+    %child[concept] { node[concept] {Garbage Collector} }
+    child[concept color=blue!50!black] {
+        node[concept] {Optimise}
+        [clockwise from=20]
+        child { node[concept] {Omega} }
+        child { node[concept] {Psi} }
+        child { node[concept] {Irr} }
+        child { node[concept] {After burner} }
+    }
+};
+%    child[concept color=orange] { node[concept] {theoretical} };
+\end{tikzpicture}
+\end{center}
+}
+
+\newcommand{\overviewCore}
+{
+\begin{center}
+\begin{tikzpicture}%[transform canvas={scale=0.5}]
+    \path[mindmap,scale=0.75,concept color=red!50!black,text=white]
+        node[concept,scale=0.75] {Core}
+        [counterclockwise from=200]
+        child[concept,scale=0.95] { node[concept] {STG} };
+\end{tikzpicture}
+\end{center}
+}
+
+\newcommand{\overviewOptimise}
+{
+\begin{center}
+\begin{tikzpicture}%[transform canvas={scale=0.5}]
+    \path[mindmap,scale=0.75,concept color=blue!50!black,text=white]
+        node[concept,scale=0.75] {Optimise}
+        [clockwise from=20]
+        child { node[concept,scale=0.95] {Omega} }
+        child { node[concept,scale=0.95] {Psi} }
+        child { node[concept,scale=0.95] {Irr} }
+        child { node[concept] {After burner} };
+\end{tikzpicture}
+\end{center}
+}
+
+\newcommand{\overviewSugar}
+{
+\begin{center}
+\begin{tikzpicture}%[transform canvas={scale=0.5}]
+    \path[mindmap,scale=0.75,concept color=green!50!black,text=white]
+        node[concept,scale=0.75] {Frontend}
+        [clockwise from=90]
+        child { node[concept,scale=0.95] {Parser} }
+        child { node[concept,scale=0.95] {Avsockrare} }
+        child { node[concept,scale=0.95] {Lambda- lyftare} };
+\end{tikzpicture}
+\end{center}
+}

@@ -1,0 +1,147 @@
+\documentclass[../Optimise]{subfiles}
+\begin{document}
+
+\subsection{Fallstudie}
+
+Det finns många platser i kod där optimise kan placeras, alla dessa är tyvärr inte bra val. Det finns flera fallgropar att undvika för få ut så stor prestandavinst som möjligt. Vi ska illusterar detta igenom att undersöka ett något större exempel, en raytracer.
+
+En raytracer är ett program som målar upp en bild genom att från en fixt punkt i ett rum skicka ut ljusstrålar (rays) och sedan notera vad varje stråle träffar\footnote{Att jämföra med hur våra egna ögon fungerar. Fast vi skickar inte ut ljusstrålar.}.
+
+
+ Den antar en position i rummet och skickar sedan ljusstrålar (rays) och noterar vart varje stråle träffar för att sedan bygga upp en bild. Vi har implementerat en mycket enkel sådan, där rummet består av en djup sorterad lista av 2d objekt. Varje objekt beskrivs av en funktion, $(x,y) \mapsto Bool$, där False denoterar en miss.
+ 
+
+För att underlätta ges de tänka typerna för funktionerna som en kommentar ovan funktionsdefinitionen.
+En cirkle med radie \ic{1.0} eller en fyrkant med sidorna \ic{1.0} defineras:
+\begin{codeEx}
+-- type Shape = Pos -> Bool
+-- circle, square :: Shape
+
+circle p = absSqr p <. 1.0;
+square p = case p of
+    { Pos x y -> x >. -1.0 && x <. 1.0
+              && y >. -1.0 && y <. 1.0
+    };
+
+\end{codeEx}
+
+Vi har sedan en rad kombinatorer för att bygga upp mer komplexa objekt.
+
+\begin{codeEx}
+-- translate, scale :: Pos -> Shape -> Shape
+translate dp s p = s $ posSub p dp;
+scale     dp s p = s $ posDiv p dp;
+
+-- rotate :: Double -> Shape -> Shape
+rotate theta s p = s $ polar (abs' p) (arg p +. theta);
+
+-- union, minus, intersect :: Shape -> Shape -> Shape
+union     s t p = s p || t p;
+minus     s t p = s p && not (t p);
+intersect s t p = s p && t p;
+\end{codeEx}
+
+Vi ser att ett komplext objekt är bara en sammasättning av booleanska funktioner, vilket kan infogas och tillslut bli ett enda stort \kw{case} träd. 
+Låt oss börja med att betrakta en enkel figur, en fyrkant med sina sidor nerskalade till 0.5.
+
+\begin{codeEx}
+box  = scale (Pos 0.5 0.5) square
+box' = optimise box
+\end{codeEx}
+
+\ic{box} är nu en funktion från \kw{Pos} till \kw{Bool}. Där vid sådan halvt applicerade funktioner som optimise skiner. Optimise kommer att infoga allt den förmår, kasta bort onödiga \kw{thunkar} med mera. Vi kommer att betraka och diskutera ett par längre 
+ 
+
+\begin{codeEx}
+  box' = FUN <2> (p -> case <0,p> of
+     { Pos x1 y1 -> let
+         { i.cc = THUNK [i.bu <1,x1> i.bw] 3 (<0,f> <1,x1> <2,x2>)
+         } in let
+           { i.cd = THUNK [i.bu <2,y1> i.bx] 3 (<0,f> <1,y1> <2,y2>)
+           } in let
+             { i.cg = THUNK [<3,t.a> <4,t.b>] 4 (let
+                 { t.ad = THUNK [<0,x>] 2 (let
+                     { t.ae = CON (D# 1.0)
+                     } in <. <0,x> <1,t.ae>)
+                 } in let
+                   { t.af = THUNK [<1,y>] 3 (let
+                       { t.ag = THUNK [<0,y>] 2 (let
+                           { t.ah = CON (D# -1.0)
+                           } in >. <0,y> <1,t.ah>)
+                       } in let
+                         { t.ai = THUNK [<0,y>] 2 (let
+                             { t.aj = CON (D# 1.0)
+                             } in <. <0,y> <1,t.aj>)
+                         } in and <1,t.ag> <2,t.ai>)
+                   } in and <2,t.ad> <3,t.af>)
+             } in case <1,x1> of
+               { D# i.c -> case prim("/.")# <6,i.c> 0.5 of
+                   { {i.e} -> case prim(">.")# <7,i.e> -1.0 of
+                       { {i.e} -> case <8,i.e> of
+                           { True  -> <5,t.ac>
+                           ; False  -> $False
+                           }
+                       }
+                   }
+               }
+     })
+\end{codeEx}
+
+Detta är väldigt billigt och ger hyfsat mycket snabbare kod. 
+
+Dock inte det bäst <infoga förklarning> casebranches
+
+\begin{codeEx}
+  i.bp = FUN <2> (p -> case <0,p> of
+   { Pos x1 y1 -> case <1,x1> of
+      { D# i.c -> case prim("/.")# <3,i.c> 0.5 of
+         { {i.e} -> case prim(">.")# <4,i.e> -1.0 of
+            { {i.e} -> case <5,i.e> of
+               { True  -> case prim("<.")# <4,i.e> 1.0 of
+                  { {i.e} -> case <6,i.e> of
+                     { True  -> case <2,y1> of
+                        { D# i.c -> case prim("/.")# <7,i.c> 0.5 of
+                           { {i.e} -> case prim(">.")# <8,i.e> -1.0 of
+                              { {i.e} -> case <9,i.e> of
+                                 { True  -> case prim("<.")# <8,i.e> 1.0 of
+                                    { {i.e} -> <10,i.e>
+                                    }
+                                 ; False  -> $False
+                                 }
+                              }
+                           }
+                        }
+                     ; False  -> $False
+                     }
+                  }
+               ; False  -> $False
+               }
+            }
+         }
+      }
+   })
+\end{codeEx}
+
+
+Så länge man håller sig till endast en färg kan alla tänkbara figurer modeleras med ett objekt. Men när man börjar intresera sig för olika färger krävs det flera objekt (i vår implementation). Vi har valt att se varje objekt som ett par av en färg och en funktion från pos till bool. Vi placerar sedan varje objekt i en lista där första elementet är längst framtåt i z-axlen. 
+
+Vi har sedan en en funktion som givet en lista av par av färger och funktioner ger oss den träffade färgen för en punkt. Vi kallar dena funktion för \ic{shapes}. Tillsist har vi en lista av listor av positioner som ger upplösningen för bilden.
+
+\begin{codeEx}
+
+-- screen :: Double -> Double -> [[Pos]]
+screen szX szY = let { xs = fromTo -1.0 (2.0 /. (szX -. 1.0)) 1.0
+                     ; ys = fromTo -1.0 (2.0 /. (szY -. 1.0)) 1.0
+                     }
+                 in map (\x . map (\y . Pos x y) ys) xs;
+
+pic = map (map (shapes [Tuple box red])) $ screen x y;
+
+\end{codeEx}
+
+
+Man skulle kunna tänka sig att \ic{.. map (optimise shapes [Tuple box red]) ... } hade varit bra. Men <infoga förklaring> ack icke.
+
+
+
+\end{document}

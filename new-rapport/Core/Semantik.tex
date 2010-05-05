@@ -1,6 +1,7 @@
 \documentclass[../Core]{subfiles}
 \begin{document}
 \subsection{En semantik för STG}
+\label{sec:SemStg}
 
 
 \newcommandx\range[1][usedefault, addprefix=\global, 1=]{#1_{1}\,\ldots\,#1_{n}}
@@ -47,11 +48,6 @@ att förstå vad det egentligen betyder och hur de skall tolkas. Kort kan man s�
     för detta är att man enklare skall kunna skilja på dem. Till exempel ser man nu skillnad
     mellan funktionsobjekt och konstruktorer.
 \end{itemize}
-
-\newpage
-
-
-
 
 
 
@@ -120,8 +116,6 @@ en heap en representation av minnet som används för dynamisk allokering. När
 maskinen stöter på ett \kw{let}-uttryck allokeras det på heapen, vilket
 beskrivs mer formellt av följande regel:
 
-\NOTE{Kanske fräckt med en grafisk bild hur man skall tolka regler, med pilar och liknande}
-
 \[
 \mathtt{let\;\mathrm{x\mathtt{=}e}\; in\; code}\,;\, Heap\Rightarrow\mathtt{code[v/x]}\,;\, Heap[v\mapsto e] \;, v\; \textrm{is fresh}
 \]
@@ -156,7 +150,15 @@ i standardbiblioteket där.
 Som uttryck i maskinens tillstånd ligger nu ett anrop till
 \miniCode{map}-funktionen, vilket vi därför ska försöka oss på.
 Här låter vi oss inspereras av imperativa språk som ofta lägger argumenten
-på en stack före funktionsanrop. Formellt erhålls följande regel:
+på en stack före funktionsanrop. Vi kommer därför uppdatera tillstånden så att de
+nu också innefattar en stack.
+
+\begin{equation*} 
+Expr \; ; Stack \; ; \; Heap \; \Rightarrow \; Expr \; ; \; Stack \; ; \; Heap
+\end{equation*} 
+
+
+Formellt erhålls följande regel för funktionsapplikation:
 
 \[
 f\; a_{1}\;\ldots\; a_{n}\,;\, Stack\,;\, Heap\Rightarrow f\,;\, a_{1}:\ldots:a_{n}:Stack\,;\, Heap\]

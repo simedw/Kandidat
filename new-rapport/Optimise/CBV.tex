@@ -5,38 +5,66 @@
 
 \subsection{Call by Value semantik}
 
-\NOTE{
-Dessa regler är listade lite fult samt det förklaras inte riktigt varför
-de ser ut som de gör eller varför de fungerar 
-
-Att lyfta ut Omega, Psi och Irr texten då den är samma för alla semantikerna.
-Och sedan skriva om det CBV till att likna CBN mer. 
-
-}
-
 \subsubsection{Funktionsapplikationer}
 
 \begin{align}
-\OMEGA sH{f\,\bar{k}} & \Rightarrow & \mc{f\,\bar{k}}sH\\
-\OMEGA sH{f\,\bar{x}\, k\,\bar{y}} & \Rightarrow & \mc{f\,\bar{x}\, k\,\bar{y}}{\oInline s}H\\
-\IRR{\cOFUN{\bar{x}}{\alpha}s}He & \Rightarrow & \mc{\alpha}s{\heap{\alpha}{\FUN{\bar{x}}e}}
+\label{CBV:Fun1} \OMEGA sH{f\,\bar{k}}  \Rightarrow &\, \mc{f\,\bar{k}}sH\\
+ & \overline{k} \text{ all known} \nonumber \\
+\label{CBV:Fun2} \OMEGA sH{f\,\bar{x}\, k\,\bar{y}}  \Rightarrow &\, \mc{f\,\bar{x}\, k\,\bar{y}}{\oInline s}H\\
+ & \overline{x},\overline{y} \text{ unknown, } k \text{ is known} \nonumber \\
+\label{CBV:Fun3} \IRR{\cOFUN{\bar{x}}{\alpha}s}He  \Rightarrow &\, \mc{\alpha}s{\heap{\alpha}{\FUN{\bar{x}}e}}
 \end{align}
+
+I regel \eqref{CBV:Fun1} är alla argument till funktionen kända, då låter vi STG applicera funktionen precis som under vanlig körning. I \eqref{CBV:Fun2} är inte
+alla argument kända, då inline:as endast de kända argumenten till funktionen. 
+När vi har optimerat en funktionskropp så lång det går bygger vi upp funktionen igen \eqref{CBV:Fun3}.
+
 
 \subsubsection{let-uttryck}
 
 \begin{align}
-\OMEGA sH{\eLet x{\THUNK e}{e'}} & \Rightarrow & \OMEGA{\oLet x{e'}s}He\\
-\PSI{\oLet xes}Hv & \Rightarrow & \OMEGA sH{e[v/x]}
-\PSI{\oLetObj x{OBJ}s}Hv & \Rightarrow & \IRR sH{\eLet x{OBJ}v}\\
-\IRR{\oLet xes}H{e'} & \Rightarrow & \OMEGA{\oLetObj x{\THUNK{e'}}s}He\\
-\IRR{\oLetObj x{OBJ}s}He & \Rightarrow & \IRR sH{\eLet x{OBJ}e}
+\label{CBV:Let1} \OMEGA sH{\eLet x{\THUNK e}{e'}}  \Rightarrow &\, \OMEGA{\oLet x{e'}s}He\\
+\label{CBV:Let2} \PSI{\oLet xes}Hv  \Rightarrow &\, \OMEGA sH{e[v/x]} \\
+\label{CBV:Let3} \IRR{\oLet xes}H{e'}  \Rightarrow &\, \OMEGA{\oLetObj x{\THUNK{e'}}s}He
 \end{align}
+
+Regel \eqref{CBV:Let1} innebär att för varje thunk vi möter kommer vi försöka optimera
+dess innehåll. Detta är huvudanledning till många av våra problem som diskuteras i \ref{CBV:Problem}.
+I \eqref{CBV:Let2} har optimering lyckats evaluer fram ett värde ifrån thunken, därmed är thunken inte längre nödvändig och vi substituerar in dess värde i uttrycket. Om vi däremot inte lyckads få fram ett värde måste vi bygga upp let:en igen \eqref{CBV:Let3}, men iställt för att bygga upp den med en gång lägger vi ut en ny continuation och försöker optimera uttrycket efter \kw{let .. in}.
+
+
+\begin{align}
+\label{CBV:OLet1} \OMEGA sH{\eLet x{\CON{C}{\overline{as}}}{e}}  \Rightarrow &\, \OMEGA{\oLetObj x{OBJ}s}{\heap{v}{\CON{C}{\overline{as}}}}e\\
+ & \overline{as} \text{ all known, } v \text{ fresh} \nonumber \\
+\label{CBV:OLet2}\OMEGA sH{\eLet x{OBJ}{e}}  \Rightarrow &\, \OMEGA{\oLetObj x{OBJ}s}He\\
+\PSI{\oLetObj x{OBJ}s}Hv  \Rightarrow &\, \IRR sH{\eLet x{OBJ}v}\\
+\IRR{\oLetObj x{OBJ}s}He  \Rightarrow &\, \IRR sH{\eLet x{OBJ}e}
+\end{align}
+
+Om objektet inte var en thunk kan två olika saker ske, \eqref{CBV:OLet1} är ifall 
+vi har en känd \kw{CON}. Då allokerar vi den på heapen på samma sätt som maskinen
+och fortsätter att optimera det inre uttrycket. I regel \eqref{CBV:OLet2} så 
+fortsätter vi bara optimera med det inre uttrycket.
+
+$\Psi$ samt $\Phi$ bygger bara upp \kw{let}-uttrycket igen och går vidare med $\Phi$
+då det betyder att vi har optimerat klart. Ett problem här är att om man har en \kw{let}
+i en \kw{case}-granskare så kommer vi inte välja rätt gren, även om vi har ett värde.
+
+\begin{codeEx}
+foo x = case (let y = CON (X 2) in y) of
+    { X z -> ..
+    };
+\end{codeEx} 
+
+I detta fall vet vi att värdet på granskaren är ett X och z är 2, men vår optimering
+kommer inte att se detta. Det här är ytterligare en brist som den vår senare semantik
+kommer att lösa.
 
 \subsubsection{Case}
 \begin{align}
-\OMEGA sH{\eCase e{brs}} & \Rightarrow & \OMEGA{\oCase{brs}s}He\\
-\label{CBV:Case2} \PSI{\oCase{brs}s}Hv & \Rightarrow & \OMEGA sH{\text{instantiate correct brs with v}} \\
-\label{CBV:Case3} \IRR{\oCase{brs}s}He & \Rightarrow & \IRR sH{\eCase e brs}
+\OMEGA sH{\eCase e{brs}} \Rightarrow &\, \OMEGA{\oCase{brs}s}He\\
+\label{CBV:Case2} \PSI{\oCase{brs}s}Hv \Rightarrow &\, \OMEGA sH{\text{instantiate correct brs with v}} \\
+\label{CBV:Case3} \IRR{\oCase{brs}s}He \Rightarrow &\, \IRR sH{\eCase e brs}
 \end{align}
 
 Instantiate correct branch i regel \eqref{CBV:Case2} väljer helt enkelt vilken branch som matchar
@@ -56,10 +84,15 @@ case x of
 \end{codeEx}
 
 \subsubsection{Atoms}
+\begin{align}
+\OMEGA s{\heap{v}{\THUNK{e}}}v \Rightarrow &\, \OMEGA sHe
+\end{align}
 
+Vi har bara en regel för atoms och det är ifall vi hittar en variabel som på heapen
+är en thunk, så börjar vi optimera vad thunken har bundit.
 
 \subsubsection{STG interface}
-\textbf{STG}, då vi interagerar med STG maskinen måste vi har tydliga regler
+När vi interagerar med STG maskinen måste vi har tydliga regler
 för när maskien ska sluta evaluera och börja optimera. Detta sker
 antingen då den stöter på en $\OPT t$ för första gången, eller när den
 inte längre kan evaluera ett uttryck och har en Optimise continuation
@@ -74,49 +107,49 @@ på stacken.
 \PSI{O.\star\,:\, s}Hv
 \end{align}
 
-\NOTE {
-\begin{align*}
-\OMEGA sH{\eCase e{brs}} & \Rightarrow & \OMEGA{\oCase{brs}s}He\\
-\OMEGA sH{f\,\bar{k}} & \Rightarrow & \mc{f\,\bar{k}}sH\\
-\OMEGA sH{f\,\bar{x}\, k\,\bar{y}} & \Rightarrow & \mc{f\,\bar{x}\, k\,\bar{y}}{\oInline s}H\\
-\OMEGA sH{\eLet x{\THUNK e}{e'}} & \Rightarrow & \OMEGA{\oLet x{e'}s}He\\
-\OMEGA s{\nheap x{\,}}{\bullet} & \Rightarrow & \IRR sH{\bullet}
-\end{align*}
+%\NOTE {
+%\begin{align*}
+%\OMEGA sH{\eCase e{brs}} & \Rightarrow & \OMEGA{\oCase{brs}s}He\\
+%\OMEGA sH{f\,\bar{k}} & \Rightarrow & \mc{f\,\bar{k}}sH\\
+%\OMEGA sH{f\,\bar{x}\, k\,\bar{y}} & \Rightarrow & \mc{f\,\bar{x}\, k\,\bar{y}}{\oInline s}H\\
+%\OMEGA sH{\eLet x{\THUNK e}{e'}} & \Rightarrow & \OMEGA{\oLet x{e'}s}He\\
+%\OMEGA s{\nheap x{\,}}{\bullet} & \Rightarrow & \IRR sH{\bullet}
+%\end{align*}
+%
+%\begin{align*}
+%\PSI{\oLet xes}Hv & \Rightarrow & \OMEGA sH{e[v/x]}
+%\end{align*}
+%
+%\begin{align*}
+%\PSI{\oLetObj x{OBJ}s}Hv & \Rightarrow & \IRR sH{\eLet x{OBJ}v}\\
+%\PSI{\oCase{brs}s}Hv & \Rightarrow & \OMEGA sH{\text{instantiate correct brs with v}}\end{align*}
+%
+%\begin{align*}
+%\IRR{\oLet xes}H{e'} & \Rightarrow & \OMEGA{\oLetObj x{\THUNK{e'}}s}He\\
+%\IRR{\oCase{brs}s}He & \Rightarrow & \IRR sH{\eCase e brs}
+%\end{align*}
+%
+%\begin{align*}
+%\IRR{\oLetObj x{OBJ}s}He & \Rightarrow & \IRR sH{\eLet x{OBJ}e}\\
+%\IRR{\cOFUN{\bar{x}}{\alpha}s}He & \Rightarrow & \mc{\alpha}s{\heap{\alpha}{\FUN{\bar{x}}e}}
+%\end{align*}
+%
+%När vi interagerar med STG maskinen måste vi har tydliga regler
+%för när maskien ska sluta evaluera och börja optimera. Detta sker
+%antingen då den stöter på en $\OPT t$ för första gången, eller när den
+%inte längre kan evaluera ett uttryck och har en Optimise continuation
+%på stacken.
 
-\begin{align*}
-\PSI{\oLet xes}Hv & \Rightarrow & \OMEGA sH{e[v/x]}
-\end{align*}
-
-\begin{align*}
-\PSI{\oLetObj x{OBJ}s}Hv & \Rightarrow & \IRR sH{\eLet x{OBJ}v}\\
-\PSI{\oCase{brs}s}Hv & \Rightarrow & \OMEGA sH{\text{instantiate correct brs with v}}\end{align*}
-
-\begin{align*}
-\IRR{\oLet xes}H{e'} & \Rightarrow & \OMEGA{\oLetObj x{\THUNK{e'}}s}He\\
-\IRR{\oCase{brs}s}He & \Rightarrow & \IRR sH{\eCase e brs}
-\end{align*}
-
-\begin{align*}
-\IRR{\oLetObj x{OBJ}s}He & \Rightarrow & \IRR sH{\eLet x{OBJ}e}\\
-\IRR{\cOFUN{\bar{x}}{\alpha}s}He & \Rightarrow & \mc{\alpha}s{\heap{\alpha}{\FUN{\bar{x}}e}}
-\end{align*}
-
-\textbf{STG}, då vi interagerar med STG maskinen måste vi har tydliga regler
-för när maskien ska sluta evaluera och börja optimera. Detta sker
-antingen då den stöter på en $\OPT t$ för första gången, eller när den
-inte längre kan evaluera ett uttryck och har en Optimise continuation
-på stacken.
-
-\begin{align*}
-\mc as{\heap a{\OPT t}} & \Rightarrow\\
-\mc t{\cOPT{a\,}s}{\heap a{\BH}}\\
-\mc x{\cOPT as}{\heapp x{\PAP f{a_{1}\cdots a_{n}}}f{\FUN{x_{1}\cdots x_{m}}e}} & \Rightarrow\\
-\OMEGA{\cOFUN{x_{n+1}\cdots x_{m}}as}H{e[a_{1}/x_{1}\cdots a_{n}/x_{n}]}\\
-\mc v{O.\star\,:\, s}{\nheap v{\THUNK e}} & \Rightarrow\\
-\PSI{O.\star\,:\, s}Hv
-\end{align*}
-
-}
+%\begin{align*}
+%\mc as{\heap a{\OPT t}} & \Rightarrow\\
+%\mc t{\cOPT{a\,}s}{\heap a{\BH}}\\
+%\mc x{\cOPT as}{\heapp x{\PAP f{a_{1}\cdots a_{n}}}f{\FUN{x_{1}\cdots x_{m}}e}} & \Rightarrow\\
+%\OMEGA{\cOFUN{x_{n+1}\cdots x_{m}}as}H{e[a_{1}/x_{1}\cdots a_{n}/x_{n}]}\\
+%\mc v{O.\star\,:\, s}{\nheap v{\THUNK e}} & \Rightarrow\\
+%\PSI{O.\star\,:\, s}Hv
+%\end{align*}
+%
+%}
 
 %\begin{multline}
 %%\mc as{\heap a{\OPT t}} \Rightarrow \mc t{\cOPT{a\,}s}{\heap a{\BH}} \\
@@ -125,6 +158,7 @@ på stacken.
 %\end{multline}
 
 \subsubsection{Problem med CBV semantiken}
+\label{CBV:Problem}
 
 Oturligt nog bröt ovanstående optimise semantik mot STGs egna semantik. 
 Som bekant forceras evaluering av thunkar endast i case-granskaren. 

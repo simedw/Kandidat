@@ -58,7 +58,7 @@ En funktionalitet som skulle kunna gynna optimise, eller användandet av den,
 är att den skulle kunna dektektera när den potentiellt skulle falla in i en
 oändlig inliningloop. Det har inte gjorts till det här arbetet.
 
-\subsection{Sharing}
+\subsection{Delning}
 Ett annat problem förknippat med lathet är att optimise måste se till att variabler bara 
 evalueras en gång. Detta ställer till besvär hur man skall optimera let-satser.
 
@@ -83,7 +83,7 @@ test_x y = let
     } in (+) a a;
 \end{codeEx}
 
-\subsection{Call stack}
+\subsection{Anropsstack}
 
 I projektets tidigare fas användes substituering för att göra exempelvis funktionsapplikation.
 Det betyder att syntaxträdet traverseras och argumentvariablerna byts i funktionen
@@ -138,7 +138,9 @@ När man anropar funktionen behöver man nu bara lägga argumentet a på positio
 stacken, och överallt där a används kan man sedan indexera in på stacken för att
 få ut värdet.
 
-\subsection{Optimise med call stack}
+\subsection{Optimise med anropsstack}
+
+Implementationen av optimering med anropsstacken 
 
 \NOTE{Gör semantiken svårare. Shiftup and shiftdown. Situps and pulldowns}
 

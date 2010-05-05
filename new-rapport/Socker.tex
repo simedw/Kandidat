@@ -36,7 +36,7 @@
 % sockerspråket utvecklats, med ett lager socker ovanpå STG-språket. Detta 
 
 
-\subsection{Introduktion}
+%\subsection{Introduktion}
 
 \NOTE{ Tycker det här redan gör gott nog som övergångstext.
 Ha i åtanke att inledningen också slutar introducerande till hela arbetet,
@@ -46,6 +46,8 @@ Dessutom är det möjligt att vi gör den här sektionen mycket kort,
 om vi tar bort jfr med haskell och definitoner 
 (av fria variabler / substitution)
 }
+
+\overviewSugar
 
 För att undersöka optimeringsmöjligheterna behövs ett språk att arbeta med. 
 Detta språk behöver inte vara lika rikt som Haskell, men bekvämt nog
@@ -160,7 +162,7 @@ I sockerspråket finns ingen sådan konstruktion, och programmeraren kan alltså
 definiera datatypen explicit. Istället är det bara att använda
 konstruktorerna \miniCode{Just} och \miniCode{Nothing} när de behövs.
 
-\NOTE{Vi antar typecheckning}
+\NOTE{Viktigt att nämna att vi antar typechecking?}
 
 Sockerspråket skiljer på rekursiva och vanliga \kw{let}-bindningar. 
 
