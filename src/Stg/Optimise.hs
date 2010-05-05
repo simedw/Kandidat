@@ -229,7 +229,7 @@ beta cstack@(CtOBranch e brdone brleft:ss) astack h set = case brleft of
                                       (duplicateFrame astack)) h e set
     []            -> case e of
         -- kanske ska kommenteras fram?
-        -- ECase _ _ -> omega (RIrr "case in case (from beta)") ss astack h (ECase e brdone) set
+        ECase _ _ -> omega (RIrr "case in case (from beta)") ss astack h (ECase e brdone) set
         _         -> irr (RIrr "case expression finished (from beta)") ss astack h (ECase e brdone) set
 
 irr :: Variable t => Rule -> ContStack t -> ArgStack t -> Heap t -> Expr t -> 
