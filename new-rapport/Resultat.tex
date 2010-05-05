@@ -3,6 +3,82 @@
 
 \section{Resultat}
 
+% Inledande text?
+
+I den föregående sektinonen om optimise beskrivs hur optimeringen sker.
+I det här avsnittet beskrivs hur kod ser ut efter optimering och 
+olika tidsjämförelser sker med och utan optimise. 
+Vi testar CBN-semantiken med anropsstack.
+
+\subsection{shapesgrafer}
+
+\NOTE{
+Den här borde ha en återkoppling till Simons genomgång om hur man använder optimise
+}
+
+\NOTE{
+Shapes med och utan casebranches
+
+Varför tar casebranches så lång tid <-> varför blir den så bra?
+}
+
+\subsection{småexempel på mer man kan göra (med optimise)} 
+
+Här följer några mindre exempel på vad resultatet av optimise blir:
+
+\begin{itemize}
+\item Funktionen \ic{foo} i följande exempel blir när den har applicerats på \ic{x}
+en funktion som tar ett argument, \ic{y}, och adderar eller subtraherar 1 från
+det beroende på värdet på \ic{x}.
+
+\begin{codeEx}
+foo x y = case x > 0 of
+    { True  -> y + 1
+    ; False -> y - 1
+    };
+\end{codeEx}
+Om vi vill köra den funktionen med samma \ic{x}-värde många gånger kan den optimeras
+med hjälp av \ic{optimise}, exempelvis såhär:
+\begin{codeEx}
+main = map (optimise (foo getInt)) getIntList;
+\end{codeEx}
+Om \ic{getInt} är 1 väljer optimeringsfunktionen grenen \ic{True} i \ic{case}-satsen:
+\begin{codeEx}
+optimise (foo 1) === \y . y + 1
+\end{codeEx}
+
+\item På liknande sätt som ovan kan funktioner som är rekursiva i ett argument
+vecklas ut. Följande funktion adderar två tal steg för steg och kan vecklas ut
+vid optimering:
+
+\begin{codeEx}
+add x y = case x > 0 of
+    { True  -> foo (x - 1) (y + 1)
+    ; False -> y
+    };
+\end{codeEx}
+
+Vid optimerig av \ic{foo 2} fås följande funktion, där \ic{case}-satserna och 
+rekursiva anrop har plockats bort eftersom värdet på \ic{x} är känt när
+optimeringen körs:
+
+\begin{codeEx}
+optimise (add 2) === \y . y + 1 + 1
+\end{codeEx}
+
+\item ... Kända funktioner och sånt.
+
+\end{itemize}
+
+\subsection{vad fungerar bra och vad fungerar inte så bra allmänt (kanske flytta/merga med diskussion?)}
+Optimise är bra på:
+    * inlining av funktioner och primitiver
+    * optimera casebranches
+    * beräkna konstantuttryck i en pap och klistra in resultatet
+             ( detta kan också lösas med full laziness i vissa fall - (vilka?))
+
+
+
 
 \NOTE{ 
 
