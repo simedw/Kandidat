@@ -84,10 +84,12 @@ eye = scale (Pos 0.3 0.3) circle;
 
 tuple x y = Tuple (optimise x) y;
 
-smiley = tuple (translate (Pos 0.1 0.2) $ rotate (pi /. 10.0) $ scale (Pos 0.05 0.2) square) blue
-       : tuple (translate (Pos 0.5 0.0) eye) blue 
-       : tuple (translate (Pos -0.5 0.0) eye) blue 
-	   : tuple (translate (Pos 0.0 0.5) $ scale (Pos 0.35 0.25) $ minus circle (translate (Pos 0.0 -1.0) square)) blue 
-	   : tuple (circle) red : Nil;
+smiley = Tuple (translate (Pos 0.1 0.2) $ rotate (pi /. 10.0) $ scale (Pos 0.05 0.2) square) blue
+       : Tuple (translate (Pos 0.5 0.0) eye) blue 
+       : Tuple (translate (Pos -0.5 0.0) eye) blue 
+	   : Tuple (translate (Pos 0.0 0.5) $ scale (Pos 0.35 0.25) $ minus circle (translate (Pos 0.0 -1.0) square)) blue 
+	   : Tuple (circle) red : Nil;
 
-main = map (map (id (shapes ' ' smiley))) $ screen getDouble getDouble;
+smiley2 = map (\x . Tuple (optimise (fst x)) (snd x)) smiley;
+
+main = map (map (optimise (shapes ' ' smiley2))) $ screen getDouble getDouble;
