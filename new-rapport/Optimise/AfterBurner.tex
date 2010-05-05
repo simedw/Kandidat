@@ -2,21 +2,20 @@
 \begin{document}
 
 \subsection{Afterburner}
-\NOTE{
-\begin{align*}
-\CBNIRR{\cOFUN{a_{1}\cdots a_{n}}{\alpha}s}HAe & \Rightarrow & \CBNMC{\alpha}{s}{\heap{\alpha}{\FUN{a_{1}\cdots a_{n}}e}}A\\
- &  & \mbox{here we can also run the afterburner}\\
-\end{align*}
-}
 
 Alla optimeringar som hitills har arbetar tillsammans, dvs att de traverserar trädet endast engång och följer en gemensam semantik för att nå det önskade resultatet. Detta är önskvärt ut tidssynpunkt fast gör det ibland svårt att byta ut enskilda delar utan att behöva ändra på många smådelar.
 
 Det finns även en del optimeringar som behöver se större delar av syntax-träded
-samtidigt för att kunna vara verksamma. Dessa high-level (vad ska vi kalla det här?)
-optimeringar är oftast mycket långsamare att utföra.
+samtidigt för att kunna vara verksamma. Dessa optimeringar är oftast mycket långsamare att utföra.
 
 Vi har valt att utföra ett antal sådana optimeringar efter de vanliga
-optimeringana är körda, därifrån namnet "after burner".
+optimeringana är körda, därifrån namnet `after burner'. Vilket vi formellt kan beskriva
+med följande regel.
+
+\begin{align*}
+\CBNIRR{\cOFUN{\overline{as}}{\alpha}s}HAe \Rightarrow & \CBNMC{\alpha}{s}{\heap{\alpha}{obj}}A \\
+ & \text{where } obj = \text{afterburn} (\FUN{\overline{as}}e)
+\end{align*}
 
 \subsubsection{Gemensam caseganskare}
 
