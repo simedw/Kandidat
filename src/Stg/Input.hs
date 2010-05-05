@@ -11,6 +11,7 @@ data Input = Input
   , inputDoubles  :: Maybe [Double]
   , inputString   :: Maybe String
   }
+  deriving Show
 
 defaultInput :: Input
 defaultInput = Input { inputInteger  = Nothing

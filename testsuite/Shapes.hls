@@ -90,4 +90,4 @@ smiley = tuple (translate (Pos 0.1 0.2) $ rotate (pi /. 10.0) $ scale (Pos 0.05 
 	   : tuple (translate (Pos 0.0 0.5) $ scale (Pos 0.35 0.25) $ minus circle (translate (Pos 0.0 -1.0) square)) blue 
 	   : tuple (circle) red : Nil;
 
-main = map (map (optimise (shapes ' ' smiley))) $ screen getDouble getDouble;
+main = map (map (id (shapes ' ' smiley))) $ screen getDouble getDouble;

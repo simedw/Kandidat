@@ -30,19 +30,21 @@ import Util
  - and set of data to test with, this will not be random
  -}
 
-benchmarklist :: [(String, (Integer,[Integer]))]
-benchmarklist = 
-   [ --"Shapes.hls"   --> [(0,[1])]
-     "OptTest7.hls" -->  (10,list)
+benchmarklist :: [(String, Input)]
+benchmarklist =
+   --[ "Shapes.hls"   --> defaultInput {inputDouble = Just 0.0}
+     --"OptTest7.hls" -->  (10,list)
 {-    , "OptTest1.hls" --> [(0,[])]
     , "OptTest2.hls" -->  [(0,list)]
     , "OptTest3.hls" -->  [(0,list)]
   --  , "OptTest4.hls" --> [(0,list)]   -- matrix 4 x 4
     ,"OptTest6.hls" -->   [(0,list)]
     , "RSA.hls"      -->  [(0,list)] -}
-    ]
+    --]
+   [ "Shapes.hls"   --> defaultInput {inputDouble = Just n} | n <- [1.0..2.0] ]
+
  where
-   list  = [1..100]
+   --list  = [1..100]
    (-->) = (,)
 
 {- We load and parse all test before invoking the actual benchmark.
@@ -67,14 +69,10 @@ main = do
 
   where
     loadFiles [] _ = return []
-    loadFiles ((name, (i,l)):xs) prelude = do
+    loadFiles ((name, input) : xs) prelude = do
         files <- sequence [ do 
-            f <- loadFile (LSettings prelude (defaultInput
-                        { inputInteger = Just i
-                        , inputIntegers = Just l
-                        }) opt) name
-
-            return (f, "Input: " ++ show (i,length l) ++ " Optimise: " ++ show (not opt))  
+            f <- loadFile (LSettings prelude input opt) name
+            return (f, "Input: " ++ show input ++ " Optimise: " ++ show (not opt))  
                           | opt <- [True, False]]
         rest <- loadFiles xs prelude
         return $ (name, files) : rest 
