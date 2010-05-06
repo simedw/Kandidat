@@ -2,22 +2,28 @@
 \begin{document}
 
 \section{Relaterade arbeten}
-\NOTE{Ej färdigt avsnitt!}
+
 Vårt arbete spänner över två forskningsområden, partiell evaluering
 och optimering under körningstid. Till skilland från detta projekt 
 är dessa områden ofta separerade i litteraturen.
 
-
 \subsection{Statiska optimeringar}
 
-\NOTE{
-Core\cite{mitchell2007supercompiler}
+Partiell evaluering är ett aktivt foskningsområde, där 
+\cite{futamura1999partial} är en av de första artiklarna
+och en introduktion ges av \cite{intropap}, och
+tekniker för imperativa, funktionella och logiska språk
+finns in \cite{jones1993partial}.
 
-Superkompilering
+En inrikting av kraftig partiell evaluring för 
+funktionella språk är superkompilation \cite{srensen1995algorithm}
+, och det har även använts i Haskell \cite{mitchell2007supercompiler}.
 
-Partiell evaluering
-}
+\subsubsection{STG}
 
+Den funktionella maskin vi har använt i det här arbetet är 
+STG \cite{stg}, där många kända statiska optimeringsmöjligheter 
+finns \cite{santos}.
 
 \subsection{Optimeringar under körningstid}
 
@@ -26,21 +32,90 @@ de delar av ett program som används mest under körningstid. Val av
 dessa punkter sker med hjälp av statistik och heuristik gentemot vår
 lösning där programmeraren själv har kontroll över angreppspunkterna. 
 
-Att annotera optimeringspunkten har gjorts tidigare av Bolz C., då
-för en Prologvariant.\cite{bolz-automatic} Vårt arbete liknar hans
-på många punker, men skiljer sig i bl. a. hur vi hanterar förgreningar
-(i vårt fall case-satser i hans if-satser). Han lägger till en callback
-medan vi försöker fortsätta optimeringen.
-\NOTE{Prologarbetet låter ju dunderintressatn! Vi borde ha mer om det?
-Och om liknande arbeten!}
-
-\subsection{Funktionella maskiner}
-
-\NOTE{
-Stg....\cite{marlow2006making}
-}
+Liknande optimeringar som vi har gjort är tex \cite{bolz-automatic},
+där en optimeringsfunktionalitet ges till det logiska programmeringsspråket
+Prolog. Precis som i vårt arbete annoterar man var optimeringen ska ske.
+Ett pass sker före som gör om alla förgreningar till en speciell 
+case-konstruktion. Prolog har funktionalitet som gör sådana här arbeten
+intressant, tex mycket goda stöd för reflektion och att det är 
+monoikont, dvs att koden, eller rättare sagt det abstrakta syntaxträdet,
+är primitiver i språket och går att modifiera under körtid. Vårt arbete
+hade andra ambitioner, att optimera ett icke-reflekterande statiskt typat
+språk. Andra arbeten om partiell applicering i Prolog är det stora
+projektet ECCE \cite{ecce}.
 
 
+%\cite{bolz-automatic}
+%power-exemplet ar skrivet i Python (?)o
+%
+%unfolding-inlining
+%
+%han paratar mycket om balansen mellan under och overspecialisering
+%code explosion - eller for generell kod
+%
+%en stor skilland ar jit_merge_point som ar introskeln till optimeringen,
+%uppmuntras till att anvandas ofta, som i varje anrop till reverse (sid 43)
+%
+%ECCE - a classical partial evaluator for pure Prolog (sid 17)
+%
+%Controlling Generalization and Polyvariance in
+%        Partial Deduction of Normal Logic Programs
+%  Michael Leuschel, Bern martens and danny De Schreye
+%  Katholieke Universiteit Leuven
+%  http://portal.acm.org/citation.cfm?id=271525
+%  1998
+%     ECCE-arbetet (enormt)
+%        mycket mycket referenser om PA i inledning
+%        har en liten testsvit
+%        i prolog
+%        innehaller mycket stora bevis av korrekthet
+%
+%keywords
+%Program Transformation
+%Partial Evaluation and Specialization
+%
+%Compilation by Transformation in Non-strict Functional Languages
+%Andre Luis de Medeiros Santos, 1995
+%
+%har kan vi ha referenser om
+%    STG (Shared Term Graph) sida 16
+%    Unboxed Values (sida 19) han casar också på case x# +# y# of ...
+%
+%
+%Xavier om implementera funktionella sprak
+%Pierce? vill vi saga nagot om typer och lambdakalkyl tex?
+%
+%Futamura, Yoshihiko  Partial Evaluationof Computation Process -
+%                     An Approach to a Compiler-Compiler 1971
+%
+%                     revised version: 
+%                        http://www.springerlink.com/content/l46w6q3720n57607/
+%
+%Introduction to Partial Evaluation
+%  Neil D Jones
+%  University of Copenhagen
+%  1996
+%  ACM Computing Surveys (CSUR) Volume 28, Issue 3
+%    har powerexemplet, med sharing,
+%    samt lyckas optimera regexp
+%    pratar om mix-futamura-projektionen
+%
+%    some more dramatic examples
+%        pattern recognition (mer avancerad regexp)
+%        computer graphics (ray tracing)
+%        database querines (a query to spcial-purpose)
+%        spreadsheets 
+%        scientific computing (n-body problem har tydligen 
+%                              hjalpts av partiell evaluering)
+%        parsing 
+%
+%    med massor av referenser
+%
+%
+%PyPy project
+%
+%
+%
 \bibliography{references}
 
 \end{document}

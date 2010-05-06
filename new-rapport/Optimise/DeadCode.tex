@@ -41,20 +41,32 @@ kunna optimeras till:
 main = 15;
 \end{codeEx}
 
-Denna process kan mer formellt skrivas som
+\NOTE{
+Simons text, säger inte att den är fel, bara att vi kan beskriva den i vårt regel
+system :)
 
+Denna process kan mer formellt skrivas som
 \begin{mathpar}
 \inferrule
   {t\,not\,in\,freevars(e_2)}
   {\mathtt{let}\,t\,=\,e_1\,\mathtt{in}\,e_2 \Rightarrow e_2}
 \;
 \end{mathpar}
+}
+
+
 
 Detta är en kontroll som utförs varje gång vi bygger upp en \miniCode{let} 
-i Irr och Psi. Dock är freevars en ganska kostsam operation så man kan fråga sig
+i Irr och Psi. Mer formelt skrivs regel så här: 
+
+\begin{align*}
+\CBNIRR{\cOLet xs}{\heap vh}Ae \; \Rightarrow \; & \CBNIRR sHAe\\
+ & t \text{ not in freevars} (e_2)
+\end{align*}
+
+Dock är freevars en ganska kostsam operation så man kan fråga sig
 om det är värt det.
 
-Mer for
 \NOTE{bör stå om det här någon annanstans, kanske i gc?}.
 
 
