@@ -36,16 +36,17 @@ Så här ser BNF-grammatiken ut för corespråket:
 \end{aligned}
 \end{equation*}
 
-STG språket är som en mer primitiv form av vårat sockerspråk, där fler saker är mer explicita
-än vad de är i sockret. Anledningen till att de är så är för att göra det enklare
-att förstå vad det egentligen betyder och hur de skall tolkas. Kort kan man säga följande om STG:
+STG-språket är som en mer primitiv form av sockerspråk, där flera saker är mer explicita. 
+Detta gör det enklare
+att förstå vad språkkonstruktionerna egentligen gör på en lägre nivå och hur de skall tolkas. 
+Kort kan man säga följande om STG:
 
 \begin{itemize}
-\item Atomer är uttryck som antigen är primitiva eller som är variabler. De används ofta
-    där man i sockerspråket kunnde skriva vilket uttryck som helst. Till exempel funktionsapplikationer
+\item Atomer är uttryck som antingen är primitiv data eller variabler. De används ofta
+    där man i sockerspråket kunde skriva vilket uttryck som helst. Till exempel funktionsapplikationer
     som i STG är mer restriktiva i hur dess argument ser ut.
-\item Definitioner binder numera variabler till objekt istället för uttryck, anledningen 
-    för detta är att man enklare skall kunna skilja på dem. Till exempel ser man nu skillnad
+\item Definitioner binder numera variabler till objekt istället för uttryck. Anledningen 
+    till detta är att man lättare skall kunna skilja på dem. Till exempel ser man nu skillnad
     mellan funktionsobjekt och konstruktorer.
 \end{itemize}
 

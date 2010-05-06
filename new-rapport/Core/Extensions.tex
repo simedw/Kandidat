@@ -101,7 +101,7 @@ x ; Print : s ; H[x \mapsto FUN / PAP]
 \]
 
 Om x pekar på en funktion skapa s-värdet $FUN$ för att visa att att värdet har
-evaluerats klart. vi väljer att bara visa $FUN$ istället för att 
+evaluerats klart. 
 
 
 \[
@@ -109,16 +109,20 @@ sv ; PrintCon \; C \; ps \; (n : ns) : s ; H
 \Rightarrow n ; Print : PrintCon \; C \; (ps ++ sv) \; ns : s ; H
 \]
 
+Om man har ett s-värde och en \cont{PrintCon}-continuation på stacken som har flera
+atomer som man vill evaluera så sätts nuvarande värdet ihop med de redan färdigevaluerade
+och man väljer nästa atom för att fortsätta att evaluera.
 
-Ett s-värde är fullt evaluerat och då kan nästa atom i konstruktorn evalueras. 
-
+Till slut kommer man komma till att det inte finns fler atomer för denna konstruktor
+att evaluera, då kan Bygga upp konstruktorn igen.
 
 \[
 sv ; PrintCon \; C \; ps \; [] : s ; H
 \Rightarrow K \; C \; (ps ++ sv) ; s ; H
 \]
 
-Konstruktorn är helt evaluerad när den kommit till sista konstruerande atomen.
+Konstruktorn är helt evaluerad när den kommit till sista konstruerande atomen. Så
+man får nu ett nytt s-värde som kan användas för att bygga upp nya kontstruktorer.
 
 
 
