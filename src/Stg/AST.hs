@@ -39,7 +39,13 @@ mkELet False = flip $ foldr (ELet . uncurry NonRec)
 
 data Var t = Heap t
            | Local Int t
-  deriving (Show, Eq, Ord, Data, Typeable)
+  deriving (Show, Ord, Data, Typeable)
+
+instance Eq t => Eq (Var t) where
+    a == b = case (a,b) of 
+        (Heap x    , Heap y)     -> x == y
+        (Local x _ , Local y _)  -> x == y
+        _                        -> False
 
 isLocal (Local _ _) = True
 isLocal _           = False
