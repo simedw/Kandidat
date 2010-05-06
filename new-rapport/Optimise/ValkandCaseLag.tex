@@ -3,9 +3,13 @@
 
 \subsection{Välkänd case-lag}
 
-Väldigt ofta uppstår en casesats inuti en casesatsgranskare, 
+Väldigt ofta uppstår en \kw{case}-sats inuti granskaren tillhörande en annan \kw{case}-sats, 
 vilket är svårt att optimera vidare.
-Vi utnyttjar i dessa tillfällen en identitet hos casesatser. 
+Vi utnyttjar i dessa tillfällen en identitet hos \kw{case}-satser. \cite{santos}
+
+
+
+\begin{tabular}{ m{5cm} m{0.5cm} m{5cm} }
 \begin{codeEx}
  case (case x of
          A a -> x'
@@ -13,11 +17,9 @@ Vi utnyttjar i dessa tillfällen en identitet hos casesatser.
       )
    X -> r
    Y -> y
-
 \end{codeEx}
- 
-$\Leftrightarrow$
-
+	& $\Leftrightarrow$
+	&
 \begin{codeEx}
  case x of
      A a -> case x' of
@@ -27,8 +29,10 @@ $\Leftrightarrow$
               X -> r
               Y -> y
 \end{codeEx}
+\\
+\end{tabular}
 
 Nu är det lättare att applicera flera av våra andra optimeringar, 
-t ex gemensam casegranskare. 
+t.ex. gemensam \kw{case}-granskare. 
 
 \end{document}

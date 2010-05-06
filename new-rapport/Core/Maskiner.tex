@@ -2,11 +2,10 @@
 \begin{document}
 
 \subsection{Olika maskiner}
-\NOTE{Här ska finnas referenser till de olika maskinerna, tex Boquists GRIN-avhandling,
-eller Implementing Functional Languages: A Tutorial av Peyton-Jones}
+\NOTE{Här ska finnas referenser till de olika maskinerna, Implementing Functional Languages: A Tutorial av Peyton-Jones}
 För att evaluera program skrivna i ett funktionellt programmeringsspråk
 behövs en evalueringsmodell. Det finns olika abstrakta maskiner utvecklade för
-detta ändamål, till exempel G-maskinen, TIM (Three Instruction Machine), GRIN och STG.
+detta ändamål, till exempel G-maskinen, TIM (Three Instruction Machine), GRIN \cite{grin} och STG.
 Dessa går att dels tolka, det vill säga att i något programmeringsspråk (exempelvis
 Haskell) skriva ett program som kopierar maskinens funktionalitet. Det går också att
 kompilera dem till något lågnivåspråk som C, assembly eller LLVM.
@@ -14,13 +13,15 @@ kompilera dem till något lågnivåspråk som C, assembly eller LLVM.
 Att skriva en kompilator hade varit ett delikat arbete i sig, även utan
 optimering. Vi ville fokusera på optimeringen och valde därför att skriva en tolk.
 
-Av de olika maskiner vi undersökte
-ansåg vi att STG var lämpligast. I de andra ovan nämnda maskinerna är
+Av de olika maskiner vi undersökte ansåg vi att STG var lämpligast. I G-maskinen och TIM så är
 instruktionerna på låg nivå, liknande assemblerinstruktioner men för att manipulera
-ett tänkt syntaxträd. STG, å andra sidan, ser ut som ett funktionellt
+ett tänkt syntaxträd. STG och Grin, är å andra sidan, mer som ett funktionellt
 programmeringsspråk vilket skulle underlätta arbetet på optimeringen.
 
-\NOTE{GRIN liknar också ett programmeringsspråk, dock vi ansåg att det skulle vara enklare
-att gör tolk för STG}
+Många av Grin maskinens fördelar kommer från att den känner till alla funktioner i hela
+programmet (funktioner i andra moduler kopieras in när de används). Den här informationen
+använder Grin sedan för att göra en stor graf över vilka funktioner som kallar på
+vilka andra funktioner. I förhållande så här STG mer tradionell och vi trodde att det skulle
+vara enklare att göra en tolk för just STG.
 
 \end{document}

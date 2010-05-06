@@ -1,0 +1,86 @@
+\documentclass[../Appendix]{subfiles}
+\begin{document}
+
+\subsection{Print continuation}
+Utdata fås genom att \ic{main} evalueras fullt, till normalform. 
+% Ytterligare två continuations behövs - \cont{Print} och \cont{PrintCont}. 
+Uttrycksdatatypen utökas med en ny typ av värden, 
+s-värden, som antingen är en evaluerad primitiv (betecknas $n$)
+, t.ex. ett heltal, eller en konstruktor (betecknas $K C [sval]$, där
+$C$ är konstruktorns namn och sen listan av dess s-värden) .
+Om något som ska skrivas ut har evaluerats till en (partiellt evaluerad)
+funktion så skrivs \kw{FUN} istället ut. Detta är också ett s-värde.
+
+
+%\begin{codeEx}  
+%sval ::= n num
+%       | K C [sval]
+%       | <FUN>
+%\end{codeEx}
+
+%nya Cont:
+%* Print
+%* PrintCont C [sval] [atom]
+
+
+Två nya continuations behövs, \cont{Print} och \cont{PrintCont C [sval] [atom]}.
+\cont{Print} betyder att det som evalueras ska skrivas ut. \cont{PrintCont} består av ett
+konstruktorsnamn C, och först en lista på färdiga s-värden och en lista med
+atomer som maskinen har kvar att evaluera.
+
+Fem nya regler läggs till:
+
+\[
+x ; Print : s ; H[x \mapsto \CON C{a_1 \ldots a_n}]
+\Rightarrow \begin{cases} 
+K \; C \; [] ; s ; H , n = 0 \\
+a_1 ; Print : PrintCon \; C \; [] \; [a_2 \ldots a_n] : s ; H , n > 0
+\end{cases}
+\]
+
+Om x har evaluerats till en konstruktor C så finns två fall. Antingen att C är
+en nullär konstruktor och i det fallet är vi klara och ger s-värdet bestående
+av konstruktorn C.
+    är det inte en nullär konstruktor behövs alla dess konstruerande atomer
+evalueras, med start på $a_1$. Den läggs ut på maskinen med en \cont{Print}-continuation
+och under denna en contiunation som säger att de andra atomerna också ska
+evalueras.
+ 
+
+\[
+x ; Print : s ; H \; \Rightarrow \; n \; x ; s ; H
+\]
+
+x är alltså här ett värde, men ej ett s-värde.
+Om x är en primitiv datatyp, tex en int eller double, så skapa detta s-värde
+\ic{n x}.
+
+
+\[
+x ; Print : s ; H[x \mapsto FUN / PAP] \Rightarrow FUN ; s ; H
+\]
+
+Om x pekar på en funktion skapa s-värdet $FUN$ för att visa att att värdet har
+evaluerats klart. 
+
+
+\[
+sv ; PrintCon \; C \; ps \; (n : ns) : s ; H \Rightarrow n ; Print : PrintCon \; C \; (ps ++ sv) \; ns : s ; H
+\]
+
+Om man har ett s-värde och en \cont{PrintCon}-continuation på stacken som har flera
+atomer som man vill evaluera så sätts nuvarande värdet ihop med de redan färdigevaluerade
+och man väljer nästa atom för att fortsätta att evaluera.
+
+Till slut kommer man komma till att det inte finns fler atomer för denna konstruktor
+att evaluera, då kan Bygga upp konstruktorn igen.
+
+\[
+sv ; PrintCon \; C \; ps \; [] : s ; H
+\Rightarrow K \; C \; (ps ++ sv) ; s ; H
+\]
+
+Konstruktorn är helt evaluerad när den kommit till sista konstruerande atomen. Så
+man får nu ett nytt s-värde som kan användas för att bygga upp nya kontstruktorer.
+
+\end{document}

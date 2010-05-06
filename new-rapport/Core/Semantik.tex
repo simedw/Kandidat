@@ -15,28 +15,29 @@ Så här ser BNF-grammatiken ut för corespråket:
 
 \begin{equation*}
 \begin{aligned}
-\text{Variables} \quad & x,f \\
-\text{Constructors} \quad & C \\
-\defBNF{Literals}{lit}{i \; | \;  d \;|\; c}{Primitiv datatyp} \\
-\defBNF{Atoms}{a, v}{lit \; | \; x}{Atomer för funktionsanrop etc} \\
-\defBNF{Expressions}{e}{a}{Atom} \\
+\text{Variabler} \quad & x,f \\
+\text{Konstruktor} \quad & C \\
+\defBNF{Literaler}{lit}{i \; | \;  d \;|\; c}{Primitiv datatyp} \\
+\defBNF{Atomer}{a, v}{lit \; | \; x}{Atomer för funktionsanrop etc} \\
+\defBNF{Uttryck}{e}{a}{Atom} \\
     \defaltBNF{f \; \overline{a}}{Funktionsanrop} \\
     \defaltBNF{\oplus \; \overline{a}}{Primitiv operation} \\
     \defaltBNF{\mathtt{let \{} \overline{x = obj} \mathtt{ \} in } \; e}{Lokal allokering} \\
     \defaltBNF{\mathtt{letrec \{} \overline{x = obj} \mathtt{ \} in } \; e}{Lokal rekursiv allokering} \\
     \defaltBNF{\mathtt{case} \; e \;  \mathtt{ of \{ } \overline{alt} \mathtt{\}}}{Evaluering av uttryck} \\
-\defBNF{Alternative}{alt}{C \; \overline{x} \rightarrow e}{Matcha mot konstruktor} \\
+\defBNF{Alternativ}{alt}{C \; \overline{x} \rightarrow e}{Matcha mot konstruktor} \\
     \defaltBNF{x \rightarrow e}{Matcha med en variabel} \\
-\defBNF{Heap Object}{obj}{FUN(\overline{x} \rightarrow e)}{Funktionsobjekt} \\
+\defBNF{Heap-objekt}{obj}{FUN(\overline{x} \rightarrow e)}{Funktionsobjekt} \\
     \defaltBNF{PAP(f \; \overline{a})}{Partielltapplicerad funktion} \\
     \defaltBNF{CON(C \; \overline{a})}{Konstruktorer} \\
     \defaltBNF{THUNK \; e}{Senarelagt uttryck} \\
     \defaltBNF{BLACKHOLE}{Används för evaluering} \\
-\defBNF{Programs}{prog}{\overline{f=obj}}{}
+    \defaltBNF{OPT(a)}{Optimeringsobjekt} \\
+\defBNF{Program}{prog}{\overline{f=obj}}{}
 \end{aligned}
 \end{equation*}
 
-STG-språket är som en mer primitiv form av sockerspråk, där flera saker är mer explicita. 
+STG-språket är en primitivare form av sockerspråk, där flera saker är mer explicita. 
 Detta gör det enklare
 att förstå vad språkkonstruktionerna egentligen gör på en lägre nivå och hur de skall tolkas. 
 Kort kan man säga följande om STG:
@@ -52,17 +53,17 @@ Kort kan man säga följande om STG:
 
 
 
-Språket som vi har använt är en utökning av STG-maskinen, med några
-nya regler och tillstånd. För att kunna diskutera dessa behövs först
-förståelse för hur maskinen fungerar. Eftersom läsaren inte förväntas
+För att kunna diskutera semantiken för STG behövs först
+förståelse för hur abstrakta maskiner fungerar. Eftersom läsaren inte förväntas
 ha stött på begrepp som används när man beskriver abstrakta maskiner
 och deras semantik, kommer vi att bygga upp förståelsen via ett exempel
 och introducera nya koncept när de behövs. 
 
+\subsubsection{Abstrakt maskin}
+
 En abstrakt maskin kan beskrivas av regler som bestämmer varje steg i en stegvis evaluering.
 Varje regel beskriver, om man är i ett visst tillstånd, vilket tillstånd man skall gå vidare till.
-Med tillstånd så menas för tillfället ett uttryck och en heap, dessa separeras av ett
-; vi kommer senare behöva utöka tillstånden.
+Med tillstånd så menas ett uttryck och en heap som separeras av ett semikolon (;) vi kommer senare behöva utöka tillstånden.
 Så vi har en samling regler och man väljer en som matchar mot det tillstånd man har, och om 
 ingen regel matchas så är man klar.
 
@@ -93,13 +94,35 @@ ingen regel matchas så är man klar.
 %        \path[->] (esep) edge [out=90, in=-90] (m1);
 \end{tikzpicture}
 
+\subsubsection{Substitution}
+
+Låt oss säga att vi har en funktion $f$ som använder sina två 
+argument, $x$ och $y$. Om vi betraktar uttrycket som funktionens 
+kropp består av separat är $x$ och $y$ 
+\emph{fria variabler}. Det skulle inte gå att evaluera funktionskroppen utan
+att känna till vad de är. Känner man till $x$ och $y$:s värden, låt oss säga
+$x \mapsto True$ och $y \mapsto 9$, så kan man \emph{substituera} in dem i 
+uttrycket. Då byts varje $x$ ut mot $True$ och varje $y$ mot $9$. Om uttrycket 
+är $e$ skrivs en sådan substituering som $e[True/x, 9/y]$
+\footnote{En bra minnesregel för att komma ihåg vilken ordning man skall 
+          skriva dem i är att x[e/x] = e, vilket liknar vanlig division.}. 
+
+    Ett sätt att konkret realisera en substitution är att traversera trädet
+för uttrycket och jämföra varje variabel i trädet med variabeln som ska 
+substitueras och ersätta dem om de är samma. Detta är den effekten man vill 
+eftersträva rent abstrakt, men det finns också andra sätt att implementera 
+substitution, genom att t.ex. göra ett uppslag i en tabell varje gång 
+evalueringen kommer till en fri variabel. 
+
+\subsubsection{Reglerna}
+
 För att visa hur reglerna
 för STG  fungerar, ska vi visa hur följande program skulle evalueras med dem.
 
 \begin{codeEx}
 cube x = x * x * x;
 
-main = let list = [2,3,5,7,11]1
+main = let list = [2,3,5,7,11]
         in map cube list;
 \end{codeEx}
 
@@ -117,16 +140,14 @@ en heap en representation av minnet som används för dynamisk allokering. När
 maskinen stöter på ett \kw{let}-uttryck allokeras det på heapen, vilket
 beskrivs mer formellt av följande regel:
 
-\[
-\mathtt{let\;\mathrm{x\mathtt{=}e}\; in\; code}\,;\, Heap\Rightarrow\mathtt{code[v/x]}\,;\, Heap[v\mapsto e] \;, v\; \textrm{is fresh}
-\]
+\begin{align*}
+\mathtt{let\;\mathrm{x\mathtt{=}e}\; in\; code}\,;\, Heap\,\Rightarrow\, & \mathtt{code[v/x]}\,;\, Heap[v\mapsto e] \\
+ & v\; \text{ ny variabel} \nonumber
+\end{align*}
 
-Regeln säger vilket nästa tillstånd blir, det till höger om pilen,
-om maskinen är i tillståndet som är till vänster om pilen.
-Maskinens tillstånd är ett koduttryck och en heap, som separeras med
-semikolon. I regeln ovan går maskinen från \kw{let}-uttrycket till
+I regeln ovan går maskinen från \kw{let}-uttrycket till
 uttrycket som står efter \kw{in}, alltså \ic{code},
-och \miniCode{x} läggs på heapen och pekar på \ic{e}.
+och \ic{v} läggs på heapen och pekar på \ic{e}.
 Heap{[}{]} betyder inte att heapen bara innehåller det som är inuti
 hakparanteserna utan är en notation för att visa att heapen
 uppdateras med en variabelbindning.
@@ -139,8 +160,9 @@ allokering ska ske på en ny plats i heapen.
 
 Maskinens tillstånd är nu:
 
-\[
-\mathtt{map\; cube\; list}\,;\, Heap[list\mapsto[2,3,5,7,11],cube\mapsto\lambda x.x\cdot x\cdot x,\ldots]\]
+\begin{align*}
+\mathtt{map\; cube\; list}\,;\, Heap[list\mapsto[2,3,5,7,11],cube\mapsto\lambda x.x\cdot x\cdot x,\ldots]
+\end{align*}
 
 
 Den observante läsaren märker att även \miniCode{cube} ligger på heapen, vilket
@@ -158,22 +180,21 @@ nu också innefattar en stack.
 Expr \; ; Stack \; ; \; Heap \; \Rightarrow \; Expr \; ; \; Stack \; ; \; Heap
 \end{equation*} 
 
-
+I regeln har vi placerat stacken mellan uttrycket och heapen, och kolon används
+för att separera element på den. Den tomma stacken skrivs som $\epsilon$.
 Formellt erhålls följande regel för funktionsapplikation:
 
 \[
 f\; a_{1}\;\ldots\; a_{n}\,;\, Stack\,;\, Heap\Rightarrow f\,;\, a_{1}:\ldots:a_{n}:Stack\,;\, Heap\]
 
 
-I regeln har vi placerat stacken mellan uttrycket och heapen, och kolon används
-för att separera element på den. Den tomma stacken skrivs som $\epsilon$.
-Maskinens tillstånd blir nu:
+Efter att ha utförs funktionsapplikationsregeln blir maskinens tillstånd:
 
 \[
 \mathtt{map\,\mathrm{;}\, cube\,:\, list\,:\,\epsilon}\,;\, Heap\]
 
-
-Nu behövs koden för \miniCode{map}:
+För att kunna gå vidare krävs det nu att vi har koden för \ic{map} så att vi vet
+vad vi skall sätta in variabler i. Så här är \ic{map} definerad:
 
 
 \begin{codeEx}
@@ -200,7 +221,7 @@ f\,;\, a_{1}:\ldots:a_{n}:Stack\,;\, Heap[f\mapsto\lambda x_{1}\ldots x_{n}.e]\R
 Här behöver vi ersätta alla funktionens argument $x_{1}\ldots x_{n}$ mot
 de atomer $a_{1}\ldots a_{n}$ som finns på stacken. Substitutionen som sker är 
 således $e[a{}_{1}/x_{1}\ldots a_{n}/x_{n}]$, som i vårt fall betyder att
-\ic{f} substitueras med \ic{cube} och \ic{xs} med \ic{list}. Maskinens tillstånd blir följande:
+\ic{f} substitueras med \ic{cube} och \ic{xs} med \ic{list}. Därefter kommer maskinens tillstånd att vara följande:
 
 \[
 \mathtt{case\; list\; of\,\lbrace\ldots\rbrace};\,\epsilon\,;\, Heap\]
@@ -266,7 +287,7 @@ let { a = cube 2
     } in Cons a b
 \end{codeEx}
 
-Nu skall a bindas till ett uttryck, \miniCode{cube 2}. I tradionella språk skulle
+Nu skall a bindas till ett uttryck, \miniCode{cube 2}. I ett tradionellt imperativt språk skulle
 \miniCode{cube 2} först evalueras och dess värde bindas till \ic{a}. Men eftersom STG
 är lat så väntar maskinen med att beräkna det tills värdet behövs.
 En sådan senarelagd beräkning kallas för en \emph{thunk}. Det som händer nu är att
@@ -316,11 +337,13 @@ evaluera dessa thunkar ifall de behövs eller inte. I vårt fall är
 det \miniCode{main} som har kallat på \miniCode{map} och eftersom vi skriver ut resultatet från \miniCode{main}
 kommer den att evaluera thunkarna. Vi tänker oss fallet då den börjar evaluera variabeln \miniCode{a}:
 
-\[
-x\,;\, Stack\,;\, Heap[x\mapsto\THUNK e]\Rightarrow e\,;\, Upd\, x\,\bullet\,:\, Stack\,;\, Heap[x\mapsto BLACKHOLE]\]
+\begin{align*}
+x\,;\, Stack\,;\, & Heap[x\mapsto\THUNK e] \Rightarrow  \\
+ & e\,;\, Upd\, x\,\bullet\,:\, Stack\,;\, Heap[x\mapsto BLACKHOLE]
+\end{align*}
 
 För att evaluera en en thunk flyttar vi dess uttryck till maskinens kod
-för evaluering. Den kommer också att lägga ut en Upd-continuation, vilket
+för evaluering. Den kommer också att lägga ut en \cont{Upd}-continuation, vilket
 återigen beror på att STG är lat. Lathet kräver att uttryck bara evalueras
 en gång, och därför kommer vi när \miniCode{e} har evaluerats till ett värde att spara
 det så att \miniCode{x} binds till det nya värdet och om \miniCode{x}'s värde skulle behövas
@@ -364,8 +387,10 @@ detta ska fungera behövs ett nytt heapobjekt som vi kallar för PAP, vilket st�
 application. En PAP innehåller de hittills applicerade argumenten och en referens till funktionen.
 Regeln blir följande:
 
-\[
-f\,;\, Arg\, a_{1}:\ldots:Arg\, a_{m}:Stack\,;\, Heap[f\mapsto\FUN{\range[x]}e\Rightarrow p\,;\, Stack\,;\, Heap[x\mapsto\PAP f{\rangem[a]}]\]
+\begin{align*}
+f\,;\, Arg\, a_{1}:\ldots:&Arg\, a_{m}:Stack\,;\, Heap[f\mapsto\FUN{\range[x]}e \Rightarrow \\
+ & p\,;\, Stack\,;\, Heap[x\mapsto\PAP f{\rangem[a]}]
+\end{align*}
 
 
 Antalet argument $m$ är mindre än antalet parametrar $n$.
@@ -374,8 +399,10 @@ utföras när resterande argument appliceras. Till sist kommer nu
 regeln som verkligen gör applikationen av dessa partiellt applicerade
 objekt.
 
-\[
-p\,;\, Arg\, a_{n+1}:Stack\,;\, Heap[p\mapsto\PAP f{\range[a]}\Rightarrow f\,;\, Arg\, a_{1}:\ldots:Arg\, a_{n}:Arg\, a_{n+1}:Stack\,;\, Heap\]
+\begin{align*}
+p\,;\, & Arg\, a_{n+1}:Stack\,;\, Heap[p\mapsto\PAP f{\range[a]} \Rightarrow \\
+ & f\,;\, Arg\, a_{1}:\ldots:Arg\, a_{n}:Arg\, a_{n+1}:Stack\,;\, Heap
+\end{align*}
 
 
 Denna regel kommer återigen att försöka göra applikationen. Antigen lyckas

@@ -3,26 +3,29 @@
 
 \subsection{Afterburner}
 
-Alla optimeringar som hitills har arbetar tillsammans, dvs att de traverserar trädet endast engång och följer en gemensam semantik för att nå det önskade resultatet. Detta är önskvärt ut tidssynpunkt fast gör det ibland svårt att byta ut enskilda delar utan att behöva ändra på många smådelar.
+Alla optimeringar har hittills i det här arbetet har arbetat tillsammans, i en gemensam
+traversering av syntaxträdet som följer en gemensam semantik för att nå det önskade resultatet. 
+Detta är bra ur tidssynpunkt men gör det ibland svårt att byta ut enskilda delar i koden
+eftersom man då ofta behöver ändra på många ställen på samma gång.
 
-Det finns även en del optimeringar som behöver se större delar av syntax-träded
-samtidigt för att kunna vara verksamma. Dessa optimeringar är oftast mycket långsamare att utföra.
+Det finns även en del optimeringar som behöver se större delar av syntaxträdet
+samtidigt för att kunna vara verksamma. Dessa optimeringar är som regel mycket långsammare att utföra.
 
-Vi har valt att utföra ett antal sådana optimeringar efter de vanliga
-optimeringana är körda, därifrån namnet `after burner'. Vilket vi formellt kan beskriva
-med följande regel.
+Vi har valt att utföra ett antal sådana optimeringar efter att de vanliga
+optimeringana har körts, därav namnet `after burner'. Följande regel beskriver
+var i semantiken som afterburnern kommer in:
 
 \begin{align*}
 \CBNIRR{\cOFUN{\overline{as}}{\alpha}s}HAe \Rightarrow & \CBNMC{\alpha}{s}{\heap{\alpha}{obj}}A \\
- & \text{where } obj = \text{afterburn} (\FUN{\overline{as}}e)
+ & \text{där } obj = \text{afterburn} (\FUN{\overline{as}}e)
 \end{align*}
 
 \subsubsection{Gemensam caseganskare}
 
-Att case:a på samma uttryck två gånger kommer alltid i ett funktionellt språk att ge
-samma resultat då alla variabler egentligen är konstanter. För varje casebranch
-vi går in i vet vi att alla nästlade case på samma uttryck måste initiera samma
-branch.
+Att \kw{case}:a på samma uttryck två gånger kommer i ett funktionellt språk alltid att ge
+samma resultat då alla variabler egentligen är konstanter. För varje \kw{case}-gren
+vi går in i vet vi att alla nästlade \kw{case} på samma uttryck måste välja samma
+gren som den första.
 
 \begin{codeEx}
 test x = x * x
@@ -38,7 +41,7 @@ test x = case x of
                             in r
 \end{codeEx}
 
-Om vi sedan kör gemensam casegranskare erhålls:
+Om vi sedan kör optimeringen av gemensamma \kw{case}-granskare erhålls:
 \begin{codeEx}
 test x = case x of
             I# a -> case a #* b of
@@ -53,8 +56,8 @@ case x of
     D a b -> e2
 \end{codeEx}
 
-Vi söker upp \miniCode{case x} i \miniCode{e1} och initiera 
-C-grenen med a b som värden. I \miniCode{e2} gör vi samma sak fast initierar D-grenen.
+Vi söker upp \ic{case x} i \ic{e1} och initierar 
+\ic{C}-grenen med \ic{a} och \ic{b} som värden. I \ic{e2} gör vi samma sak fast initierar \ic{D}-grenen.
 
 
 \end{document}

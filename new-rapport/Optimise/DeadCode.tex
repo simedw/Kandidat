@@ -3,15 +3,14 @@
 
 \subsection{Dödkodseliminering}
 \label{sec:DeadCode}
-
 \NOTE{
 \begin{align*}
 \CBNPSI{\oLet xs}{\heap vh}A{lbs}v & \Rightarrow & \CBNPSI sHA{lbs}v\\
 \end{align*}
 }
 
-När diverse optimeringar har körts och det är dags att bygga upp trädet igen kan
-så kallad `död kod' att förekomma. Det vill säga, kod som inte längre 
+När optimeringarna har körts och det är dags att bygga upp trädet igen kan
+så kallad `död kod' förekomma. Det vill säga, kod som inte längre 
 behövs eftersom den inte kan nås.
 
 \begin{codeEx}
@@ -22,52 +21,37 @@ main = let t = getValue in
               };
 \end{codeEx}
 
-Detta exemplet är trivialt att optimera då värdet i casegranskaren är känd. 
-Den korrekta grenen kan alltså initieras.
+Detta exemplet är trivialt att optimera då värdet i casegranskaren är känt, och 
+den korrekta grenen kan väljas.
 
 \begin{codeEx}
 main = let t = getValue in 15;
 \end{codeEx}
 
 
-Vi ser nu att t inte längre refereras till i uttrycket \miniCode{15} 
+Vi ser nu att \ic{t} inte längre refereras till i uttrycket \miniCode{15} 
 och därför kan \miniCode{let t = getValue} betraktas som `död kod'. 
 
-Död kod tar onödig plats, de leder till att onödigt mycket kommer 
-allokeras på heapen bara för att garbagecollectas. Main skulle
+Död kod tar onödig plats, och leder till att onödigt mycket kommer att 
+allokeras på heapen bara för att tas hand om skräpsamlaren. \ic{Main} skulle
 kunna optimeras till:
 
 \begin{codeEx}
 main = 15;
 \end{codeEx}
 
-\NOTE{
-Simons text, säger inte att den är fel, bara att vi kan beskriva den i vårt regel
-system :)
+Denna process kan mer formellt skrivas som:
 
-Denna process kan mer formellt skrivas som
 \begin{mathpar}
 \inferrule
-  {t\,not\,in\,freevars(e_2)}
+  {t\,ej\,i\,fria\,variabler\,i\,e_2}
   {\mathtt{let}\,t\,=\,e_1\,\mathtt{in}\,e_2 \Rightarrow e_2}
 \;
 \end{mathpar}
-}
-
-
 
 Detta är en kontroll som utförs varje gång vi bygger upp en \miniCode{let} 
-i Irr och Psi. Mer formelt skrivs regel så här: 
-
-\begin{align*}
-\CBNIRR{\cOLet xs}{\heap vh}Ae \; \Rightarrow \; & \CBNIRR sHAe\\
- & t \text{ not in freevars} (e_2)
-\end{align*}
-
-Dock är freevars en ganska kostsam operation så man kan fråga sig
-om det är värt det.
-
-\NOTE{bör stå om det här någon annanstans, kanske i gc?}.
-
+i \iIrr och \iPsi. Att ta fram vilka fria variabler som ett har är dock en 
+ganska kostsam operation så det kan finnas fall då det inte ger så mycket
+prestandaökning att det är värt det.
 
 \end{document}

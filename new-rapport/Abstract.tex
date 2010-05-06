@@ -1,9 +1,10 @@
 \documentclass[Rapport]{subfiles}
 \begin{abstract}
 
-Vi har utvecklat en tolk för ett funktionellt programmeringsspråk med lat semantik.
-Tolken använder sig av STG, som används i exempelvis Haskellkompilatorn GHC, som
-intern representation av koden. I språket ges möjligheten att annotera var koden
+Vi har utvecklat en lat-semantik för optimering av partiellt applicerade funktioner under körningstid hos ett funktionellt språk. Vi har även implementerat en tolk med STG som corespråk. STG används även i Haskellkompilatorn GHC, då som en intern representation av koden.
+% använder sig av STG, som används i exempelvis Haskellkompilatorn GHC, som
+%intern representation av koden. 
+I vårt språket ges möjligheten att annotera var koden
 ska optimeras under körningstid, vilket möjliggör fler optimeringar än de som kan
 göras statiskt.
 

@@ -3,24 +3,27 @@
 
 \numberwithin{equation}{section}
 
-\subsection{Call by Value semantik}
+\subsection{Call-by-value-semantik}
+\label{sec:Optimise:CBV}
 
 \subsubsection{Funktionsapplikationer}
 
 \begin{align}
-\label{CBV:Fun1} \OMEGA sH{f\,\bar{k}}  \Rightarrow &\, \mc{f\,\bar{k}}sH\\
- & \overline{k} \text{ all known} \nonumber \\
-\label{CBV:Fun2} \OMEGA sH{f\,\bar{x}\, k\,\bar{y}}  \Rightarrow &\, \mc{f\,\bar{x}\, k\,\bar{y}}{\oInline s}H\\
- & \overline{x},\overline{y} \text{ unknown, } k \text{ is known} \nonumber \\
-\label{CBV:Fun3} \IRR{\cOFUN{\bar{x}}{\alpha}s}He  \Rightarrow &\, \mc{\alpha}s{\heap{\alpha}{\FUN{\bar{x}}e}}
+\label{CBV:Fun1} \OMEGA sH{f\,\many{k}}  \Rightarrow &\, \mc{f\,\many{k}}sH\\
+ & \many{k} \text{ alla kända} \nonumber \\
+\label{CBV:Fun2} \OMEGA sH{f\,\many{x}\, k\,\many{y}}  \Rightarrow &\, \mc{f\,\many{x}\, k\,\many{y}}{\oInline s}H\\
+ & \many{x},\many{y} \text{ okänd, } k \text{ är känd} \nonumber \\
+\label{CBV:Fun3} \IRR{\cOFUN{\many{x}}{\alpha}s}He  \Rightarrow &\, \mc{\alpha}s{\heap{\alpha}{\FUN{\many{x}}e}}
 \end{align}
 
-I regel \eqref{CBV:Fun1} är alla argument till funktionen kända, då låter vi STG applicera funktionen precis som under vanlig körning. I \eqref{CBV:Fun2} är inte
-alla argument kända, då inline:as endast de kända argumenten till funktionen. 
-När vi har optimerat en funktionskropp så lång det går bygger vi upp funktionen igen \eqref{CBV:Fun3}.
+I regel \eqref{CBV:Fun1} är alla argument till funktionen kända. Då låter vi STG 
+applicera funktionen precis som under en vanlig körning. I \eqref{CBV:Fun2} finns det 
+åtminstone något argument som är känt, och då infogas funktionen i hopp om
+fler optimeringsmöjligheter.
+När vi har optimerat en funktionskropp så långt det går bygger vi upp funktionen igen \eqref{CBV:Fun3}.
 
 
-\subsubsection{let-uttryck}
+\subsubsection{Let-uttryck}
 
 \begin{align}
 \label{CBV:Let1} \OMEGA sH{\eLet x{\THUNK e}{e'}}  \Rightarrow &\, \OMEGA{\oLet x{e'}s}He\\
@@ -28,14 +31,18 @@ När vi har optimerat en funktionskropp så lång det går bygger vi upp funktio
 \label{CBV:Let3} \IRR{\oLet xes}H{e'}  \Rightarrow &\, \OMEGA{\oLetObj x{\THUNK{e'}}s}He
 \end{align}
 
-Regel \eqref{CBV:Let1} innebär att för varje thunk vi möter kommer vi försöka optimera
-dess innehåll. Detta är huvudanledning till många av våra problem som diskuteras i \ref{CBV:Problem}.
-I \eqref{CBV:Let2} har optimering lyckats evaluer fram ett värde ifrån thunken, därmed är thunken inte längre nödvändig och vi substituerar in dess värde i uttrycket. Om vi däremot inte lyckads få fram ett värde måste vi bygga upp let:en igen \eqref{CBV:Let3}, men iställt för att bygga upp den med en gång lägger vi ut en ny continuation och försöker optimera uttrycket efter \kw{let .. in}.
+Regel \eqref{CBV:Let1} innebär att vi för varje thunk vi stöter på kommer att försöka optimera
+dess innehåll. Detta är huvudanledningen till många av de problem som diskuteras i \ref{CBV:Problem}.
+I \eqref{CBV:Let2} har optimeringen lyckats evaluera fram ett värde ifrån thunken, och
+därmed är thunken inte längre nödvändig. Då substituerar vi in dess värde i uttrycket. 
+Om vi däremot inte lyckas få fram ett värde måste vi bygga upp \kw{let}:en igen \eqref{CBV:Let3}, 
+men iställt för att bygga upp den med en gång lägger vi ut en ny continuation och 
+försöker optimera uttrycket efter \kw{let .. in}.
 
 
 \begin{align}
-\label{CBV:OLet1} \OMEGA sH{\eLet x{\CON{C}{\overline{as}}}{e}}  \Rightarrow &\, \OMEGA{\oLetObj x{OBJ}s}{\heap{v}{\CON{C}{\overline{as}}}}e\\
- & \overline{as} \text{ all known, } v \text{ fresh} \nonumber \\
+\label{CBV:OLet1} \OMEGA sH{\eLet x{\CON{C}{\many{a}}}{e}}  \Rightarrow &\, \OMEGA{\oLetObj x{OBJ}s}{\heap{v}{\CON{C}{\many{a}}}}e\\
+ & \many{a} \text{ alla kända, } v \text{ ny variabel} \nonumber \\
 \label{CBV:OLet2}\OMEGA sH{\eLet x{OBJ}{e}}  \Rightarrow &\, \OMEGA{\oLetObj x{OBJ}s}He\\
 \PSI{\oLetObj x{OBJ}s}Hv  \Rightarrow &\, \IRR sH{\eLet x{OBJ}v}\\
 \IRR{\oLetObj x{OBJ}s}He  \Rightarrow &\, \IRR sH{\eLet x{OBJ}e}
@@ -44,11 +51,12 @@ I \eqref{CBV:Let2} har optimering lyckats evaluer fram ett värde ifrån thunken
 Om objektet inte var en thunk kan två olika saker ske, \eqref{CBV:OLet1} är ifall 
 vi har en känd \kw{CON}. Då allokerar vi den på heapen på samma sätt som maskinen
 och fortsätter att optimera det inre uttrycket. I regel \eqref{CBV:OLet2} så 
-fortsätter vi bara optimera med det inre uttrycket.
+fortsätter vi bara optimera med det inre uttrycket. Här är alltså objekten
+inte thunkar.
 
-$\Psi$ samt $\Phi$ bygger bara upp \kw{let}-uttrycket igen och går vidare med $\Phi$
-då det betyder att vi har optimerat klart. Ett problem här är att om man har en \kw{let}
-i en \kw{case}-granskare så kommer vi inte välja rätt gren, även om vi har ett värde.
+$\Psi$ och $\Phi$ bygger bara upp \kw{let}-uttrycket igen och går vidare med $\Phi$
+då det betyder att vi har optimerat klart. Ett problem här är att om vi har en \kw{let}
+i en \kw{case}-granskare så kommer ingen gren att väljas, trots att det finns ett värde.
 
 \begin{codeEx}
 foo x = case (let y = CON (X 2) in y) of
@@ -56,25 +64,27 @@ foo x = case (let y = CON (X 2) in y) of
     };
 \end{codeEx} 
 
-I detta fall vet vi att värdet på granskaren är ett X och z är 2, men vår optimering
-kommer inte att se detta. Det här är ytterligare en brist som den vår senare semantik
-kommer att lösa.
+I detta fall vet vi att värdet på granskaren är konstruktorn \ic{X} och att \ic{z} är $2$, men vår optimering
+kommer inte att se detta. Det här är ytterligare en brist som löses senare i detta arbete.
 
 \subsubsection{Case}
+\label{cbv:case}
 \begin{align}
 \OMEGA sH{\eCase e{brs}} \Rightarrow &\, \OMEGA{\oCase{brs}s}He\\
-\label{CBV:Case2} \PSI{\oCase{brs}s}Hv \Rightarrow &\, \OMEGA sH{\text{instantiate correct brs with v}} \\
+\label{CBV:Case2} \PSI{\oCase{brs}s}Hv \Rightarrow &\, \OMEGA sH{\text{instantiera korrekt gren av brs med v}} \\
 \label{CBV:Case3} \IRR{\oCase{brs}s}He \Rightarrow &\, \IRR sH{\eCase e brs}
 \end{align}
 
-Instantiate correct branch i regel \eqref{CBV:Case2} väljer helt enkelt vilken branch som matchar
-värdet som maskinen arbetat fram. Detta är troligtvis en av de viktigaste
-stegen i vår optimering då kan skala bort alla onödiga brancher, minska koden 
-och oftast fortsätta optimera en bit in det nya uttrycket.
+Regel \eqref{CBV:Case2} väljer helt enkelt vilken branch som matchar
+värdet som maskinen arbetat fram, och instansierar den. Detta är troligtvis ett
+av de viktigaste stegen i vår optimering då det skalar bort alla onödiga 
+grenar, minskar koden och oftast kan fortsätta optimera en bit in det nya uttrycket.
 
-Istället för att skapa en $\eCase e brs$ i \eqref{CBV:Case3} har vi även testat att gå in
-och optimera varje branch, detta bryter dock semantiken, vi kan fastna
-i oändliga loopar i brancher vi aldrig hade hamnat i. 
+Istället för att skapa en $\eCase e brs$ i \eqref{CBV:Case3} finns även
+funktionalitet för att
+optimera varje branch. Detta bryter dock semantiken eftersom optimeringen kan fastna
+i en oändlig loopar när den optimerar grenar som programmet aldrig hade exekverat
+vid en vanlig körning: 
 
 \begin{codeEx}
 case x of
@@ -83,29 +93,48 @@ case x of
     }
 \end{codeEx}
 
-\subsubsection{Atoms}
+Om \ic{x} är okänt under optimeringen och den optimerar i grenarna kommer den
+att infoga \ic{repeat 1} obegränsat. Detta är felaktigt då denna loop bara skulle uppstå
+om \ic{x} någon gång var \kw{False}.
+
+\subsubsection{Atomer}
 \begin{align}
 \OMEGA s{\heap{v}{\THUNK{e}}}v \Rightarrow &\, \OMEGA sHe
 \end{align}
 
-Vi har bara en regel för atoms och det är ifall vi hittar en variabel som på heapen
-är en thunk, så börjar vi optimera vad thunken har bundit.
+Den enda omega-regeln som finns för atomer hanterar variabler som på 
+heapen är en thunk. Då börjar vi optimera vad thunken har bundit.
 
-\subsubsection{STG interface}
-När vi interagerar med STG maskinen måste vi har tydliga regler
-för när maskien ska sluta evaluera och börja optimera. Detta sker
+\subsubsection{Gränssnitt mot STG}
+När vi interagerar med STG-maskinen måste vi ha tydliga regler
+för när maskinen ska sluta evaluera och börja optimera. Detta sker
 antingen då den stöter på en $\OPT t$ för första gången, eller när den
 inte längre kan evaluera ett uttryck och har en Optimise continuation
 på stacken.
 
 \begin{align}
 \mc as{\heap a{\OPT t}} & \Rightarrow\\
-\mc t{\cOPT{a\,}s}{\heap a{\BH}}\\
-\mc x{\cOPT as}{\heapp x{\PAP f{a_{1}\cdots a_{n}}}f{\FUN{x_{1}\cdots x_{m}}e}} & \Rightarrow\\
-\OMEGA{\cOFUN{x_{n+1}\cdots x_{m}}as}H{e[a_{1}/x_{1}\cdots a_{n}/x_{n}]}\\
-\mc v{O.\star\,:\, s}{\nheap v{\THUNK e}} & \Rightarrow\\
-\PSI{O.\star\,:\, s}Hv
+\mc t{\cOPT{a\,}s}{\heap a{\BH}} \nonumber
 \end{align}
+Den här regler sätter upp maskinen i läge för att optimera atomen $a$. Men om $a$
+är en thunk behöver den först evalueras till ett värde. Därför läggs
+OPT-continuationen ut för att skrida till verket då maskinen har evaluerat
+$a$ till ett värde.
+
+\begin{align}
+\mc x{\cOPT as}{\heapp x{\PAP f{a_{1}\ldots a_{n}}}f{\FUN{x_{1}\ldots x_{m}}e}} & \Rightarrow\\
+\OMEGA{\cOFUN{x_{n+1}\ldots x_{m}}as}H{e[a_{1}/x_{1}\ldots a_{n}/x_{n}]} \nonumber
+\end{align}
+Nu har vi ett PAP-värde och vi kan börja optimera funktionen. De kända 
+argumenten substitueras in.
+
+\begin{align}
+\mc v{O.\star\,:\, s}{\nheap v{\THUNK e}} & \Rightarrow\\
+\PSI{O.\star\,:\, s}Hv \nonumber
+\end{align}
+Ibland används maskinen för att evaluera t.ex. konstantuttryck under optimeringen.
+Dessa reduceras alltid till ett värde och då anropas $\psi$ som tar hand 
+om detta värde.
 
 %\NOTE {
 %\begin{align*}
@@ -157,21 +186,23 @@ på stacken.
 %%\mc v{O.\star\,:\, s}{\nheap v{\THUNK e}} & \Rightarrow & \PSI{O.\star\,:\, s}Hv
 %\end{multline}
 
-\subsubsection{Problem med CBV semantiken}
+\subsubsection{Problem med CBV-semantiken}
 \label{CBV:Problem}
 
-Oturligt nog bröt ovanstående optimise semantik mot STGs egna semantik. 
-Som bekant forceras evaluering av thunkar endast i case-granskaren. 
-Om funktionen som optimeras hade forcerat en thunk under vanlig körning så är
- opimise också tillåten att göra detta. Det finns ibland anledning att focera
- även vid andra tillfällen, men vårt naiva tillvägagångsätt höll inte måttet.
+Ovanstående optimisesemantik bryter mot semantiken för STG. 
+Det enda i STG:s semantik som kan framkalla en thunkforcering är om den ligger i en \kw{case}-granskare. 
+Det är endast om funktionen som optimeras hade forcerat en thunk under vanlig 
+körning som optimise också ska vara tillåten att göra det. Ibland finns det anledning 
+att forcera även vid andra tillfällen, men vårt naiva tillvägagångsätt gör det
+för mycket.
 
 \begin{codeEx}
 take n list = if (n == 0) Nil (head list : take (n-1) (tail list))
 \end{codeEx}
-Här vill man först evaluera \ic{n == 0} innan någon av argumenten till \ic{if}.
-If är defienierad med en \kw{case} sats på det första argumentet. Även om
-if inlinas så ligger inte casen-först i funktionen. För att bättre förstå varför kan vi observera hur take koden ser ut osockrad. 
+Här vill man först evaluera \ic{n == 0} innan något av argumenten till \ic{if}.
+\ic{If} är definierad med en \kw{case}-sats på det första argumentet, men även om
+\ic{if} infogas så kommer inte \kw{case}-satsen att ligga först i funktionen. För att bättre 
+förstå varför kan vi observera hur \ic{take}-koden ser ut osockrad:
 
 \begin{codeEx}
 take n list = let 
@@ -183,11 +214,11 @@ take n list = let
     } in  if t1 Nil t5;
 \end{codeEx}
 
-Vi evaluerar varje ny thunk efter vi passerat den, när vi kommer till 
-\miniCode{t5} görs ett rekursivt anrop till take och processen börjar om.
-\miniCode{if t1 Nil t5} får aldrig en chans att avbryta loopen och optimeringen terminerar aldrig.
+Vi evaluerar varje ny thunk efter att vi har passerat den, och när vi kommer till 
+\ic{t5} görs ett rekursivt anrop till \ic{take} och processen börjar om.
+\ic{if t1 Nil t5} får aldrig en chans att avbryta loopen och optimeringen terminerar aldrig.
 
-Definierades take istället på följande sättet terminerar optimise:
+Definieras \ic{take} istället på följande sätt terminerar optimise:
 
 \begin{codeEx}
 take n list = case n == 0 of
@@ -202,11 +233,14 @@ take n list = case n == 0 of
 
 %\NOTE{oeftersträvansvärt var ordet}
 
-Och det är oeftersträvansvärt att tvinga användarna att skriva all funktioner
+% formellt och bra! /Dan
+Det är oeftersträvansvärt att tvinga användarna att skriva alla funktioner
 de vill optimera med detta i åtanke. Användaren behöver inte bara hålla reda på 
-hur sina funktioner är skrivan, men också hur alla funktioner han använder är skrivna. 
-Detta arbetar emot principen om abstraktion vilket är oturligt. Detta leder oss in på vår strävan
-efter en lat optimeringssemantik.
+hur de egna funktionerna är skrivna, men också hur alla funktioner han använder är skrivna. 
+Detta arbetar emot abstraktionsprincipen, och skulle vara ett väldigt jobbigt
+sätt att skriva kod på. 
+% lite informellare igen... :( /Dan
+Detta leder oss in på vår strävan efter en lat optimeringssemantik.
 
 
 \end{document}

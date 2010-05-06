@@ -21,7 +21,9 @@ main = do
 \end{codeEx}
 
 Funktionen \miniCode{powers} tar in ett tal \miniCode{n} och en lista \miniCode{xs}, och kör funktionen \miniCode{power n}, 
-som upphöjer ett tal till \miniCode{n}, på varje element i listan. Om indatan \miniCode{n} till 
+som upphöjer varje element i listan till \miniCode{n}.
+%som upphöjer ett tal till \miniCode{n}, på varje element i listan.
+Om indatan \miniCode{n} till 
 \miniCode{powers} är känd statiskt (när programmet kompileras) skulle en kompilator kunna 
 göra en specialiserad version av \miniCode{power} för just det \miniCode{n}-värdet. Till exempel, när \miniCode{n} $\mapsto$ \miniCode{4}:
 % \miniCode{n=4}:
@@ -49,14 +51,52 @@ powers n xs = map (optimise (power n)) xs
 \end{codeEx}
 
 När nu \ic{powers} anropas med \ic{4} och någon lista \ic{xs} kommer
-den vid evaluering först att optimera \ic{power}-funktionen så att den
-ser ut som \ic{power\_4} ovan, och sedan köra den optimerade funktionen på varje
-element i listan. Det går inte att räkna med att det alltid kommer att vara
-snabbare, då optimeringen kan ta lite tid, men för en tillräckligt stor lista 
+den vid evaluering först att optimera \ic{power}-funktionen till att 
+ser ut som \ic{power\_4} ovan, sedan körs den optimerade funktionen på varje
+element i listan. Det går inte alltid att räkna med en tidvinst då optimeringen tar en  tid att utföra,
+%Det går inte att räkna med att det alltid kommer att vara
+%snabbare, då optimeringen kan ta lite tid, 
+men för en tillräckligt stor lista 
 \ic{xs} kommer programmet vara snabbare jämfört med samma program utan \ic{optimise}.
 Ju större listan \ic{xs} blir, desto mer tid sparas.
 
-\subsection{Partiell evaluering}
+
+
+\subsection{Överblick}
+
+
+Vi har i detta arbete gjort
+\begin{itemize}
+    \item Vi har gjort ett corespråk som är en utökning av den abstrakta maskinen STG \cite{stg} som används i 
+          GHC-kompilatorn. I sektionen \ref{sec:Core} går vi in djupare över semantiken för både STG samt våra utökningar. 
+    \item Vi har gjort ett sockerspåk som översätts till corespråket eftersom det underlättar 
+          att skriva program då corespråket är väldigt primitivt. Hur det är definerat
+          går att läsa i sektion \ref{sec:Socker}.
+    \item Givit den en optimeringsfunktionalitet, som med värden kända under körtid
+          optimerar funktioner och partiellt applicerade funktioner. I sektion \ref{sec:Optimise}
+          kommer vi gå igenom två olika semantiker hur vi kan göra optimeringen.
+          I sektion \ref{sec:Optimise:CBV} berättar vi om hur vår första semantik
+          såg ut och varför den inte fungerar på grund av att den var strikt i sin
+          optimering. Lösningen var en optimering som använde en Abyss som vi kan
+          använda för att göra att den blir lat, se sektion \ref{sec:Optimise:CBN}. 
+    \item Vi har implementerat detta i en tolk, med den har vi visat att det här sättet 
+            att optimera på ger goda resultat på en del program, se sektion \ref{sec:Resultat}.
+\end{itemize}
+
+\overviewIntro
+\NOTE{
+Olles text rör ej :'/
+För att kunna göra det här arbetet krävs det ett programmeringsspråk
+att arbeta i. Vi har skapat en tolk efter STG, som är en modell för hur
+ett funktionellt språk kan evalueras. Haskellkompilatorn GHC använder sig
+till exempel av STG som ett steg i kompileringen. Ett program som representeras
+med STG-kod är evalueringsvänligt, men inte särskilt programmerarvänligt,
+varför vi också har skapat ett språk till - sockerspråket -
+som är lättare att programmera i och mer liknar andra funktionella
+språk som exempelvis Haskell. Sockerspråket kan sedan översättas till
+STG-representationen och evalueras i tolken.
+}
+\subsection{Bakgrund : Partiell evaluering}
 Detta arbete handlar till stor del om partiell evaluering. Men vad innebär det?
 I funktionella språk är funktioner första klassens objekt och kan t.ex.
 skickas med som argument till andra funktioner eller returneras från
@@ -79,34 +119,22 @@ in  zipWith (f 3) list1 list2
 
 
 Funktioner som har några, men inte alla argument applicerade kallas 
-partiellt applicerade. Att börja evaluera en sådan funktion, partialevaluera,
+partiellt applicerade. Att börja optimera en sådan funktion genom att evaluera med de nya värdena
+insatta medans resterand argument är okända, att partialevaluera,
 är inget som vanligtvis görs i Haskellimplementationer, 
 men är vad som undersöks i detta projekt. Funktionen \ic{optimise} är
 tänkt att användas på en funktion som är partiellt applicerad. Då kan optimise göra en
 partiell evaluering av funktionen, så långt det är möjligt utan de okända argumenten.
 
 %\subsection{Avgränsningar}
-% vi är fegr
+%%vi är fegr
 %Detta projekt har gjort ett par avgränsningar i vad som skulle göras, 
 %
 %Den här rapporten antar att läsaren har en förståelse av funktionella programmeringsspråk
 %och vissa kunskaper av programspråk i allmänhet. Vi kommer att introducera de koncept
 %vi använder men för en större överblick av området rekomenderas mer grundlägande material.
-
+%
 %\NOTE{Den här sektionen är inte klar och jag vet inte vad jag vill med den}
 
-\subsection{Överblick}
-
-\overviewIntro
-
-För att kunna göra det här arbetet krävs det ett programmeringsspråk
-att arbeta i. Vi har skapat en tolk efter STG, som är en modell för hur
-ett funktionellt språk kan evalueras. Haskellkompilatorn GHC använder sig
-till exempel av STG som ett steg i kompileringen. Ett program som representeras
-med STG-kod är evalueringsvänligt, men inte särskilt programmerarvänligt,
-varför vi också har skapat ett språk till - sockerspråket -
-som är lättare att programmera i och mer liknar andra funktionella
-språk som exempelvis Haskell. Sockerspråket kan sedan översättas till
-STG-representationen och evalueras i tolken.
 
 \end{document}

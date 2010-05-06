@@ -3,95 +3,73 @@
 \begin{document}
 
 \section{Optimise}
-
+\label{sec:Optimise}
 % svårt att låta bli att alla dessa avsnitt börjar med 
 % 'i det här avsnittet [ ska vi undersöka / beskrivs / förklaras ... ]'
 % plepp, plepp
 
 \overviewOptimise
 
-Nu är sockerpråket förklarat (sektion 2), och corespråket (sektion 3),
-och nu kan vi undersöka själva kärnan i arbetet, nämligen optimeringen.
+Nu när sockerspråket (sektion 2) och corespråket (sektion 3) är förklarade
+kan kan vi börja undersöka optimeringen som är själva kärnan i arbetet.
 I introduktionen i detta avsnitt kan du läsa om vad optimering och 
-optimering under körtid innebär. För att optimera under körtid har 
-olika semantiker tagits fram och undersökts.
-    
-Den första av dem, som kommer refereras till som cbv-semantiken, 
-kan du läsa om i avsnitt 4.2. Den hade vissa nackdelar, så i 
-efterföljande avsitt kommer den uppgradera versionen, cbn-semantiken.
+optimering under körningstid innebär. 
 
-Denna kunde också tjäna på andra optimeringar, som tex
+För att optimera under körningstid har olika semantiker tagits fram och undersökts.   
+Den första av dem, som kommer att refereras till som CBV- eller call-by-value-semantiken, 
+kan du läsa om i avsnitt 4.2. Den hade vissa nackdelar, så i 
+efterföljande avsitt presenteras en bättre lösning som kallas för CBN- eller call-by-name-semantiken.
+
+Denna kunde också tjäna på andra optimeringar, som t.ex.
 dödkodseliminering (sektion 4.5), 
 välkänd caselag (sektion 4.6) och 
 afterburner (sektion 4.7).
 
-Hur optimeringen fungerar tillsammans med anropssatcken
-kan du läsa i det sista avsnittet 4.8.
+Hur optimeringen fungerar tillsammans med anropsstacken visas i det sista avsnittet 4.8.
 
 \subfile{Optimise/Intro}
-%\NOTE{
-%Vi har använt ett par olika semantiker för att beskriva optimeringsskedet
-%i vårt språk, vi ska nu förklara var och ett av dessa i kronologisk
-%ordning.
-
-
-%Detta optimeringspass arbetar sig igenom trädet på ett sätt inte
-%helt olikt STG-maskinen, dock kan vi bland annat gå in och evaluera
-%funktion utan att känna till alla argument, s.k. evaluera under lambdat.
-%För att inte duplicera för mycket av STGs funktionalitet så anropas
-%optimise STG-maskinen för diverse uppgifter.
-%}
 
 \subsection{Optimeringsmaskiner}
 
-Statiska optimeringar är ofta uppdelade i olika pass, specialserade på en viss
-typ av optimering\footnote{Vi kan se varje pass som transformen $\llbracket \_ \rrbracket :: syntaxtree \rightarrow syntaxtree$}. Det kan ibland finns anledning att köra ett pass flera gånger, till exempel kan ett tidigare pass skapat nya optimeringsmöjligheter för ett annat redan kört pass. Att köra dessa pass under kompileringstid är inget större problem, under körningstid finns det dock större krav på tidseffektivitet, något som den iterativa 
-method har svårt att levera.
+Statiska optimeringar är ofta uppdelade i olika pass, specialiserade på en viss
+typ av optimering\footnote{Vi kan se varje pass som transformen $\llbracket \_ \rrbracket :: syntaxtree \rightarrow syntaxtree$}. Det kan ibland finnas anledning att köra ett pass flera gånger. Till exempel 
+kan ett tidigare pass ha skapat nya optimeringsmöjligheter för ett annat, redan kört, pass. 
+Att köra dessa pass under kompileringstid är inget större problem, 
+men under körningstid finns det större krav på tidseffektivitet, vilket denna iterativa 
+metod har svårt att leverera.
 
-\NOTE{Det med att vi går igenom syntax-trädet bara en gång stämmer inte riktigt}
+Vi valde istället att skriva en ny del av evalueringsmaskinen som tar över när något skall optimeras.
+Denna har precis som STG ett antal regler som den följer beroende på vilket
+tillstånd den har. Till skillnad från STG tillåts variabler att vara okända när optimeringen
+körs, eftersom den är tänkt att köras på partiellt applicerade funktioner eller 
+evaluera under lambdat som det också kan kallas.
+Precis som STG använder den sig av continuations, vilka används för att bygga upp 
+syntaxträdet när optimeringen är klar. Med det här tillvägagångsättet behöver vi 
+bara gå igenom syntaxträdet en gång. Vi har delat upp optimeringen i tre tillstånd
+som har olika ansvarsområden. Optimeringen kan också gå tillbaka till STG-maskinen
+och använda den för att evaluera uttryck, vilket gör att vi slipper duplicera
+den funktionaliteten.
 
-Vi valde istället att skriva tre ny maskiner som tar över när något skall optimeras.
-Dessa maskiner har precis som STG ett antal regler som följs, dock tillåtes i skillnad mot STG till exempel variabler att 
-vara okända. Precis som STG läggs continuations ut, dessa används nu för att bygga upp syntax-träded när optimeringen är klara. Med det vårt tillvägagångsätt kommer vi bara gå igenom syntax-trädet en gång.
-Varje maskin motsvarar en fas i optimeringen.
-\NOTE{BILD på omega psi irr stg}
+\stgOptimise
 
 
-\textbf{Omega} $\Omega$, är ingångspunkten till optimeringsfunktionen, anropas från maskinen
+\textbf{Omega} $\Omega$, är ingångspunkten till optimeringsfunktionen, och anropas från maskinen
 när något har blivit annoterat för optimering. Omega bryter ner trädet
 och delegerar vidare vem och vad som ska ske, samt lägger ut continuations
-för att senare bygga upp ett förhoppningsvis nytt träd.
+för att senare bygga upp ett (förhoppningsvis) nytt träd.
 
-\textbf{Psi} $\Psi$, anropas från när optimise har lagt ut något åt maskinen och
-maskinen inte kan komma längre. Psi kommer använda värdet från maskinen
-och sedan delegera vidare optimeringen.
+\textbf{Psi} $\Psi$, anropas när optimise har lagt ut något åt STG-maskinen och
+den inte kan komma längre. Psi kommer att använda värdet från maskinen
+och sedan delegera vidare optimeringen beroende på det.
 
-\textbf{Irr} $\Phi$, kortform för Irreducible. Anropas när Omega eller Psi inte längre
-kan optimeringa vidare. Irr kan då utifrån nuvarande continuations
-bygga trädet eller byta continuation och fortsätta optimera på en
-andra delar i uttrycket. Det är här vi kan tillslut gå tillbaka till
+\textbf{Irr} $\Phi$, kortform för Irreducible. Anropas när Omega eller Psi inte
+kan optimera vidare. Irr kan då utifrån vilka continuations som ligger på stacken
+bygga upp trädet eller byta continuation och fortsätta optimera på en
+annan del i uttrycket. Det är också här vi till slut går tillbaka till
 STG-maskinen.
 
-
-
-
-
-
-\NOTE{
-Den här texten är bra - var ska den in? Något för övergångstexten?
-Eller i introduktionen? /Dan
-
-Vi har använt ett par olika semantiker för att beskriva optimeringsskedet
-i vårt språk, vi ska nu förklara var och ett av dessa i kronologisk
-ordning.
-
-
-Detta optimeringspass arbetar sig igenom trädet på ett sätt inte
-helt olikt STG-maskinen, dock kan vi bland annat gå in och evaluera
-funktion utan att känna till alla argument, s.k. evaluera under lambdat.
-För att inte duplicera för mycket av STGs funktionalitet så anropas
-optimise STG-maskinen för diverse uppgifter.
-}
+Vi har använt ett par olika semantiker för att beskriva optimeringen
+i vårt språk, och vi ska nu förklara dessa i kronologisk ordning.
 
 \subfile{Optimise/CBV}
 
@@ -101,6 +79,5 @@ optimise STG-maskinen för diverse uppgifter.
 \subfile{Optimise/DeadCode}
 \subfile{Optimise/ValkandCaseLag}
 \subfile{Optimise/AfterBurner}
-\subfile{Optimise/CaseStudy}
 
 \end{document}

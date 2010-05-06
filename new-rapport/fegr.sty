@@ -4,7 +4,7 @@
 \usepackage{amsmath, amsthm, amssymb}
 \usepackage{stmaryrd}
 \usepackage{tikz}
-\usetikzlibrary{mindmap,trees}
+\usetikzlibrary{mindmap,trees,arrows,automata}
 
 \usepackage{graphicx}
 \usepackage{rotating}
@@ -12,7 +12,7 @@
 \usepackage{color}
 \usepackage{fancyheadings}
 \usepackage{mathpartir}
-
+\usepackage{array}
 % Used for code examples
 \newenvironment{codeEx}
 {\verbatim}
@@ -21,7 +21,7 @@
 % Used for code inside text
 \newcommand{\miniCode}[1] {\tt#1\rm}
 \newcommand{\ic}[1] {\miniCode{#1}}
-
+\newcommand{\many}[1]{\overline{#1}}
 
 % Used for keywords
 \newcommand{\kw}[1]{\texttt{#1}}
@@ -45,16 +45,17 @@ Notering!
 
 % things defined in Opt1.tex %
 
-\global\long\def\mc#1#2#3{#1;#2;#3}
+\newcommand{\iIrr}{$\Phi$}
+\newcommand{\iPsi}{$\Psi$}
+\newcommand{\oOmega}{$\Omega$}
 
-
-\global\long\def\OMEGA#1#2#3{\Omega_{#1;#2}(#3)}
-
-
-\global\long\def\PSI#1#2#3{\Psi_{#1\,;\,#2}(#3)}
-
-
-\global\long\def\IRR#1#2#3{\Phi_{#1\,;\,#2}(#3)}
+%CBV semantic
+\newcommand{\OPTMac}[2]{\text{\large$#1$}\Big[#2\Big]}
+\global\long\def\mc#1#2#3{#1\,;\,#2\,;\,#3}
+  % stack ; heap ; expr
+\global\long\def\OMEGA#1#2#3{\OPTMac{\Omega}{#3\,;\,#1\,;\,#2}}
+\global\long\def\PSI#1#2#3{\OPTMac{\Psi}{#3\,;\,#1\,;\,#2}}
+\global\long\def\IRR#1#2#3{\OPTMac{\Phi}{#3\,;\,#1\,;\,#2}}
 
 
 \global\long\def\red#1#2{#1\Rightarrow#2}
@@ -120,9 +121,9 @@ Notering!
 % CBN %
 \global\long\def\CBNMC#1#2#3#4{#1;#2;#3;#4}
 
-\global\long\def\CBNOMEGA#1#2#3#4{\Omega_{#1;#2;#3}(#4)}
-\global\long\def\CBNPSI#1#2#3#4#5{\Psi_{#1;#2;#3;#4}(#5)}
-\global\long\def\CBNIRR#1#2#3#4{\Phi_{#1;#2;#3}(#4)}
+\global\long\def\CBNOMEGA#1#2#3#4{\OPTMac{\Omega}{#4;#1;#2;#3}}
+\global\long\def\CBNPSI#1#2#3#4#5{\OPTMac{\Psi}{#5;#1;#2;#3;#4}}
+\global\long\def\CBNIRR#1#2#3#4{\OPTMac{\Phi}{#4;#1;#2;#3}}
 
 % pixxX %
 
@@ -198,4 +199,28 @@ child[concept color=red!50!black] {
         child { node[concept,scale=0.95] {Lambda- lyftare} };
 \end{tikzpicture}
 \end{center}
+}
+
+\newcommand{\stgOptimise}
+{
+\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=2.8cm,
+                    semithick]
+    \tikzstyle{every state}=[fill=blue,draw=none,text=white]
+    \node[state,fill=red!50!black](stg)   {STG};
+    \node[state](omega) [below of=stg]          {$\Omega$};
+    \node[state](psi)   [below left  of=omega]  {$\Psi$};
+    \node[state](irr)   [below right of=omega]  {$\Phi$};
+    \path (stg)   edge[line width=2pt, bend left] node {} (omega)
+                  edge[bend right] node {} (psi)
+          (omega) edge node {} (psi)
+                  edge node {} (irr)
+                  edge[bend left] node {} (stg)
+          (irr)   edge node {} (omega)
+                  edge[line width=2pt,bend right] node {} (stg)
+          (psi)   edge node {} (omega)
+                  edge node {} (irr);
+          
+    
+    
+\end{tikzpicture}
 }

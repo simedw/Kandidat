@@ -4,11 +4,20 @@
 
 \subsection{Introduktion till optimise}
 
+\NOTE{
+Introducera syntaxen!
+
+optimise är ett objekt
+
+avsockring av optimise-keyword
+
+}
+
 Vi börjar med att återigen betrakta powerfunktionsexemplet från introduktionen. Vi är
-intreserade av att se vilka optimeringar som krävs för att den skall optimeras till den
+intresserade av att se vilka optimeringar som krävs för att den skall transformeras till den
 mer optimala kod som visades.
 \begin{codeEx}
-power n x = let t1 = n==0
+power n x = let t1 = n == 0
     in case t1 of
         { True -> 1
         ; False -> let 
@@ -18,21 +27,22 @@ power n x = let t1 = n==0
             } in t4
         };
 \end{codeEx}
-Vi ser att \miniCode{power 3 5} kommer upphöja 5 till 3, dvs 5 * 5 * 5
+Vi ser att \ic{power 3 5} kommer att upphöja $5$ till $3$, dvs $5 * 5 * 5$
 
-Om vi känner till exponenten men inte basen kan vi göra en optimerad version av power
-specialicerad för just den exponenten, hur detta går till skall vi nu visa på ett 
-mer informellt sätt. Senare kommer mer formella regler att ges. Vi antar att programmeraren
-har skrivit följande för att visa att hon vill ha en specialiserad version av \miniCode{power} för $3$.
+Om vi känner till exponenten men inte basen kan vi göra en specialiserad version av \ic{power}
+för just den exponenten. Hur detta går till ska vi nu visa på ett informellt sätt. 
+Senare kommer mer formella regler att ges. Vi antar att programmeraren
+har skrivit följande för att visa att hon vill ha en specialiserad version av \ic{power} för $3$.
 
 \begin{codeEx}
 optimise (power 3)
 \end{codeEx}
 
-Vi börjar med att byta ut alla n mot 3 i power, ingeting görs med \miniCode{x} för 
-att den är okänd. Vi `döper' också om power för att inte förstöra orginalet.
+Vi börjar med att byta ut alla \ic{n} mot $3$ i \ic{power}. Ingenting görs med 
+\ic{x} eftersom den är okänd. Vi ger också ett nytt namn till den optimerade funktionen
+så att vi kan behålla originalet om den skulle behövas i någon annan del av koden.
 \begin{codeEx}
-power_3 x = let t1 = 3==0
+power_3 x = let t1 = 3 == 0
     in case t1 of
         { True -> 1
         ; False -> let 
@@ -43,7 +53,10 @@ power_3 x = let t1 = 3==0
         };
 \end{codeEx}
 
-Vi börjar nu gå igenom trädet. Först möter vi \miniCode{let t1 = ... in exp} vilket sparas undan och vi gå vidare in i \miniCode{exp} som är ett case-uttryck. Case:en kan forcera fram värdet från t1 då t1 är inte innehåller några fria variabler, som i det här fallet är x. Då \miniCode{3==0} är falskt fås nu: 
+Vi börjar nu gå igenom trädet. Först möter vi \ic{let t1 = ... in exp} vilket 
+sparas undan och vi går vidare in i \ic{exp} som är ett \ic{case}-uttryck. 
+\ic{Case}-uttrycket kan få ut värdet från \ic{t1} eftersom den inte innehåller några 
+fria variabler (som i det här fallet bara är \ic{x}). Då \ic{3 == 0} är falskt fås nu: 
 
 \begin{codeEx}
 power_3 x = case False of
@@ -56,22 +69,27 @@ power_3 x = case False of
     };
 \end{codeEx}
 
-Vi kan nu välja False grenen, vi sparar sedan undan let:arna och går in i t4, därefter inlinas t4.
+Nu kan vi välja \ic{False}-grenen och strunta i den andra. När vi går in i grenen
+sparar vi som tidigare först undan \ic{let}:arna och går sedan till \ic{t4}.
+Den kan bytas ut mot sitt värde i \ic{let}-uttrycket, och på samma sätt  kan \ic{t3}
+och \ic{t2} infogas så att vi till slut kommer fram till följande funktion:
 
 \begin{codeEx}
 power_3 x = x * power (3-1) x;
 \end{codeEx}
 
-Vi forstätter med att inline power (3-1) x på samma sätt.
+Härifrån kan vi fortsätta genom att infoga \ic{power (3-1) x} och optimera den
+koden på samma sätt. Till sist får vi följande kod:
 
 \begin{codeEx}
 power_3 x = x * x * x * 1;
 \end{codeEx}
 
-Vilket är en mycket mindre och snabbare funktion.
-Men det här är inte hela sanningen, egentlingen boxas varje heltal i vårt språk.
- Och * är som bekant en funktion som evaluerar dess argument och sedan multiplicerar
-dem med den primitiva gånger operatorn \#*
+Denna funktion är mycket mindre och snabbare.
+Detta är dock inte riktigt hela sanningen eftersom heltal boxas i vårt språk, vilket
+också betyder att multiplikationsoperatorn, \ic{*}, är en funktion som först
+evaluerar sina argument och sedan multiplicerar dem med den primitiva 
+multiplikationsoperatorn (\ic{*\#}).
 
 \begin{codeEx}
 a * b
@@ -82,11 +100,11 @@ blir efter inlining
 \begin{codeEx}
 case a of
     { I# a' -> case b of
-        { I# b' -> case  a' #* b' of
+        { I# b' -> case  a' *# b' of
             { r' -> let r = I# r' in r}}}
 \end{codeEx}
 
-Och om vi då inlinarna alla multiplicationer i power\_3 får vi följande svårbegriblig kod:
+Om vi nu infogar alla multiplikationer i \ic{power 3} får vi följande svårbegripliga kod:
 \begin{codeEx}
 power_3 x = case 
     ( case 
@@ -109,8 +127,9 @@ power_3 x = case
 \end{codeEx}
 
 
-Vi case:ar flera gånger på x och bygger upp I\# för att direkt ta bort de senare.
- Detta kommer vi att optimera bort och få följande funktion.
+Vi \ic{case}:ar flera gånger på \ic{x} och använder konstruktorn \ic{I\#} för att boxa värden
+när de ändå bara ska \ic{case}:as fram.
+Detta kan vi optimera bort, vilket beskrivs i avsnittet om afterburner, och vi får följande funktion:
 
 \begin{codeEx}
 power_3 x = case x of
@@ -121,9 +140,9 @@ power_3 x = case x of
                     { r' -> let r = I# r' in r}}}}};
 \end{codeEx}
 
-Detta är hur långt vår optimise funktionalitet kommer. \miniCode{x * 1} skulle naturligtvis
-kunna optimeras till x, men vi har inte fokuserat på dessa specialfall.
-I resten av det här avsnittet kommer vi i detalj förklara vart och ett av dessa 
-steg och varför det fungerar som det gör.
+Detta är så långt som vår optimering kommer. \ic{x * 1} skulle naturligtvis
+kunna optimeras till \ic{x}, men vi har inte fokuserat på sådana specialfall.
+I resten av det här avsnittet kommer vi i detalj förklara vart och ett av optimeringsstegen 
+och varför de fungerar som de gör.
 
 \end{document}

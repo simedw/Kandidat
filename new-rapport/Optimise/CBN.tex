@@ -10,100 +10,91 @@
 \global\long\def\cOInstant#1#2{OInstant\,#1\,:\,#2}
 \global\long\def\cOApp#1#2#3{OApp\,#1\;#2\,:\,#3}
 \global\long\def\cOUpd#1#2{OUpd\,#1\,:\,#2}
-\global\long\def\cOLet#1#2{OLet\,#1=?\mathtt{ in }\bullet\,:\,#2}
+\global\long\def\cOLet#1#2{OLet\,#1=?\,\mathtt{ in }\bullet\,:\,#2}
 
 \global\long\def\objCon#1{CON(#1)}
 \global\long\def\eLet#1#2#3{\mathtt{let}\,#1=#2\,\mathtt{in}\,#3}
 
 \global\long\def\Arg#1#2{Arg\,#1\,:\,#2}
 
-\newcommand{\many}[1]{\overline{#1s}}
+
 
 \subsection{Call-by-name-semantik}
+\label{sec:Optimise:CBN}
+%\setcounter{equation }{0}
 För att lösa problemet med call-by-value-semantiken så har vi skapat en latare semantik.
 Det är en svår balansgång mellan att optimera för mycket och för lite, men vi har
 försökt lösa lathetsproblemet på samma sätt som STG själv gör det.
 
 \subsubsection{Abyss}
-Det stora problemet med den förgående semantiken var thunkar optimerades där
-de definerades och och inte där de används, om de används, vilket kunnde leda
+Det stora problemet med den föregående semantiken var att thunkar optimerades där
+de definerades och och inte där de användes (om de användes), vilket kunde leda
 till onödig optimering eller till och med icke-terminering!
 
-Vår lösning går ut på att let-uttryck allokerar sina objekt på heapen även när vi
+Vår lösning går ut på att \kw{let}-uttryck allokerar sina objekt på heapen även när vi
 optimerar. Men för att kunna skilja på objekt som kan innehålla okända variabler
-och de vanliga heap objekten som aldrig innehåller något okänt, har vi introducerat
-en ny slags heap som vi kallar för `Abyss'. I reglerna kommer denna att denoteras
-med stort A, och användas på liknande sätt som Heapen H.
+och de vanliga heap-objekten som aldrig innehåller något okänt, har vi introducerat
+en ny sorts heap som vi kallar för `abyss'. I reglerna kommer denna att denoteras
+med stort $A$, och användas på liknande sätt som heapen $H$.
 
 En annan ändring är att $\Psi$ numera tar en atom istället för en variabel
-detta för att det inte bara är variabler som kan vara värden. Detta var en detalj
-som missades i första semantiken men som fixades till med den nya.
+eftersom det inte bara är variabler som kan vara värden. Detta var en detalj
+som missades i CBV-semantiken men som nu har rättats till.
 
 
 \subsubsection{Funktionsapplikationer}
 \begin{align}
 \label{CBN:FunK}\CBNOMEGA s{\heap f{\FUN{\overline{xs}}{e}}}A{f \, \overline{as}} \Rightarrow & \CBNMC {f \, \overline{as}}sHA \\
- & \overline{as} \text{ known } \nonumber \\
-\label{CBN:FunI}\CBNOMEGA s{\heap f{\FUN{\overline{xs}}e}}A{f\, \overline{as}} \Rightarrow & \CBNOMEGA sHA{\text{inline } f \text{ with } \overline{as}} \\
- & | \overline{xs} | = | \overline{as} | \nonumber
+ & \overline{as} \text{ kända } \nonumber \\
+\label{CBN:FunI}\CBNOMEGA s{\heap f{\FUN{\overline{xs}}e}}A{f\, \overline{as}} \Rightarrow & \CBNOMEGA sHA{\text{infoga } f \text{ med } \overline{as}} \\
+ & \text{ samma antal atomer i } \overline{xs} \text{ som i } \overline{as} \nonumber
 \end{align}
 
-Regeln \eqref{CBN:FunK} finns kvar från den gamla semantiken om att ifall vi känner till
+Regeln \eqref{CBN:FunK} är samma som i den gamla semantiken och säger att om vi känner till
 argumenten till funktionen $f$ så kan vi evaluera applikationen på maskinen. 
 
-Hur vi gör infogningen beror på om man har anropsstack eller inte, därför kommer vi
+Hur vi gör infogningen beror på om man har anropsstack eller inte, och därför kommer vi
 att skriva i regeln att något skall infogas men inte hur. Så regel \eqref{CBN:FunI}
 visar att om parameterlistan för funktionen och argumentlistan för applikationen är
 lika långa kommer vi att infoga funktionen med parametrarna $\many{x}$ utbytta mot
-argumenten $\many{a}$. Detta görs bara om inline-räknaren tillåter oss att göra 
+argumenten $\many{a}$. Detta görs bara om infogningsräknarenräknaren tillåter oss att göra 
 denna infogning.
-
-\NOTE{
-\begin{align}
-\CBNOMEGA s{\heap f{\FUN{x_{1}\ldots x_{n}}e}}A{f\, a_{1}\cdots a_{n}} \Rightarrow & \CBNMC f{\Arg{a_{1}}{\ldots\,:\,\Arg{a_{n}}{\cOInstant 1s}}}HA
-\end{align}
-
-Den här regeln används för inlining, vi låter maskinen få göra det då vi lägger ut en
-\cont{OInstant} som tillåter maskinen att reducera $1$ steg. Efter det kommer optimeringen
-fortsätta. Vad som inte syns i denna formulering är att vi endast gör det om
-inline-räknaren tillåter det.
-}
 
 Ifall variabeln inte är ett \kw{FUN}-objekt på heapen utan en thunk vill man först evaluera
 det till en funktion. En ny continuation \cont{OApp} införs för att vi skall komma ihåg
 funktionsapplikationen vi höll på med innan.
 
 \begin{align}
-\CBNOMEGA s{\heap f{\THUNK e}}A{f\, \many{a}}  \Rightarrow & \CBNMC f{\cOApp f{\many{a}}}HA\\
+\CBNOMEGA s{\heap f{\THUNK e}}A{f\, \many{a}}  \Rightarrow & \CBNMC f{\cOApp f{\many{a}}s}HA\\
 \CBNOMEGA sH{\abyss f{\THUNK e}}{f\, \many{a}}  \Rightarrow & \CBNOMEGA{\cOApp f{\many{a}}s}HAe\\
 \label{CBN:Fun:Psi}\CBNPSI{\cOApp f{\many{a}}s}HA{lbs}v  \Rightarrow & \CBNOMEGA {s'}HA{v\, \many{a}} \\
- & \text{where } s' = \text{ bindings of } lbs \text{ pushed to } s \nonumber \\
+ & \text{där } s' \text{ är \kw{let}-bindningarna av } lbs \text{ tillagda till } s \nonumber \\
 \label{CBN:Fun:Irr}\CBNIRR {\cOApp f {\many{a}}s}HAe  \Rightarrow & \CBNIRR sHA{f\, \many{a}}
 \end{align}
 
-Ifall vi har lyckats evaluera det till en funktion kommer \eqref{CBN:Fun:Psi} att
-se bygga upp applikationen igen och $\Omega$ kan fortsätta att optimera funktionen.
-Notera att den måste lägga $lbs$ på stacken så att den senaste bindningen läggs på
-först. 
+Om vi har lyckats evaluera det till en funktion kommer \eqref{CBN:Fun:Psi} sedan att
+på nytt bygga upp applikationen och $\Omega$ kan fortsätta optimera funktionen.
+Notera att den måste lägga $lbs$ på stacken så att de kommer i samma ordning på 
+argumentstacken som när de togs.
 
 Om det inte lyckades \eqref{CBN:Fun:Irr} så använder vi det gamla funktionsvärdet
 när vi bygger upp det igen.
 
 \begin{align}
 \CBNOMEGA sHA{\oplus\, \many{a}}  \Rightarrow & \mc{\oplus\, \many{a}}sHA \\
- & \many{a} \text{ known} \nonumber
+ & \many{a} \text{ kända } \nonumber
 \end{align}
 
-Värt att notera är att primitiva operationer så som \miniCode{+\# *\# ==\#} betecknas $\oplus$. 
-Dessa körs också via maskinen, så först måste man även kontrollera att dess argument
+Värt att notera är att primitiva operationer såsom \ic{+\#}, \ic{*\#} och \ic{==\#} betecknas $\oplus$. 
+Dessa körs också via maskinen, så även här måste vi först kontrollera att dess argument
 är kända.
 
-\subsubsection{let-uttryck}
+\subsubsection{Let-uttryck}
 \begin{align}
 \label{CBN:Let1} \CBNOMEGA sHA{\eLet x{obj}r} \Rightarrow & \CBNOMEGA {\cOLet{x'}s}{\heap{x'}{obj}}A{\subst r{x'}x}\\
-   & x'\mbox{ fresh and } obj \text{ known}\nonumber \\
+   & x'\mbox{ ny variabel och } obj \text{ är känd}\nonumber \\
 \label{CBN:Let2} \CBNOMEGA sHA{\eLet x{obj}r} \Rightarrow & \CBNOMEGA{\cOLet{x'}s}H{\abyss{x'}{obj}}{\subst r{x'}x}\\
-   & x'\mbox{ fresh} \nonumber \\
+   & x'\mbox{ ny variabel} \nonumber \\
 \label{CBN:Let3} \CBNPSI{\cOLet xs}H A{lbs}v \Rightarrow & \CBNPSI sHA{x\,:\, lbs}v \\
 \label{CBN:Let4} \CBNIRR{\cOLet xs}{\heap xo}Ae \Rightarrow & \CBNIRR sHA{\eLet xoe} \\
 \label{CBN:Let5} \CBNIRR{\cOLet xs}H{\abyss xo}e \Rightarrow & \CBNIRR sHA{\eLet xoe}
@@ -116,22 +107,29 @@ Dessa körs också via maskinen, så först måste man även kontrollera att des
 
 
 
-Alla \miniCode{let} som $\Omega$ ser kommer nu att läggas på abyssen, med undantag av objekt som bara beror på kända variabler \eqref{CBN:Let1}. Detta undantag infördes då det underlätta optimering i case:ar, vi kan inte case på något på abyssen.
+Alla \kw{let}-uttryck som $\Omega$ ser kommer nu att läggas på abyssen, 
+med undantag för objekt som bara beror på kända variabler \eqref{CBN:Let1}. 
+Detta undantag införs därför att det underlättar optimering av \kw{case}-satser, 
+då vi inte kan \kw{case}:a på något som ligger på abyssen.
 
-$\Psi$ kan endast få atomer som argument, aldrig uttryck. Detta innebär att vi i regler \eqref{CBN:Let3} vet med säkerhet att variablen inte refererar till det let-bunda uttrycket. Vi kan därför ta bort det från stacken och fortsätta vår optimering. I $\Phi$ får vi dock ett uttryck som argument och måste därför återbygga let-satsen. 
-Vilket sker via de två reglerna \eqref{CBN:Let4} och \eqref{CBN:Let5} beroende på om
-den är på heapen eller abyssen.
+$\Psi$ kan endast få atomer som argument, aldrig uttryck. Detta innebär att vi 
+i regeln \eqref{CBN:Let3} vet med säkerhet att variabeln inte refererar till det 
+\kw{let}-bundna uttrycket. Vi kan därför ta bort det från stacken och fortsätta 
+vår optimering. I $\Phi$ får vi dock ett uttryck som argument och måste därför 
+återbygga \kw{let}-satsen, vilket sker via de två reglerna \eqref{CBN:Let4} och 
+\eqref{CBN:Let5} beroende på om den ligger på heapen eller abyssen.
 
 I avsnitt \ref{sec:DeadCode} kommer vi att ändra på just \eqref{CBN:Let4} 
-samt \eqref{CBN:Let5} så att de endast bygger upp \kw{let}-uttrycket när det behövs.
+och \eqref{CBN:Let5} så att de endast bygger upp \kw{let}-uttrycket när så behövs.
 
 
 %När vi slutligen når $\Psi$ med en OLet-continuation \eqref{CBN:Let5} på stacken kan vi vara säkra på vi inte använder den bortsparade let-satsen och vi kan därför kasta bort den. I \eqref{CBN:Let3} kan dock uttrycket innehålla en reference till let:en och därför återskapas uttrycket. 
 
 
 
-\subsubsection{case-satser}
-Fungerar precis som tidigare, dock forslas let bunda variabler samt abyssen nu också runt.
+\subsubsection{Case-satser}
+Fungerar precis som tidigare, med den skillnaden att \kw{let}-bundna variabler 
+och abyssen nu också forslas runt. Se sektion \ref{cbv:case}
 %\begin{align}
 %\label{eq:case1}\CBNOMEGA sHA{\eCase e{brs}}  \Rightarrow &\, \CBNOMEGA{\oCase{brs}s}HAe\\
 %\label{eq:case2}\CBNIRR{\oCase{brs}s}HAe  \Rightarrow &\, \CBNIRR sHA{\eCase e{brs}}\\
@@ -140,61 +138,62 @@ Fungerar precis som tidigare, dock forslas let bunda variabler samt abyssen nu o
 %Där \miniCode{e'} är instantierad med den korrekta grenen och let bundna variabler från \miniCode{lbs} läggs till.
 %Vi ser att \eqref{eq:case1} är oförändrade från CBV-semantiken. 
 
-\subsubsection{Atoms}
+\subsubsection{Atomer}
 \begin{align}
 \label{CBN:Atoms1}\CBNOMEGA s{\heap v{\THUNK e}}Av \Rightarrow &\, \CBNMC vsHA\\
-\label{CBN:Atoms2}\CBNOMEGA sH{\abyss v{\THUNK e}}v  \Rightarrow &\, \CBNOMEGA sHA{\text{inline }e}\\
+\label{CBN:Atoms2}\CBNOMEGA sH{\abyss v{\THUNK e}}v  \Rightarrow &\, \CBNOMEGA sHA{\text{infoga }e}\\
 \label{CBN:Atoms3}\CBNOMEGA sHAa \Rightarrow &\, \CBNPSI sHA{\epsilon}a
 %\label{CBN:Atoms4}\CBNOMEGA s{\heap v{\objCon{C\, a_{1}\cdots a_{n}}}}Av \Rightarrow &\, \CBNPSI sHA{\epsilon}v
 \end{align}
-Regel \eqref{CBN:Atoms1} så lämnar vi arbetet vidare åt maskinen, den får fortsätta att
-evaluera thunken som den fick in.
+Regel \eqref{CBN:Atoms1} lämnar arbetet vidare åt STG-maskinen, som får fortsätta
+evalueringen av thunken som den fick in.
 
-Liknande behövs göras ifall thunken är på abyssen, dock kan vi inte använda maskinen
-så vi får infoga uttrycket och gå vidare med $\Omega$, vilket görs av regel \eqref{CBN:Atoms2}. 
+Liknande behöver göras ifall thunken ligger på abyssen, men vi kan då inte använda maskinen.
+Istället får vi infoga uttrycket och gå vidare med $\Omega$, vilket görs av regel \eqref{CBN:Atoms2}. 
 
-Den sista reglern \eqref{CBN:Atoms3} är att vi har hittat ett värde och $\Psi$ funktionen kan kallas.
-Vilket kommer leda till att dessa kan användas i tidigare case-utryck eller liknande.
+Den sista regeln \eqref{CBN:Atoms3} tillämpas när vi har hittat ett värde och $\Psi$-funktionen kan anropas,
+vilket kommer att leda till att värdet kan användas i tidigare \kw{case}-uttryck eller liknande.
 
 
-\subsection{Call-by-name semantik med anroppstack}
+\subsection{Call-by-name-semantik med anropsstack}
 
-\NOTE{Virrvarv av vad vi betyder}
+%\NOTE{Virrvarv av vad vi betyder}
 
-De invarianter som måste hållas för att hålla koll på anropsstacken liknar de som finns
-för maskinen. Här nedan listas de ställen där vi ändrar på anropsstacken
+De invarianter som måste hållas för att organisera anropsstacken liknar de som finns
+för maskinen. Här nedan listas de ställen i optimeringe där anropsstacken förändras
 
 
 
 \begin{itemize}
 \item
-Om $\Omega$ börjar att optimera inuti en \kw{case}-granskare duppliceras översta aktiveringspost 
+Om $\Omega$ börjar optimera inuti en \kw{case}-granskare dupliceras översta aktiveringsposten 
 på liknande sätt som i maskinen när man börjar evaluera granskaren. När den är klar
-tas den översta posten bort, och man kan antigen bygga upp \kw{case}-uttrycket igen
-eller välja rätt gren. För att välja rätt gren så ersätter vi alla argument som var
-bundna via den rätta grenen med vilket värde de borde vara. Detta sker via en special
-substituion som ändrar de lokala variablerna som bands av grenen med vad de borde ha
-för värde. De lokala variabler som binds lokalt i grenuttrycket måste skiftas ner antalet
-variabler som bands av grenen.
+tas den översta posten bort, och man kan antingen bygga upp \kw{case}-uttrycket igen
+eller välja rätt gren. För att välja rätt gren ersätter vi alla argument som var
+bundna via grenen med värdena som de ska ha. Detta sker via en specialsubstituion 
+som både lägger in de värden som grenen band och skiftar ner grenuttryckets andra lokala 
+variabler så många steg som antalet variabler som bands av grenen, så att uttryckets
+lokala variabler får rätt värde även efter att \kw{case}-satsen tagits bort.
 
 \item
-När maskinen kallas duppliceras översta aktiveringspost och när sedan maskinen har
-ett värde och skall kalla på $\Psi$ så tas den översta aktiveringsposten bort igen.
+När STG-maskinen anropas från optimeringen dupliceras den översta aktiveringsposten,
+och när maskinen sedan har evaluerat fram ett värde och anropar $\Psi$ tas den översta aktiveringsposten bort igen.
 
 \item
-Precis som när man optimerar \kw{case}-granskaren så vill vi se till att när vi 
+Precis som när \kw{case}-granskare optimeras vill vi duplicera den översta aktiveringsposten när vi 
 optimerar funktionen i en funktionsapplikation. Detta för att vi här likt \kw{case}
-har en punkt som vi vill återvända till. Denna aktiveringspost tas bort när man 
-bygger upp funktionsapplikationen igen (antingen i $\Psi$ eller $\Phi$). 
+har en punkt som vi vill återvända till. Denna aktiveringspost tas bort när 
+funktionsapplikationen byggs upp igen (antingen i $\Psi$ eller $\Phi$). 
 
 \item
-Varje \cont{OLet}-continuation skall ha en plats i aktiveringsposten, detta medför
-att när vi lägger ut \cont{OLet} skall vi också lägga ut ett argument på aktiveringsposten.
-När vi plockar bort en \cont{OLet} plockar vi även bort argumentet på aktiveringsposten.
+Varje \cont{OLet}-continuation behöver en plats i aktiveringsposten, vilket medför
+att vi när vi lägger ut en \cont{OLet} också ska lägga ut ett argument på aktiveringsposten.
+När vi plockar bort en \cont{OLet} tar vi på motsvarande sätt bort argumentet på aktiveringsposten.
 
 \item
-Om vi har aktiverat att man skall optimera inuti grenar så läggs några okända värden ut,
-dessa plockas sedan bord när man har optimerat klart inuti grenen. 
+Om grenoptimeringar är aktiverade läggs variablerna som binds av grenen ut på
+översta aktiveringsposten som okända, bara för att de ska ta upp rätt antal platser.
+Dessa plockas sedan bord när optimeringen av grenen är klar. 
 
 
 \end{itemize}

@@ -2,6 +2,7 @@
 \begin{document}
 
 \section{Sockerspråk}
+\label{sec:Socker}
 
 %
 % Bnf, exempel
@@ -38,15 +39,6 @@
 
 %\subsection{Introduktion}
 
-\NOTE{ Tycker det här redan gör gott nog som övergångstext.
-Ha i åtanke att inledningen också slutar introducerande till hela arbetet,
-tex även den här sektinonen.
-
-Dessutom är det möjligt att vi gör den här sektionen mycket kort,
-om vi tar bort jfr med haskell och definitoner 
-(av fria variabler / substitution)
-}
-
 \overviewSugar
 
 För att undersöka optimeringsmöjligheterna behövs ett språk att arbeta med. 
@@ -60,22 +52,29 @@ för listor i Haskell: \miniCode{[5,0,4]} är socker för \miniCode{5 : 0 : 4 : 
 Sockerspråket är så likt Haskell att det går enkelt att översätta mellan språken.
 Det är också designat så att det är lätt att översätta och avsockra det till 
 core-språket som introduceras i nästa kapitel. I den här sektionen
-förklaras istället hur sockerspråket ser ut och hur det används.
+förklaras istället hur sockerspråket ser ut och hur det används, och hur
+det skiljer sig från Haskell.
 
-\subsection{BNF | Backus–Naur form}
+Det finns ingen typcheckare till sockerspråket, men eftersom den här optimeringen
+är tänkt att fungera i Haskell, som är statiskt typat och typcheckat, antas
+alla program som körs vara typkorrekta. Vi kommer inte resonera om några program
+som använder dynamisk typning eller annan typning som inte skulle kunna gå
+att skrivas i Haskell.
+
+\subsection{Grammatik}
 
 Så här ser BNF-grammatiken ut för sockerspråket:
 
 
 \begin{equation*}
 \begin{aligned}
-variables \quad & v,f \\
-constructor \quad & K \\
-program \quad&&::=&\; \overline{def} 
+Variabler \quad & v,f \\
+Konstruktor \quad & K \\
+Program \quad&&::=&\; \overline{def} 
         & \text{Program är flera definitioner}\\ 
-def  \quad && ::=&\; f \; \overline{v} \, \mathtt{=} \, e \mathtt{;} 
-        & \text {Defintionen kan binda variabler för ett uttryck}\\
-expr \quad & e &::=&\;  v \\
+Definitioner  \quad && ::=&\; f \; \overline{v} \, \mathtt{=} \, e \mathtt{;} 
+        & \text {Bind funktionsuttryck}\\
+Uttryck \quad & e &::=&\;  v \\
        &&|&\; f \; \overline{e}  
             & \text{Funktionsanrop} \\ 
        &&|&\; \mathtt{let \{} \overline{def} \mathtt{\} in }\; e 
@@ -92,7 +91,11 @@ expr \quad & e &::=&\;  v \\
             & \text{Konstruktorapplikation} \\
        &&|&\; primitive 
             & \text{Primitiv datatyp} \\
-branch \quad & brs &::=&\; K \; \overline{v} \; \mathtt{\rightarrow} \; e \mathtt{;} 
+       &&|&\; \mathtt{optimise} \; e 
+            & \text{Optimera uttrycket} \\
+       &&|&\; \mathtt{optimise } \; e \; \mathtt{ with \{} \text{direktiv} \} 
+            & \text{Optimera uttrycket} \\
+Alternativ \quad & brs &::=&\; K \; \overline{v} \; \mathtt{\rightarrow} \; e \mathtt{;} 
             & \text{Matchning mot konstruktor} \\
          &&|&\; v \; \mathtt{\rightarrow} \; expr \mathtt{;}
             & \text{Matchning med en variabel}
@@ -100,7 +103,8 @@ branch \quad & brs &::=&\; K \; \overline{v} \; \mathtt{\rightarrow} \; e \matht
 \end{equation*}
 
 
-Ett program är en lista av definitioner. Att det är en lista visas med ett streck över namnet, som i $\overline{def}$.
+Ett program är en lista av definitioner. Att det är en lista visas med ett
+streck över namnet, som i $\overline{def}$.
 Dessa funktionsdefinitioner är de som sägs vara på \emph{toppnivå}. Funktioner som är 
 skapade med en lambdaabstraktion eller i en \kw{let}-sats är inte på toppnivå. 
 
@@ -110,10 +114,16 @@ ett semikolon.
 
     Ett uttryck kan vara en variabel eller ett funktionsanrop, som är ett
 funktionsnamn, applicerat på ett eller flera uttryck. Det kan också vara en \kw{let}-sats eller
-\kw{letrec}-bundna funktioner (eller variabler om de är funktioner som
-inte tar något argument), eller en \kw{case}-sats som tar ett uttryck och flera grenar.
+\kw{letrec}-bundna definitioner (eller variabler om de inte tar något argument).
+Man kan ha \kw{case}-satser som tar ett uttryck och flera grenar, vilket kommer
+att evaluera uttrycket och sedan välja den gren som matchar.
+
 Som uttryck tillåts också primitiva operationer som skrivs infix, exempelvis addition 
 och multiplikation. Konstruktorer och primitiver, som heltal och decimaltal, är också uttryck.
+
+Det sista uttrycken är de som har med optimeringen att göra, de kan ha olika direktiv
+som bestämmer hur optimeringen skall gå till. Mer om vilka direktiv som finns går
+att läsa i sektion \ref{sec:Optimise:With}.
 
     En gren kan antingen vara att mönstermatcha mot en konstruktor och binda
 dess konstruktionsvariabler, eller att matcha mot vad som helst.
@@ -162,7 +172,6 @@ I sockerspråket finns ingen sådan konstruktion, och programmeraren kan alltså
 definiera datatypen explicit. Istället är det bara att använda
 konstruktorerna \miniCode{Just} och \miniCode{Nothing} när de behövs.
 
-\NOTE{Viktigt att nämna att vi antar typechecking?}
 
 Sockerspråket skiljer på rekursiva och vanliga \kw{let}-bindningar. 
 
@@ -183,44 +192,5 @@ in  h t1 t2
 \end{codeEx}
 
 Här går det inte, till skillnad från i Haskell, att byta plats på \kw{t1} och \kw{t2}.
-
-\subsection{Standardbibliotek och testsvit}
-\NOTE{Tveksam placering, borde kanske flyttas?}
-
-För att slippa skriva om alla enkla funktioner hela tiden gjorde vi ett litet standardbibliotek
-som helt enkelt är en fil med en rad funktioner skriven i sockerspråket som läggs
-till på slutet av den aktuella filen som ska köras.
-
-Under tiden som vi jobbade med projektet skrev vi ofta små enkla
-program för att testa ny funktionalitet. Vi samlade på oss en mängd sådana program av
-olika karaktär och komplexitet och gjorde så att de kunde testas automatiskt, 
-vilket var ett bra redskap för oss 
-när vi gjorde ändringar i tolken eftersom vi då kunde se om något som tidigare
-fungerat slutade fungera med en viss ändring. 
-
-En testsvit är också en bra morot när man gör stora ändringar som kanske gör så att
-alla testprogram slutar fungera, för när man så sakteliga får saker att fungera
-igen kommer det att reflekteras i antalet fungerande testprogram i testsviten. 
-Man ser konkreta resultat av sitt arbete.
-
-
-
-\subsection{Definitioner}
-
-\subsubsection{Fria variabler och substitution}
-Låt oss säga att vi har en funktion $f$ som använder sina två 
-argument, $x$ och $y$. Om vi betraktar uttrycket som funktionens 
-kropp består av separat är $x$ och $y$ 
-\emph{fria variabler}. Det skulle inte gå att evaluera funktionskroppen utan
-att känna till vad de är. Känner man till $x$ och $y$:s värden, låt oss säga
-$x \mapsto True$ och $y \mapsto 9$, så kan man \emph{substituera} in dem i uttrycket. Då byts varje
-$x$ ut mot $True$ och varje $y$ mot $9$. Om uttrycket är $e$ skrivs en sådan substituering som $e[True/x, 9/y]$
-\footnote{En bra minnesregel för att komma ihåg vilken ordning man skall skriva dem i är att x[e/x] = e, vilket liknar vanlig division.}. 
-
-    Ett sätt att konkret realisera en substitution är att traversera trädet
-för uttrycket och jämföra varje variabel i trädet med variabeln som ska substitueras och ersätta dem
-om de är samma. Detta är den effekten man vill eftersträva rent abstrakt,
-men det finns också andra sätt att implementera substitution, genom
-att t.ex. göra ett uppslag i en tabell varje gång evalueringen kommer till en fri variabel. 
 
 \end{document}

@@ -3,8 +3,9 @@
 
 \subsection{Anropsstack}
 \label{sec:CallStack}
-\NOTE{Termen substitution används både för den abstrakta att byta ut, samt för den hjärndöda substituionen
-vi behöver nog ett namn för hjärndöd substitution: Cerebellum disconectus?}
+%Termen substitution används både för den abstrakta att byta ut, 
+% samt för den hjärndöda substituionen
+% vi behöver nog ett namn för hjärndöd substitution: Cerebellum disconectus?}
 \subsubsection{Aktiveringsposter}
 
 Till en början använde vår tolk sig av naiv substitution, vilket innebär att man
@@ -64,6 +65,7 @@ map <f,0> <xs,1> = case <xs,1> of
         } in c
     ; Nil -> <xs,1>};
 \end{codeEx}
+
 
 Eftersom variabler som binds med både \miniCode{case} och \miniCode{let} 
 ska använda aktiveringsposten så ska även dessa ges indicier.
@@ -191,6 +193,9 @@ Main avsockras till:
 main = let <list,0> = THUNK [] (enumFrom 1)
        in  map cube <list,0>
 \end{codeEx}
+
+
+
 Notera att \miniCode{list}-thunken inte har några fria variabler.
 I evalueringen allokeras först denna thunk och sedan ska anropet till map
 utföras. 
@@ -240,7 +245,7 @@ att återvända från att ha evaluerat granskaren kommer den ta bort den
 \end{codeEx}
 
 List pekar på den ovan definierade thunken. Maskinen kommer att gå in i den
-koden. Detta räknas som ett tail-call och den översta aktiveringsposten byts
+koden. Detta räknas som ett svansanrop och den översta aktiveringsposten byts
 ut mot thunkens, som är tom.
 
 Anropstacken blir:

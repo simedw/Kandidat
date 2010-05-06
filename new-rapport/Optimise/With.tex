@@ -2,10 +2,11 @@
 \documentclass[../Optimise]{subfiles}
 \begin{document}
 
-\subsection{Optimise ... with ..}
+\subsection{Optimise ... with ...}
+\label{sec:Optimise:With}
 
-Det är finns alltid specialfall där brott mot den lata STG-semantiken hade varit 
-fördelaktigt.  Sådana fall är ytterst svåra att idenfiera maskinellt, därför 
+Det är finns specialfall där brott mot den lata STG-semantiken hade varit 
+fördelaktigt.  Sådana fall är svåra att idenfiera maskinellt, så därför 
 ombeds användaren ge ytterligare argument till optimeringsfunktionen när 
 dessa specialfall uppstår. Notationen är följande:
 
@@ -13,11 +14,12 @@ dessa specialfall uppstår. Notationen är följande:
 optimise f x with { options }
 \end{codeEx}
 
-Här är det möjligt att genom att ge keywordet `\kw{with}' efter optimise ge olika options.
+Här är det möjligt att genom att ge keywordet `\kw{with}' efter optimise ge olika direktiv
+till optimeringen.
 
-\subsubsection{Case Branches}
-      Ibland finns det möjlighet att optimera i en casebranch. Detta bryter semantiken
-      då detta kan forcera evaluering av uttryck som vanligtvis inte skulle beräknats.
+\subsubsection{Case-grenar}
+      Ibland finns det möjlighet att optimera i en \kw{case}-gren. Detta bryter semantiken
+      då detta kan leda till evaluering av uttryck som vanligtvis inte skulle ha beräknats.
 \begin{codeEx}
 f x y z = case g z of
     { A -> case h x y of
@@ -32,14 +34,14 @@ f x y z = case g z of
 \end{codeEx}
 
 Om vi nu använder \miniCode{optimise( f 1 2 )}, så är \miniCode{z} okänd, men i
-grenarna så finns det case-sastser som bara beror på \miniCode{x} och \miniCode{y} 
-och rätt gren kan alltså väljas. Vi har stöd för att optimera i sådana här casegrenar:
+grenarna finns det \kw{case}-sastser som bara beror på \miniCode{x} och \miniCode{y} 
+och rätt gren kan alltså väljas. Vi har stöd för att optimera i sådana här \kw{case}-grenar:
 
 \begin{codeEx}
   optimise f x y with { casebranches }
 \end{codeEx}
 
-Detta kan bryta semantiken, tex om
+Detta kan bryta semantiken, t.ex. om
 
 \begin{codeEx}
 f x z = case z of
@@ -48,24 +50,32 @@ f x z = case z of
     };
 \end{codeEx}
 
-Om vi här försöker optimera i brancherna då z är okänd kommer optimeringen
-att loopa, och det skulle programmet inte gjort om t ex. f alltid får False som
+Om vi här försöker optimera i brancherna då \ic{z} är okänd kommer optimeringen
+att loopa, och det skulle programmet inte ha gjort om t.ex. \ic{f} alltid får \ic{False} som
 argument.
 
-\subsubsection{Inline-räknare}
-När man valt en utökning som bryter mot semantiken kan man inte alltid vara säker på
-att den terminerar, därför kan inline-räknaren användas för att garantera det det högst
-ser ett visst antal inlines.
+\subsubsection{Infogningsräknare}
+När vi har valt en utökning som bryter mot semantiken kan vi inte alltid vara säkra på
+att programmet terminerar. Därför kan en infogningsräknare användas för att garantera
+att det det högst sker ett visst antal infogningar.
 
-Det går att både begränsa det globala antalet inlines och inlines för olika funktioner.
+Det går både att begränsa det globala antalet infogningar samt antalet infogningar för specifika funktioner.
+
+I ett kodavsnitt som använder \ic{repeat}-funktionen skulle det vara dumt att
+försöka infoga den tills det inte går mer, eftersom funktionen är oändlig,
+men ibland kanske det skulle vara önskvärt att den iallafall är infogad ett par steg.
+Det kan vi ange med hjälp av följande syntax som betyder att vi tillåter
+$10$ infogningar av just den funktionen:
 
 \begin{codeEx}
-f z = case g z of
-    { A -> repeat 1
-    ; B -> Nil
-    };
+optimise ... with { inline repeat 10 }
 \end{codeEx}
 
-Här hade det varit otrevligt att försöka inlina repeat då den aldrig terminerar.
+Om vi istället vill begränsa antalet infogningar oavsett vilken funktion det gäller
+skriver vi på ett liknande sätt:
+
+\begin{codeEx}
+optimise ... with { inlinings 10 }
+\end{codeEx}
 
 \end{document}

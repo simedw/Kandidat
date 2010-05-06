@@ -1,20 +1,28 @@
-\documentclass[../Optimise]{subfiles}
+n\documentclass[../Optimise]{subfiles}
 \begin{document}
 
 \subsection{Fallstudie}
 
-\NOTE {Inte äns halvfärdig.... kanske ska ligga under resultat?}
+\NOTE {Inte ens halvfärdig.... kanske ska ligga under resultat?}
 
-Det finns många platser i kod där optimise kan placeras, alla dessa är tyvärr inte bra val. Det finns flera fallgropar att undvika för få ut så stor prestandavinst som möjligt. Vi ska illusterar detta igenom att undersöka ett något större exempel, en raytracer.
+Det finns många platser i kod där optimise kan placeras, alla dessa är tyvärr 
+inte bra val. Det finns flera fallgropar att undvika för få ut så stor 
+prestandavinst som möjligt. Vi ska illusterar detta igenom att undersöka ett 
+något större exempel, en raytracer.
 
-En raytracer är ett program som målar upp en bild genom att från en fixt punkt i ett rum skicka ut ljusstrålar (rays) och sedan notera vad varje stråle träffar\footnote{Att jämföra med hur våra egna ögon fungerar. Fast vi skickar inte ut ljusstrålar.}.
+En raytracer är ett program som målar upp en bild genom att från en fixt punkt
+i ett rum skicka ut ljusstrålar (rays) och sedan notera vad varje stråle träffar
+\footnote{Att jämföra med hur våra egna ögon fungerar. 
+          Fast vi skickar inte ut ljusstrålar.}.
 
-
- Den antar en position i rummet och skickar sedan ljusstrålar (rays) och noterar vart varje stråle träffar för att sedan bygga upp en bild. Vi har implementerat en mycket enkel sådan, där rummet består av en djup sorterad lista av 2d objekt. Varje objekt beskrivs av en funktion, $(x,y) \mapsto Bool$, där False denoterar en miss.
- 
+Den antar en position i rummet och skickar sedan ljusstrålar (rays) och noterar
+vart varje stråle träffar för att sedan bygga upp en bild. Vi har implementerat
+en mycket enkel sådan, där rummet består av en djup sorterad lista av 2d objekt.
+Varje objekt beskrivs av en funktion, $(x,y) \mapsto Bool$, där det boolska
+variabeln svarar på frågan "Var den här punkten innanför formen?"
 
 För att underlätta ges de tänka typerna för funktionerna som en kommentar ovan funktionsdefinitionen.
-En cirkle med radie \ic{1.0} eller en fyrkant med sidorna \ic{1.0} defineras:
+En cirkel med radie \ic{1.0} eller en kvadrat med sidorna \ic{2.0} defineras:
 \begin{codeEx}
 -- type Shape = Pos -> Bool
 -- circle, square :: Shape
@@ -27,7 +35,9 @@ square p = case p of
 
 \end{codeEx}
 
-Vi har sedan en rad kombinatorer för att bygga upp mer komplexa objekt.
+Vi har sedan en rad kombinatorer för att bygga upp mer komplexa objekt,
+för translation och skalning, för rotation, och för att sammanfoga 
+flera former.
 
 \begin{codeEx}
 -- translate, scale :: Pos -> Shape -> Shape
@@ -43,15 +53,20 @@ minus     s t p = s p && not (t p);
 intersect s t p = s p && t p;
 \end{codeEx}
 
-Vi ser att ett komplext objekt är bara en sammasättning av booleanska funktioner, vilket kan infogas och tillslut bli ett enda stort \kw{case} träd. 
-Låt oss börja med att betrakta en enkel figur, en fyrkant med sina sidor nerskalade till 0.5.
+Vi ser att ett komplext objekt är bara en sammasättning av booleanska 
+funktioner, vilket kan infogas och tillslut bli ett enda stort \kw{case}-träd. 
+Låt oss börja med att betrakta en enkel figur, en fyrkant med sina sidor
+nerskalade till 1.0.
 
 \begin{codeEx}
 box  = scale (Pos 0.5 0.5) square
 box' = optimise box
 \end{codeEx}
 
-\ic{box} är nu en funktion från \kw{Pos} till \kw{Bool}. Där vid sådan halvt applicerade funktioner som optimise skiner. Optimise kommer att infoga allt den förmår, kasta bort onödiga \kw{thunkar} med mera. Vi kommer att betraka och diskutera ett par längre 
+\ic{box} är nu en funktion från \kw{Pos} till \kw{Bool}. Där vid sådan halvt
+applicerade funktioner som optimise skiner. Optimise kommer att infoga allt den
+förmår, kasta bort onödiga \kw{thunkar} med mera. Vi kommer att betraka och
+diskutera ett par längre 
  
 
 \begin{codeEx}
@@ -125,9 +140,16 @@ Dock inte det bäst <infoga förklarning> casebranches
 \end{codeEx}
 
 
-Så länge man håller sig till endast en färg kan alla tänkbara figurer modeleras med ett objekt. Men när man börjar intresera sig för olika färger krävs det flera objekt (i vår implementation). Vi har valt att se varje objekt som ett par av en färg och en funktion från pos till bool. Vi placerar sedan varje objekt i en lista där första elementet är längst framtåt i z-axlen. 
+Så länge man håller sig till endast en färg kan alla tänkbara figurer modeleras
+med ett objekt. Men när man börjar intresera sig för olika färger krävs det
+flera objekt (i vår implementation). Vi har valt att se varje objekt som ett par
+av en färg och en funktion från pos till bool. Vi placerar sedan varje objekt i
+en lista där första elementet är längst framtåt i z-axlen. 
 
-Vi har sedan en en funktion som givet en lista av par av färger och funktioner ger oss den träffade färgen för en punkt. Vi kallar dena funktion för \ic{shapes}. Tillsist har vi en lista av listor av positioner som ger upplösningen för bilden.
+Vi har sedan en en funktion som givet en lista av par av färger och funktioner
+ger oss den träffade färgen för en punkt. Vi kallar dena funktion för
+\ic{shapes}. Tillsist har vi en lista av listor av positioner som ger
+upplösningen för bilden.
 
 \begin{codeEx}
 
@@ -142,8 +164,8 @@ pic = map (map (shapes [Tuple box red])) $ screen x y;
 \end{codeEx}
 
 
-Man skulle kunna tänka sig att \ic{.. map (optimise shapes [Tuple box red]) ... } hade varit bra. Men <infoga förklaring> ack icke.
-
-
+Man skulle kunna tänka sig att 
+\ic{.. map (optimise shapes [Tuple box red]) ... } hade varit bra. 
+Men <infoga förklaring> ack icke.
 
 \end{document}

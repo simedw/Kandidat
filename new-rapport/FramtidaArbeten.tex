@@ -50,7 +50,7 @@ Dessa är genomförbara utvecklingar, och skall inte ses som omöjliga önskning
 Anledningen till att de inte finns med och är implementerade är tidsbrist,
 någon avgränsning fick ske.
 
-\subsubsection{Sharing}
+\subsubsection{Delning}
 Den powerfunktion som vi har fokuserat på i det här arbetet har linjär
 komplexitet med det finns som bekant också en logaritmisk, nämligen
 
@@ -73,7 +73,7 @@ inte.
 
     Just nu är det svår att återskapa thunkar efter de optimeras både på grund
 av att de kan refereras till i andra thunkar och konstruktörer, och på grund
-av anropsstacken. 
+av anropsstacken. Detta problem är 
 
 \subsubsection{Rekursiva funktioner}
 
@@ -92,8 +92,8 @@ som i sin tur kan anropa varandra. Som det är nu kan inte funktionen som
 optimeras anropa sig själv, eller andra funktioner som den har skapat,
 för det skapas inte ens några.
 
-    I det här regexp-fallet kanske man vill skapa en specialiserad match-
-funktion för olika sort regexp, som (ab)*, ab, a och b, och de i sin tur
+    I det här regexp-fallet vill en skapa specialiserade match-
+funktioner för olika reguljäruttryck, som (ab)*, ab, a och b, och de i sin tur
 kan kalla på varandra.
 
 \subsubsection{Tvingad strikthet}
@@ -101,15 +101,15 @@ kan kalla på varandra.
 I vissa fall så vill man tvinga fram strikthet, som i fallet 
 \ic{optimise (sum (zipWith (*) getIntList))} som skulle kunna bli en utrullad,
 optimerad skalärprodukt. Just nu sker inte detta för att anropet till nästa
-zipWith är lat eftersom det skapar ett Cons-objekt, där elementet är de första
+\ic{zipWith} är lat eftersom det skapar ett \ic{Cons}-objekt, där elementet är de första
 elmenten i listorna adderat, och resten av listan är ihopzippningen av resten
-av listorna. Cons ska inte evaluera sina argument, och därför stannar
+av listorna. \ic{Cons} ska inte evaluera sina argument, och därför stannar
 optimeringen. Om rekursiva funktioner skulle vara implementerat som i föregående
 avsnitt så kunde göra ett anrop till sig själv igen.
 
     I fallet med skalärprodukt vill man hellre att hela getIntList-listan 
 utrullas. Då behöver man någon slags strikthetsnotation. Antingen i koden 
-för zipWith, eller som argument till optimise. Tex att Cons ska vara strikt i 
+för \ic{zipWith}, eller som argument till \kw{optimise}. Tex att \ic{Cons} ska vara strikt i 
 sitt andra argument.
 
 \end{document}

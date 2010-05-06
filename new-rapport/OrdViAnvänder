@@ -1,0 +1,25 @@
+tysta filen!!
+
+--översatta
+
+sharing            = delning 
+pusha              = lägga till (överst)
+garbage collection = skräpsamling
+inline             = infoga   -- används i CBN
+unroll             = utrulla
+popFrame           = ta bort översta aktiveringsposten
+scrutinee          = granskare
+branch             = gren
+callstack          = anropsstack
+stackframe         = aktiveringspost
+tail call          = svansanrop
+
+?¿ ^^^ core språk, kärnspråk vvv ?¿
+
+
+--som de är
+
+abyss
+inlining
+thunk
+casesats
