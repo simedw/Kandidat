@@ -10,7 +10,7 @@
 \global\long\def\cOInstant#1#2{OInstant\,#1\,:\,#2}
 \global\long\def\cOApp#1#2#3{OApp\,#1\;#2\,:\,#3}
 \global\long\def\cOUpd#1#2{OUpd\,#1\,:\,#2}
-\global\long\def\cOLet#1#2{OLet\,#1=?\,\mathtt{ in }\bullet\,:\,#2}
+\global\long\def\cOLet#1#2{OLet\,#1=\,?\,\mathtt{ in }\,\bullet\,:\,#2}
 
 \global\long\def\objCon#1{CON(#1)}
 \global\long\def\eLet#1#2#3{\mathtt{let}\,#1=#2\,\mathtt{in}\,#3}
@@ -44,10 +44,10 @@ som missades i CBV-semantiken men som nu har rättats till.
 
 \subsubsection{Funktionsapplikationer}
 \begin{align}
-\label{CBN:FunK}\CBNOMEGA s{\heap f{\FUN{\overline{xs}}{e}}}A{f \, \overline{as}} \Rightarrow & \CBNMC {f \, \overline{as}}sHA \\
- & \overline{as} \text{ kända } \nonumber \\
-\label{CBN:FunI}\CBNOMEGA s{\heap f{\FUN{\overline{xs}}e}}A{f\, \overline{as}} \Rightarrow & \CBNOMEGA sHA{\text{infoga } f \text{ med } \overline{as}} \\
- & \text{ samma antal atomer i } \overline{xs} \text{ som i } \overline{as} \nonumber
+\label{CBN:FunK}\CBNOMEGA s{\heap f{\FUN{\many{x}}{e}}}A{f \, \many{a}} \Rightarrow & \CBNMC {f \, \many{a}}sHA \\
+ & \many{a} \text{ kända } \nonumber \\
+\label{CBN:FunI}\CBNOMEGA s{\heap f{\FUN{\many{x}}e}}A{f\, \many{a}} \Rightarrow & \CBNOMEGA sHA{\text{infoga } f \text{ med } \overline{as}} \\
+ & \text{ samma antal atomer i } \many{x} \text{ som i } \many{a} \nonumber
 \end{align}
 
 Regeln \eqref{CBN:FunK} är samma som i den gamla semantiken och säger att om vi känner till
@@ -66,7 +66,10 @@ funktionsapplikationen vi höll på med innan.
 
 \begin{align}
 \CBNOMEGA s{\heap f{\THUNK e}}A{f\, \many{a}}  \Rightarrow & \CBNMC f{\cOApp f{\many{a}}s}HA\\
-\CBNOMEGA sH{\abyss f{\THUNK e}}{f\, \many{a}}  \Rightarrow & \CBNOMEGA{\cOApp f{\many{a}}s}HAe\\
+\CBNOMEGA sH{\abyss f{\THUNK e}}{f\, \many{a}}  \Rightarrow & \CBNOMEGA{\cOApp f{\many{a}}s}HAe
+\end{align}
+
+\begin{align}
 \label{CBN:Fun:Psi}\CBNPSI{\cOApp f{\many{a}}s}HA{lbs}v  \Rightarrow & \CBNOMEGA {s'}HA{v\, \many{a}} \\
  & \text{där } s' \text{ är \kw{let}-bindningarna av } lbs \text{ tillagda till } s \nonumber \\
 \label{CBN:Fun:Irr}\CBNIRR {\cOApp f {\many{a}}s}HAe  \Rightarrow & \CBNIRR sHA{f\, \many{a}}
@@ -94,7 +97,10 @@ Dessa körs också via maskinen, så även här måste vi först kontrollera att
 \label{CBN:Let1} \CBNOMEGA sHA{\eLet x{obj}r} \Rightarrow & \CBNOMEGA {\cOLet{x'}s}{\heap{x'}{obj}}A{\subst r{x'}x}\\
    & x'\mbox{ ny variabel och } obj \text{ är känd}\nonumber \\
 \label{CBN:Let2} \CBNOMEGA sHA{\eLet x{obj}r} \Rightarrow & \CBNOMEGA{\cOLet{x'}s}H{\abyss{x'}{obj}}{\subst r{x'}x}\\
-   & x'\mbox{ ny variabel} \nonumber \\
+   & x'\mbox{ ny variabel} \nonumber 
+\end{align}
+
+\begin{align}
 \label{CBN:Let3} \CBNPSI{\cOLet xs}H A{lbs}v \Rightarrow & \CBNPSI sHA{x\,:\, lbs}v \\
 \label{CBN:Let4} \CBNIRR{\cOLet xs}{\heap xo}Ae \Rightarrow & \CBNIRR sHA{\eLet xoe} \\
 \label{CBN:Let5} \CBNIRR{\cOLet xs}H{\abyss xo}e \Rightarrow & \CBNIRR sHA{\eLet xoe}

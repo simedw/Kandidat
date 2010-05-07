@@ -59,6 +59,9 @@ ha stött på begrepp som används när man beskriver abstrakta maskiner
 och deras semantik, kommer vi att bygga upp förståelsen via ett exempel
 och introducera nya koncept när de behövs. 
 
+Optimeringen har fått ett eget objekt, se sektionerna 
+\ref{sec:Optimise:CBV} och \ref{sec:Optimise:CBN}.
+
 \subsubsection{Abstrakt maskin}
 
 En abstrakt maskin kan beskrivas av regler som bestämmer varje steg i en stegvis evaluering.
@@ -293,15 +296,14 @@ Nu skall a bindas till ett uttryck, \miniCode{cube 2}. I ett traditionellt imper
 En sådan senarelagd beräkning kallas för en \emph{thunk}. Det som händer nu är att
 \ic{a} binds till thunken \miniCode{cube 2}. På heapen tillåts flera olika
 sorters objekt: konstruktorer, lambdafunktioner och nu även thunkar.
-Vi behöver kunna skilja dem åt, så vi inför ny notation för dessa objekt:
-
+Vi behöver kunna skilja dem åt, så vi inför ny notation för dessa objekt: \\[0.5cm]
 \begin{tabular}{ccc}
 Föregående syntax & Faktisk syntax & Beskrivning\tabularnewline
 \hline
 $C\;\range[a]$ & $\CON C{\range[a]}$ & Konstruktor\tabularnewline
 $\lambda\range[x].e$ & $\FUN{\range[x]}e$ & Lambdafunktion\tabularnewline
 - & $\THUNK e$ & Senarelagd beräkning\tabularnewline
-\end{tabular}
+\end{tabular} \\[0.5cm]
 
 Så här skrivs \miniCode{map}-funktionen i STG-språket utan något syntaktiskt socker:
 

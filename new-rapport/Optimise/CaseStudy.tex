@@ -3,169 +3,134 @@ n\documentclass[../Optimise]{subfiles}
 
 \subsection{Fallstudie}
 
-\NOTE {Inte ens halvfärdig.... kanske ska ligga under resultat?}
+\NOTE{
+Turtoise: det är som ett gammal skämt, det tappar något
 
-Det finns många platser i kod där optimise kan placeras, alla dessa är tyvärr 
-inte bra val. Det finns flera fallgropar att undvika för få ut så stor 
-prestandavinst som möjligt. Vi ska illusterar detta igenom att undersöka ett 
-något större exempel, en raytracer.
+Achilles: vadå?
 
-En raytracer är ett program som målar upp en bild genom att från en fixt punkt
-i ett rum skicka ut ljusstrålar (rays) och sedan notera vad varje stråle träffar
-\footnote{Att jämföra med hur våra egna ögon fungerar. 
-          Fast vi skickar inte ut ljusstrålar.}.
+Turtoise: farten!!
+}
 
-Den antar en position i rummet och skickar sedan ljusstrålar (rays) och noterar
-vart varje stråle träffar för att sedan bygga upp en bild. Vi har implementerat
-en mycket enkel sådan, där rummet består av en djup sorterad lista av 2d objekt.
-Varje objekt beskrivs av en funktion, $(x,y) \mapsto Bool$, där det boolska
-variabeln svarar på frågan "Var den här punkten innanför formen?"
+Då det inte finns någon funktionalitet som beräknar var det skulle vara
+bra att optimera så behöver användaren göra det själv, därför är det trevligt om
+användaren får lite tips om var dessa annoteringar skall vara. Hur de kan påverka
+resultatet.
 
-För att underlätta ges de tänka typerna för funktionerna som en kommentar ovan funktionsdefinitionen.
-En cirkel med radie \ic{1.0} eller en kvadrat med sidorna \ic{2.0} defineras:
+
+Nu har det pratats mycket om optimise, men hur gör man nu när man ska använda
+funktionaliten? I det här avsnittet kommer vi förklara var det är fördelaktigt
+att skriva optimisenyckelordet, och var det får oeftersträvansvärt resultat.
+
+
+
+Huvudtanken med optimise var att det är bra att köra den på en funktion
+som senare kommer användas flera gånger. Typexempel på det här inom
+funktionell programmering är \ic{map}-funktionen, här med powerexemplet:
+
 \begin{codeEx}
--- type Shape = Pos -> Bool
--- circle, square :: Shape
-
-circle p = absSqr p <. 1.0;
-square p = case p of
-    { Pos x y -> x >. -1.0 && x <. 1.0
-              && y >. -1.0 && y <. 1.0
-    };
-
+main = map (power getInt) [1..20]
 \end{codeEx}
 
-Vi har sedan en rad kombinatorer för att bygga upp mer komplexa objekt,
-för translation och skalning, för rotation, och för att sammanfoga 
-flera former.
-
+Hur ska man resonera för att optimera exponentfunktionen här?
+\ic{power getInt} ska köras på varje element i listan [1..20], så det 
+är den funktionen som ska optimeras. Inte map, den står snarare för
+distibutionen av att funktionen appliceras på varj element i listan.
 \begin{codeEx}
--- translate, scale :: Pos -> Shape -> Shape
-translate dp s p = s $ posSub p dp;
-scale     dp s p = s $ posDiv p dp;
+-- rätt
+main = map (optimise power getInt) [1..20]
 
--- rotate :: Double -> Shape -> Shape
-rotate theta s p = s $ polar (abs' p) (arg p +. theta);
-
--- union, minus, intersect :: Shape -> Shape -> Shape
-union     s t p = s p || t p;
-minus     s t p = s p && not (t p);
-intersect s t p = s p && t p;
+-- fel
+main = let f = optimise map (power getInt)
+       in  f [1..20]
 \end{codeEx}
 
-Vi ser att ett komplext objekt är bara en sammasättning av booleanska 
-funktioner, vilket kan infogas och tillslut bli ett enda stort \kw{case}-träd. 
-Låt oss börja med att betrakta en enkel figur, en fyrkant med sina sidor
-nerskalade till 1.0.
 
+
+Om man istället redan vet listan och vill få den att rullas ut och applicerar en
+funktion på varje element i den kända listan. På detta sätt kommer man inte att 
+att case:a på kända listan utan istället bygga upp med kända.
 \begin{codeEx}
-box  = scale (Pos 0.5 0.5) square
-box' = optimise box
+-- kvadrerar, kuberar och ökar inputlistan med 1
+main = let g f = map f getIntList
+       in  map g [square, cube, incr];
 \end{codeEx}
 
-\ic{box} är nu en funktion från \kw{Pos} till \kw{Bool}. Där vid sådan halvt
-applicerade funktioner som optimise skiner. Optimise kommer att infoga allt den
-förmår, kasta bort onödiga \kw{thunkar} med mera. Vi kommer att betraka och
-diskutera ett par längre 
- 
-
+Här måste man använda funktionen \ic{listSeq} som kommer att forcera alla element
+i en lista för att sedan bygga upp den igen. Detta så att \kw{optimise} kommer
+att få information om att den får forcera evaluering av resterande lista.. 
+Minns att \kw{case}-satser forcerar ut evaluering, även under optimering.
 \begin{codeEx}
-  box' = FUN <2> (p -> case <0,p> of
-     { Pos x1 y1 -> let
-         { i.cc = THUNK [i.bu <1,x1> i.bw] 3 (<0,f> <1,x1> <2,x2>)
-         } in let
-           { i.cd = THUNK [i.bu <2,y1> i.bx] 3 (<0,f> <1,y1> <2,y2>)
-           } in let
-             { i.cg = THUNK [<3,t.a> <4,t.b>] 4 (let
-                 { t.ad = THUNK [<0,x>] 2 (let
-                     { t.ae = CON (D# 1.0)
-                     } in <. <0,x> <1,t.ae>)
-                 } in let
-                   { t.af = THUNK [<1,y>] 3 (let
-                       { t.ag = THUNK [<0,y>] 2 (let
-                           { t.ah = CON (D# -1.0)
-                           } in >. <0,y> <1,t.ah>)
-                       } in let
-                         { t.ai = THUNK [<0,y>] 2 (let
-                             { t.aj = CON (D# 1.0)
-                             } in <. <0,y> <1,t.aj>)
-                         } in and <1,t.ag> <2,t.ai>)
-                   } in and <2,t.ad> <3,t.af>)
-             } in case <1,x1> of
-               { D# i.c -> case prim("/.")# <6,i.c> 0.5 of
-                   { {i.e} -> case prim(">.")# <7,i.e> -1.0 of
-                       { {i.e} -> case <8,i.e> of
-                           { True  -> <5,t.ac>
-                           ; False  -> $False
-                           }
-                       }
-                   }
-               }
-     })
-\end{codeEx}
-
-Detta är väldigt billigt och ger hyfsat mycket snabbare kod. 
-
-Dock inte det bäst <infoga förklarning> casebranches
-
-\begin{codeEx}
-  i.bp = FUN <2> (p -> case <0,p> of
-   { Pos x1 y1 -> case <1,x1> of
-      { D# i.c -> case prim("/.")# <3,i.c> 0.5 of
-         { {i.e} -> case prim(">.")# <4,i.e> -1.0 of
-            { {i.e} -> case <5,i.e> of
-               { True  -> case prim("<.")# <4,i.e> 1.0 of
-                  { {i.e} -> case <6,i.e> of
-                     { True  -> case <2,y1> of
-                        { D# i.c -> case prim("/.")# <7,i.c> 0.5 of
-                           { {i.e} -> case prim(">.")# <8,i.e> -1.0 of
-                              { {i.e} -> case <9,i.e> of
-                                 { True  -> case prim("<.")# <8,i.e> 1.0 of
-                                    { {i.e} -> <10,i.e>
-                                    }
-                                 ; False  -> $False
-                                 }
-                              }
-                           }
-                        }
-                     ; False  -> $False
-                     }
-                  }
-               ; False  -> $False
-               }
+listSeq li = case li of
+    { Cons x xs = case x of
+        { x' -> case listSeq xs of
+            { xs' -> Cons x' xs'
             }
-         }
-      }
-   })
+        }
+    ; Nil -> Nil
+    };
 \end{codeEx}
 
-
-Så länge man håller sig till endast en färg kan alla tänkbara figurer modeleras
-med ett objekt. Men när man börjar intresera sig för olika färger krävs det
-flera objekt (i vår implementation). Vi har valt att se varje objekt som ett par
-av en färg och en funktion från pos till bool. Vi placerar sedan varje objekt i
-en lista där första elementet är längst framtåt i z-axlen. 
-
-Vi har sedan en en funktion som givet en lista av par av färger och funktioner
-ger oss den träffade färgen för en punkt. Vi kallar dena funktion för
-\ic{shapes}. Tillsist har vi en lista av listor av positioner som ger
-upplösningen för bilden.
-
+Här ska du placera \kw{optimise} och \ic{listSeq}:
 \begin{codeEx}
+-- rätt
+main = let g = optimise (\f . listSeq (map f getIntList))
+       in  map g [square, cube, incr];
 
--- screen :: Double -> Double -> [[Pos]]
-screen szX szY = let { xs = fromTo -1.0 (2.0 /. (szX -. 1.0)) 1.0
-                     ; ys = fromTo -1.0 (2.0 /. (szY -. 1.0)) 1.0
-                     }
-                 in map (\x . map (\y . Pos x y) ys) xs;
-
-pic = map (map (shapes [Tuple box red])) $ screen x y;
-
+-- fel
+main = let g = optimise (\f . map f getIntList)
+       in  map g [square, cube, incr];
 \end{codeEx}
 
+%\subsection{Småexempel på mer man kan göra (med optimise)}
+%
+%Här följer några mindre exempel på vad resultatet av optimise blir:
+%
+%\begin{itemize}
+%\item Funktionen \ic{foo} i följande exempel blir när den har applicerats på \ic{x}
+%en funktion som tar ett argument, \ic{y}, och adderar eller subtraherar 1 från
+%det beroende på värdet på \ic{x}.
+%
+%\begin{codeEx}
+%foo x y = case x > 0 of
+%    { True  -> y + 1
+%    ; False -> y - 1
+%    };
+%\end{codeEx}
+%Om vi vill köra den funktionen med samma \ic{x}-värde många gånger kan den optimeras
+%med hjälp av \ic{optimise}, exempelvis såhär:
+%\begin{codeEx}
+%main = map (optimise (foo getInt)) getIntList;
+%\end{codeEx}
+%Om \ic{getInt} är 1 väljer optimeringsfunktionen grenen \ic{True} i \ic{case}-satsen:
+%\begin{codeEx}
+%optimise (foo 1) === \y . y + 1
+%\end{codeEx}
+%
+%\item På liknande sätt som ovan kan funktioner som är rekursiva i ett argument
+%vecklas ut. Följande funktion adderar två tal steg för steg och kan vecklas ut
+%vid optimering:
+%
+%\begin{codeEx}
+%add x y = case x > 0 of
+%    { True  -> add (x - 1) (y + 1)
+%    ; False -> y
+%    };
+%\end{codeEx}
+%
+%Vid optimerig av \ic{add 2} fås följande funktion, där \ic{case}-satserna och 
+%rekursiva anrop har plockats bort eftersom värdet på \ic{x} är känt när
+%optimeringen körs:
+%
+%\begin{codeEx}
+%optimise (add 2) === \y . y + 1 + 1
+%\end{codeEx}
+%
+%\item ... Kända funktioner och sånt.
+%
+%\end{itemize}
 
-Man skulle kunna tänka sig att 
-\ic{.. map (optimise shapes [Tuple box red]) ... } hade varit bra. 
-Men <infoga förklaring> ack icke.
+% radera inte mig :)
+% inte mig heller :)
+% ta de som é över :)
 
 \end{document}

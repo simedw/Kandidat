@@ -3,15 +3,48 @@
 
 
 \section{Diskussion}
-
-\NOTE{ Vad vi har gjort, helhetsbild, metaobservationer, kritik }
-
-\NOTE{ Vissa av dessa passar också in i future work }
     
 Vi har gjort en tolk för ett funktionellt programmeringsspråk
 med en semantik som följer STG-maskinen som används i Haskellkompilatorn GHC.
 Till denna har vi lagt till möjligheten att optimera partiellt applicerade funktioner under körningstid
 då vi känner till värdena som applicerades och kan utnyttja dessa till optimering.
+
+\subsection{Varför optimering under körningstid?}
+
+En relevant fråga att ställa sig är varför man i huvudtaget vill göra optimeringar under körningstid. Faktum är att många av de optimeringar vi gör kan köras statiskt.
+
+\begin{codeEx}
+
+foo x = case x of
+        { A y  -> e1
+        ; B z  -> e2
+        };
+
+\end{codeEx}
+
+Vid statiskt optimering vet vi inte vilken av grenarna som kommer att väljas. Dock skulle en kompilator kunna skapa två olika versioner, en för \ic{A}-grenen och en för 
+\ic{B}-grenen. Sedan under körningstid behöver man kolla på x en gång för att sedan avgöra vilken av de optimerade grenarna man ska använda.
+Som vi nämnt tidigare har inte kompilatorer samma tidsrestriktion vid optimeringar som vi har under körningstid, vilket kan göra detta till en rimlig lösning. Det finns ändå ett par nackdelar:
+\begin{itemize}
+    \item Kan ta väldigt långt tid. Tänk dig \ic{power} funktionen men en specialversion för varje heltal som finns. (Naturligtvis hade man använt någon mekanism för att annotera vad som ska specialiseras och inte)
+    \item Kan vara svårt att förutspå vad som kommer att används ofta och därför är värt att specialisera. Vår optimise körs bara om den någon gång anropas.
+    \item Små program kan blir mycket stora när en version av varje input måste lagras.
+\end{itemize}
+
+
+Det finns också kritik mot att partiell evaluering som optimering endast är användbart för konstruerade problem, till exempel utträkning av fakultet eller skalärprodukt. Vi har försökt visa på mer verkliga fall där det kan vara mycket användbart genom att optimera en raytracer och fått goda resultat. 
+
+
+\subsection{Placering av optimise}
+
+Vi valde att programmeraren själv skulle  specificera var i koden vi skulle optimera. Det har har visat sig att detta inte alltid är trivialt och som programmerare måste man ta hänsyn till flera olika saker för att få bra prestanda. Att sätta optimise på helt fel ställe kan till och med göra programmet flera gånger långsammare.
+
+Vi kunde istället ha gjort som man gör i de flesta just in time-kompilatorer. De noterar så kallade hotspots i koden, delar av koden som körs många gånger, och börjar sedan antingen optimera eller kompilera de delarna. Då kan vi inte längre använda våra semantikförstörande utökningar (se \ref{sec:Optimise:With}) vilket ofta krävs för att få någon verklig prestandavinst. 
+
+
+
+
+
 
 \subsection{Implementerbarhet i kompilator}
 Vi valde att göra en tolk eftersom det ofta är enklare än att implementera en kompilator.
@@ -46,7 +79,7 @@ icke-terminering om man inlinar det rekursiva anropet till take.
 en semantik som var latare, inte forcerade evaluering av alla thunkar och närmare semantiken från STG.
 
 Det finns andra sätt förhindra icke terminering, i \cite{mitchell2007supercompiler} 
-används en vidareutveckling av \cite{home-emb}. Där används ett kriterium för att se om infogad kod kommer att anropa på sig själv utan att minska på sina argument och om inte avbryts infogningen. Detta ämnar sig bättre för optimeringar som arbetar med omskrivnings regler och troligtvis inte lika bra för vår mer evaluerande metod.
+används en vidareutveckling av \cite{home-emb}. Där används ett kriterium för att se om infogad kod kommer att anropa på sig själv utan att minska på sina argument. Uppfylls detta avbryts infogningen. Detta ämnar sig något bättre för optimeringar som arbetar med omskrivnings regler och troligtvis inte lika bra för vår mer evalueringsinriktade metod.
 
 
 
@@ -101,10 +134,9 @@ det inte finns någon tillgång till syntaxsträdet.
 För att göra vår tolk mer realistisk byttes substitueringen till en callstack. 
 Det gav också en hastighetsökning av tolken med ungefär 2500\%.
 
-\subsection{Optimise med anropsstack}
+%\subsection{Optimise med anropsstack}
 
-Implementationen av optimering med anropsstacken 
+Att översätt optimise till att arbete med en anropsstack var relativt svårt. Varje gång en funktion infogades, eller någon \kw{let} kunde tas bort behövde alla efterkommande indexes räknas om. 
 
-\NOTE{Gör semantiken svårare. Shiftup and shiftdown. Situps and pulldowns}
 
 \end{document}

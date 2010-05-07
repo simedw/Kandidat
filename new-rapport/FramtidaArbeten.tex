@@ -2,43 +2,40 @@
 \begin{document}
 
 \section{Framtida arbete}
-
-En avgränsning för vårt projekt var att jobba inom ramen för en tolk.
+\begin{itemize}
+\item En avgränsning för vårt projekt var att jobba inom ramen för en tolk. 
 Detta av flera anledningar, men främst för att det är lättare att göra prototyper för 
 olika regler för optimise. Nu när vi har tagit fram fungerande optimeringssemantik 
 är nästa steg att implementera vårt språk i en kompilator.
-Med anropsstack istället för substitutionsfunktionen tror vi att implementationen
-i en kompilator skulle vara mer realiserbar.
+Med anropsstack som vi bytte till istället för substitutionsfunktionen tror vi att implementationen
+i en kompilator skulle vara realiserbar.
 
 
-Vårt corespråk liknar det som både YHC och GHC arbetar med i sina mellansteg.
-Det hade varit ytterst intressant att utöka vårt språk så att vi skulle kunna 
-vara backend till något större kompilator, eller runtimesystem?
-Vi har alltid haft detta i åtanke och det är delvis därför vi ej har någon 
-typechecker.
+\item Vårt corespråk liknar det som både YHC och GHC arbetar med i sina mellansteg.
+Det hade varit intressant att utöka vårt språk så att det skulle kunna 
+användas som backend till någon större kompilator, eller något runtimesystem.
+Vi har hela tiden haft detta i åtanke och det är delvis därför vi ej har någon 
+typcheckare, eftersom det redan förväntas vara gjort.
 
 
-\NOTE{
-Info bild som visar en pipe line för vart vår kompilator finns i kedjan.
-
-\includegraphics[scale=0.22]{img/pipeline} 
-}
+\item En typcheckare och stöd för bland annat algebraiska datatyper i en 
+frontend hade varit trevligt då det är lätt att skriva fel när man skriver
+program till vårt språk. 
 
 
-En typechecker och stöd för t ex algebric datatypes i ett frontend hade också
-varit trevligt då det är väldigt lätt att skriva fel i testprogrammen. 
-
-
-Något annat som föll lite utanför ramen för vårt arbete är att bevisa
+\item Något som föll lite utanför ramen för vårt arbete är att rigoröst bevisa
 korrektheten hos optimisefunktionen, för att se att en optimerad funktion
-gör samma sak som dess ooptimerade motsvarighet. Vi har endast använt oss av en testsvit
-och andra exempelprogram för att testa optimise. Ett steg för att förvissa sig
-om korrektheten skulle vara att göra QuickCheck-egenskaper och generatorer för att se
-att en optimerad funktion gör samma sak som en ooptimerad. En annat sätt för att vara säker på att den
-gör vad som förväntas vara att formalisera reglerna och bevisa
+gör samma sak som dess icke-optimerade motsvarighet. Vi har endast använt oss av en testsvit
+och exempelprogram för att testa optimise. 
+
+\begin{itemize}
+\item Ett steg för att förvissa sig om korrektheten skulle vara att göra QuickCheck-egenskaper och generatorer för att se att en optimerad funktion gör samma sak som en ooptimerad. 
+\item Ett annat sätt att säkerställa att den
+gör vad som förväntas skulle vara att formalisera reglerna och bevisa
 att de är korrekta, exempelvis med hjälp av en bevisassistent såsom Agda.
+\end{itemize}
 
-
+\end{itemize}
 \subsection{Utveckling av optimeringen}
 
 Optimeringsfunktionaliteten som presenteras i den här rapporten är inte
@@ -77,9 +74,6 @@ av anropsstacken. Detta problem är
 
 \subsubsection{Rekursiva funktioner}
 
-\NOTE{Det finns en chans att jag är ute och cyklar här angående reguljära
-      uttryck, men jag tror det finns fall då det fungerar}
-
 Ibland är inte utrullning det bästa, som i fallet för reguljära uttryck.
 Betrakta funktionen \ic{match :: RegExp -> String -> Bool}, som givet
 ett reguljärt uttryck och en sträng ger tillbaka en boolean om strängen
@@ -89,8 +83,7 @@ obegränsat lång.
 
     Istället vill man specialisera match-funktionen på olika regexpar, och
 som i sin tur kan anropa varandra. Som det är nu kan inte funktionen som
-optimeras anropa sig själv, eller andra funktioner som den har skapat,
-för det skapas inte ens några.
+optimeras anropa sig själv, eller andra funktioner som den har skapat.
 
     I det här regexp-fallet vill en skapa specialiserade match-
 funktioner för olika reguljäruttryck, som (ab)*, ab, a och b, och de i sin tur

@@ -33,19 +33,19 @@ de delar av ett program som används mest under körningstid. Val av
 dessa punkter sker med hjälp av statistik och heuristik gentemot vår
 lösning där programmeraren själv har kontroll över angreppspunkterna. 
 
-\NOTE{Det tinff mycket goda stöd för att dennna text skall skrivas om}
+%\NOTE{Det tinff mycket goda stöd för att dennna text skall skrivas om}
 
 Liknande optimeringar som vi har gjort är tex \cite{bolz-automatic},
 där en optimeringsfunktionalitet ges till det logiska programmeringsspråket
 Prolog. Precis som i vårt arbete annoterar man var optimeringen ska ske.
 Ett pass sker före som gör om alla förgreningar till en speciell 
 case-konstruktion. Prolog har funktionalitet som gör sådana här arbeten
-intressant, tex mycket goda stöd för reflektion och att det är 
-monoikont, dvs att koden, eller rättare sagt det abstrakta syntaxträdet,
-är primitiver i språket och går att modifiera under körtid. Vårt arbete
-hade andra ambitioner, att optimera ett icke-reflekterande statiskt typat
-språk. Andra arbeten om partiell applicering i Prolog är det stora
-projektet ECCE \cite{ecce}.
+intressant. En anledning till detta är att det har mycket gott stöd för
+reflektion;  det abstrakta syntaxträdet är primitiver i språket och 
+går att modifiera under körtid. 
+Vårt arbete hade andra ambitioner, att optimera ett icke-reflekterat 
+statiskt typat språk. Andra arbeten om partiell applicering i 
+Prolog är det stora projektet ECCE \cite{ecce}.
 
 
 %\cite{bolz-automatic}

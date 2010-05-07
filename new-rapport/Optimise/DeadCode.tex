@@ -3,11 +3,6 @@
 
 \subsection{Dödkodseliminering}
 \label{sec:DeadCode}
-\NOTE{
-\begin{align*}
-\CBNPSI{\oLet xs}{\heap vh}A{lbs}v & \Rightarrow & \CBNPSI sHA{lbs}v\\
-\end{align*}
-}
 
 När optimeringarna har körts och det är dags att bygga upp trädet igen kan
 så kallad `död kod' förekomma. Det vill säga, kod som inte längre 
@@ -44,7 +39,7 @@ Denna process kan mer formellt skrivas som:
 
 \begin{mathpar}
 \inferrule
-  {t\,ej\,i\,fria\,variabler\,i\,e_2}
+  {t\,\text{ej fri variabel i}\,e_2}
   {\mathtt{let}\,t\,=\,e_1\,\mathtt{in}\,e_2 \Rightarrow e_2}
 \;
 \end{mathpar}
@@ -52,6 +47,11 @@ Denna process kan mer formellt skrivas som:
 Detta är en kontroll som utförs varje gång vi bygger upp en \miniCode{let} 
 i \iIrr och \iPsi. Att ta fram vilka fria variabler som ett har är dock en 
 ganska kostsam operation så det kan finnas fall då det inte ger så mycket
-prestandaökning att det är värt det.
+prestandaökning att det är värt det. Följande regel beskriver
+var i semantiken som dödkodseliminering kommer in:
+
+\begin{align*}
+\CBNPSI{\oLet xs}{\heap vh}A{lbs}v & \Rightarrow & \CBNPSI sHA{lbs}v\\
+\end{align*}
 
 \end{document}

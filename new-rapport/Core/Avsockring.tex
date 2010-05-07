@@ -87,28 +87,23 @@ att det är rimligare att göra det till funktionsanrop direkt.
         
 
 
-
-\NOTE{Detta kanske borde vara i optimise-avsnittet} 
-\subsubsection{Avsockring av optimise with}
-
-\begin{codeEx}
-let f = optimise foo x y with { caseBranches, inlinings = n * n } 
-in map f zs
-\end{codeEx}
-
-avsockras till
-
-\begin{codeEx} 
-let { temp1 = THUNK ( n * n )
-    ; temp2 = OPT ( foo x y ) with { caseBranches, inlinings = temp1 }
-    ; f = THUNK ( case temp1 of _ -> temp2 }
-    }
-in map f zs
-\end{codeEx}
-
-    I sockerspråket är optimise ett nyckelord som ser ut som en 
-    funktionsapplikation, men avsockras till ett OPT-objekt. Dessutom
-    forceras alla dess inställningar med hjälp av \kw{case}-satser.
+%    \NOTE{Detta kanske borde vara i optimise-avsnittet} 
+%    \subsubsection{Avsockring av optimise with}
+%    \begin{codeEx}
+%    let f = optimise foo x y with { caseBranches, inlinings = n * n } 
+%    in map f zs
+%    \end{codeEx}
+%    avsockras till
+%    \begin{codeEx} 
+%    let { temp1 = THUNK ( n * n )
+%        ; temp2 = OPT ( foo x y ) with { caseBranches, inlinings = temp1 }
+%        ; f = THUNK ( case temp1 of _ -> temp2 }
+%        }
+%    in map f zs
+%    \end{codeEx}
+%        I sockerspråket är optimise ett nyckelord som ser ut som en 
+%        funktionsapplikation, men avsockras till ett OPT-objekt. Dessutom
+%        forceras alla dess inställningar med hjälp av \kw{case}-satser.%    
 
 
 \subsubsection{Lambdalyftare}
