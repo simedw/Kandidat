@@ -7,7 +7,7 @@ Utdata fås genom att \ic{main} evalueras fullt, till normalform.
 % Ytterligare två continuations behövs - \cont{Print} och \cont{PrintCont}. 
 Uttrycksdatatypen utökas med en ny typ av värden, 
 s-värden, som antingen är en evaluerad primitiv (betecknas $n$)
-, t.ex. ett heltal, eller en konstruktor (betecknas $K C [sval]$, där
+, till exempel ett heltal, eller en konstruktor (betecknas $K C [sval]$, där
 $C$ är konstruktorns namn och sen listan av dess s-värden) .
 Om något som ska skrivas ut har evaluerats till en (partiellt evaluerad)
 funktion så skrivs \kw{FUN} istället ut. Detta är också ett s-värde.
@@ -26,7 +26,7 @@ funktion så skrivs \kw{FUN} istället ut. Detta är också ett s-värde.
 
 Två nya continuations behövs, \cont{Print} och \cont{PrintCont C [sval] [atom]}.
 \cont{Print} betyder att det som evalueras ska skrivas ut. \cont{PrintCont} består av ett
-konstruktorsnamn C, och först en lista på färdiga s-värden och en lista med
+konstruktors namn C, och först en lista på färdiga s-värden och en lista med
 atomer som maskinen har kvar att evaluera.
 
 Fem nya regler läggs till:
