@@ -82,7 +82,7 @@ main = apply (qsort (apply reverse (apply take3 (iterate (\x.x + 1) 0)));
 apply f x = f x;
 \end{codeEx}
 
-Detta ger så stor overhead för något så simpelt som funktionsapplikation
+Detta ger så stor extrakostnad för något så simpelt som funktionsapplikation
 att det är rimligare att göra det till funktionsanrop direkt.
         
 
