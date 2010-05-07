@@ -3,15 +3,15 @@
 
 \section{Framtida arbete}
 
-En avgränsning för vårt projekt var att jobba inom ramen för en interpreter. 
+En avgränsning för vårt projekt var att jobba inom ramen för en tolk.
 Detta av flera anledningar, men främst för att det är lättare att göra prototyper för 
-olika regler för optimise. Nu när vi har tagit fram fungerande optimeringssemtantik 
+olika regler för optimise. Nu när vi har tagit fram fungerande optimeringssemantik 
 är nästa steg att implementera vårt språk i en kompilator.
-Med callstacken istället för substitutionsfunktionen tror vi att implementationen
+Med anropsstack istället för substitutionsfunktionen tror vi att implementationen
 i en kompilator skulle vara mer realiserbar.
 
 
-Vårt core språk liknar det som både YHC och GHC arbetar med i sina mellansteg.
+Vårt corespråk liknar det som både YHC och GHC arbetar med i sina mellansteg.
 Det hade varit ytterst intressant att utöka vårt språk så att vi skulle kunna 
 vara backend till något större kompilator, eller runtimesystem?
 Vi har alltid haft detta i åtanke och det är delvis därför vi ej har någon 
@@ -26,7 +26,7 @@ Info bild som visar en pipe line för vart vår kompilator finns i kedjan.
 
 
 En typechecker och stöd för t ex algebric datatypes i ett frontend hade också
-varit trevligt då det är väldigt lätt att skriva fel i testprogramen. 
+varit trevligt då det är väldigt lätt att skriva fel i testprogrammen. 
 
 
 Något annat som föll lite utanför ramen för vårt arbete är att bevisa
@@ -44,7 +44,7 @@ att de är korrekta, exempelvis med hjälp av en bevisassistent såsom Agda.
 Optimeringsfunktionaliteten som presenteras i den här rapporten är inte
 komplett. Det finns mycket utrymme för att lägga till fler optimeringar
 som skulle kunna förbättra koden ytterligare. Det som finns i åtanke är
-sharing, smartare hantering av rekursiva funktioner och tvingad strikthet.
+delning, smartare hantering av rekursiva funktioner och tvingad strikthet.
 
 Dessa är genomförbara utvecklingar, och skall inte ses som omöjliga önskningar.
 Anledningen till att de inte finns med och är implementerade är tidsbrist,
@@ -65,10 +65,10 @@ power n x = case n == 0 of
     }
 \end{codeEx}
 
-Optimeringssemantiken, som den är nu, kommer inlina \ic{a} två gånger,
+Optimeringssemantiken, som den är nu, kommer infoga \ic{a} två gånger,
 liknande call by name, men inte call by need. Anledningen är att beräkningen
 \ic{a} lagras i en thunk på abyssen, och när senare multiplikationen ska
-inlinas så inlinas även \ic{a}, och två gånger. Det resultatet sparas
+infogas så infogas även \ic{a}, och två gånger. Det resultatet sparas
 inte.
 
     Just nu är det svår att återskapa thunkar efter de optimeras både på grund
@@ -99,10 +99,10 @@ kan kalla på varandra.
 \subsubsection{Tvingad strikthet}
 
 I vissa fall så vill man tvinga fram strikthet, som i fallet 
-\ic{optimise (sum (zipWith (*) getIntList))} som skulle kunna bli en utrullad,
+\ic{optimise (sum . zipWith (*) getIntList)} som skulle kunna bli en utrullad,
 optimerad skalärprodukt. Just nu sker inte detta för att anropet till nästa
 \ic{zipWith} är lat eftersom det skapar ett \ic{Cons}-objekt, där elementet är de första
-elmenten i listorna adderat, och resten av listan är ihopzippningen av resten
+elementen i listorna adderat, och resten av listan är ihopzippningen av resten
 av listorna. \ic{Cons} ska inte evaluera sina argument, och därför stannar
 optimeringen. Om rekursiva funktioner skulle vara implementerat som i föregående
 avsnitt så kunde göra ett anrop till sig själv igen.
