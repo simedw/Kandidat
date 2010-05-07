@@ -8,7 +8,7 @@ behövs en evalueringsmodell. Det finns olika abstrakta maskiner utvecklade för
 detta ändamål, till exempel G-maskinen, TIM (Three Instruction Machine), GRIN \cite{grin} och STG.
 Dessa går att dels tolka, det vill säga att i något programmeringsspråk (exempelvis
 Haskell) skriva ett program som kopierar maskinens funktionalitet. Det går också att
-kompilera dem till något lågnivåspråk som C, assembly eller LLVM.
+kompilera dem till något lågnivåspråk som C, assemblyspråk eller LLVM.
 
 Att skriva en kompilator hade varit ett delikat arbete i sig, även utan
 optimering. Vi ville fokusera på optimeringen och valde därför att skriva en tolk.
@@ -21,7 +21,7 @@ programmeringsspråk vilket skulle underlätta arbetet på optimeringen.
 Många av Grin maskinens fördelar kommer från att den känner till alla funktioner i hela
 programmet (funktioner i andra moduler kopieras in när de används). Den här informationen
 använder Grin sedan för att göra en stor graf över vilka funktioner som kallar på
-vilka andra funktioner. I förhållande så här STG mer tradionell och vi trodde att det skulle
+vilka andra funktioner. I förhållande så här STG mer traditionell och vi trodde att det skulle
 vara enklare att göra en tolk för just STG.
 
 \end{document}

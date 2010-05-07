@@ -36,7 +36,7 @@ dess innehåll. Detta är huvudanledningen till många av de problem som diskute
 I \eqref{CBV:Let2} har optimeringen lyckats evaluera fram ett värde ifrån thunken, och
 därmed är thunken inte längre nödvändig. Då substituerar vi in dess värde i uttrycket. 
 Om vi däremot inte lyckas få fram ett värde måste vi bygga upp \kw{let}:en igen \eqref{CBV:Let3}, 
-men iställt för att bygga upp den med en gång lägger vi ut en ny continuation och 
+men istället för att bygga upp den med en gång lägger vi ut en ny continuation och 
 försöker optimera uttrycket efter \kw{let .. in}.
 
 
@@ -75,14 +75,14 @@ kommer inte att se detta. Det här är ytterligare en brist som löses senare i 
 \label{CBV:Case3} \IRR{\oCase{brs}s}He \Rightarrow &\, \IRR sH{\eCase e brs}
 \end{align}
 
-Regel \eqref{CBV:Case2} väljer helt enkelt vilken branch som matchar
+Regel \eqref{CBV:Case2} väljer helt enkelt vilken gren som matchar
 värdet som maskinen arbetat fram, och instansierar den. Detta är troligtvis ett
 av de viktigaste stegen i vår optimering då det skalar bort alla onödiga 
 grenar, minskar koden och oftast kan fortsätta optimera en bit in det nya uttrycket.
 
 Istället för att skapa en $\eCase e brs$ i \eqref{CBV:Case3} finns även
 funktionalitet för att
-optimera varje branch. Detta bryter dock semantiken eftersom optimeringen kan fastna
+optimera varje gren Detta bryter dock semantiken eftersom optimeringen kan fastna
 i en oändlig loopar när den optimerar grenar som programmet aldrig hade exekverat
 vid en vanlig körning: 
 

@@ -6,7 +6,7 @@
 \label{sec:Optimise:With}
 
 Det är finns specialfall där brott mot den lata STG-semantiken hade varit 
-fördelaktigt.  Sådana fall är svåra att idenfiera maskinellt, så därför 
+fördelaktigt.  Sådana fall är svåra att identifiera maskinellt, så därför 
 ombeds användaren ge ytterligare argument till optimeringsfunktionen när 
 dessa specialfall uppstår. Notationen är följande:
 
@@ -34,7 +34,7 @@ f x y z = case g z of
 \end{codeEx}
 
 Om vi nu använder \miniCode{optimise( f 1 2 )}, så är \miniCode{z} okänd, men i
-grenarna finns det \kw{case}-sastser som bara beror på \miniCode{x} och \miniCode{y} 
+grenarna finns det \kw{case}-satser som bara beror på \miniCode{x} och \miniCode{y} 
 och rätt gren kan alltså väljas. Vi har stöd för att optimera i sådana här \kw{case}-grenar:
 
 \begin{codeEx}
@@ -50,7 +50,7 @@ f x z = case z of
     };
 \end{codeEx}
 
-Om vi här försöker optimera i brancherna då \ic{z} är okänd kommer optimeringen
+Om vi här försöker optimera i grenarna då \ic{z} är okänd kommer optimeringen
 att loopa, och det skulle programmet inte ha gjort om t.ex. \ic{f} alltid får \ic{False} som
 argument.
 

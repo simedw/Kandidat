@@ -28,7 +28,7 @@ försökt lösa lathetsproblemet på samma sätt som STG själv gör det.
 
 \subsubsection{Abyss}
 Det stora problemet med den föregående semantiken var att thunkar optimerades där
-de definerades och och inte där de användes (om de användes), vilket kunde leda
+de definierades och och inte där de användes (om de användes), vilket kunde leda
 till onödig optimering eller till och med icke-terminering!
 
 Vår lösning går ut på att \kw{let}-uttryck allokerar sina objekt på heapen även när vi
@@ -57,7 +57,7 @@ Hur vi gör infogningen beror på om man har anropsstack eller inte, och därfö
 att skriva i regeln att något skall infogas men inte hur. Så regel \eqref{CBN:FunI}
 visar att om parameterlistan för funktionen och argumentlistan för applikationen är
 lika långa kommer vi att infoga funktionen med parametrarna $\many{x}$ utbytta mot
-argumenten $\many{a}$. Detta görs bara om infogningsräknarenräknaren tillåter oss att göra 
+argumenten $\many{a}$. Detta görs bara om infogningsräknaren tillåter oss att göra 
 denna infogning.
 
 Ifall variabeln inte är ett \kw{FUN}-objekt på heapen utan en thunk vill man först evaluera
@@ -160,7 +160,7 @@ vilket kommer att leda till att värdet kan användas i tidigare \kw{case}-uttry
 %\NOTE{Virrvarv av vad vi betyder}
 
 De invarianter som måste hållas för att organisera anropsstacken liknar de som finns
-för maskinen. Här nedan listas de ställen i optimeringe där anropsstacken förändras
+för maskinen. Här nedan listas de ställen i optimeringen där anropsstacken förändras
 
 
 
@@ -170,7 +170,7 @@ Om $\Omega$ börjar optimera inuti en \kw{case}-granskare dupliceras översta ak
 på liknande sätt som i maskinen när man börjar evaluera granskaren. När den är klar
 tas den översta posten bort, och man kan antingen bygga upp \kw{case}-uttrycket igen
 eller välja rätt gren. För att välja rätt gren ersätter vi alla argument som var
-bundna via grenen med värdena som de ska ha. Detta sker via en specialsubstituion 
+bundna via grenen med värdena som de ska ha. Detta sker via en specialsubstitution 
 som både lägger in de värden som grenen band och skiftar ner grenuttryckets andra lokala 
 variabler så många steg som antalet variabler som bands av grenen, så att uttryckets
 lokala variabler får rätt värde även efter att \kw{case}-satsen tagits bort.

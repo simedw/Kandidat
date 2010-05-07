@@ -51,7 +51,7 @@ för listor i Haskell: \miniCode{[5,0,4]} är socker för \miniCode{5 : 0 : 4 : 
 
 Sockerspråket är så likt Haskell att det går enkelt att översätta mellan språken.
 Det är också designat så att det är lätt att översätta och avsockra det till 
-core-språket som introduceras i nästa kapitel. I den här sektionen
+corespråket som introduceras i nästa kapitel. I den här sektionen
 förklaras istället hur sockerspråket ser ut och hur det används, och hur
 det skiljer sig från Haskell.
 
@@ -80,7 +80,7 @@ Uttryck \quad & e &::=&\;  v \\
        &&|&\; \mathtt{let \{} \overline{def} \mathtt{\} in }\; e 
             & \text{Flera lokal definitioner}\\
        &&|&\; \mathtt{letrec \{} \overline{def} \mathtt{\} in} \; e 
-            & \text{Flera lokala rekursiva defintioner} \\
+            & \text{Flera lokala rekursiva definitioner} \\
        &&|&\; \mathtt{case} \, e \, \mathtt{of \{} \overline{brs} \mathtt{\}} 
             & \text{Mönstermatchning av uttryck} \\
        &&|&\; \mathtt{\lambda } v \mathtt{.} e
@@ -89,7 +89,7 @@ Uttryck \quad & e &::=&\;  v \\
             & \text{Primitiv operation}\\ 
        &&|&\; K \; \overline{e} 
             & \text{Konstruktorapplikation} \\
-       &&|&\; primitive 
+       &&|&\; primitiv 
             & \text{Primitiv datatyp} \\
        &&|&\; \mathtt{optimise} \; e 
             & \text{Optimera uttrycket} \\
@@ -97,7 +97,7 @@ Uttryck \quad & e &::=&\;  v \\
             & \text{Optimera uttrycket} \\
 Alternativ \quad & brs &::=&\; K \; \overline{v} \; \mathtt{\rightarrow} \; e \mathtt{;} 
             & \text{Matchning mot konstruktor} \\
-         &&|&\; v \; \mathtt{\rightarrow} \; expr \mathtt{;}
+         &&|&\; v \; \mathtt{\rightarrow} \; e \mathtt{;}
             & \text{Matchning med en variabel}
 \end{aligned}
 \end{equation*}
@@ -109,7 +109,7 @@ Dessa funktionsdefinitioner är de som sägs vara på \emph{toppnivå}. Funktion
 skapade med en lambdaabstraktion eller i en \kw{let}-sats är inte på toppnivå. 
 
 En funktion har en identifierare, ett namn och noll eller fler variabler som argument. Efter likhetstecknet
-kommer funktionskroppen, som är ett uttryck \miniCode{expr}, och den avslutas med
+kommer funktionskroppen, som är ett uttryck \miniCode{e}, och den avslutas med
 ett semikolon.
 
     Ett uttryck kan vara en variabel eller ett funktionsanrop, som är ett
@@ -131,7 +131,7 @@ dess konstruktionsvariabler, eller att matcha mot vad som helst.
 
 \subsection{Jämförelse med Haskell}
 \NOTE{
-Omdiskuterat avsitt Koen. Ska det bort? Ska det läggas någon annanstans?
+Omdiskuterat avsnitt Koen. Ska det bort? Ska det läggas någon annanstans?
 }
 
     En egenskap som saknas i sockerspråket men som ofta används flitigt i Haskell är 
