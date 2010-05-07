@@ -23,7 +23,7 @@ foo x = case x of
 \end{codeEx}
 
 Vid statiskt optimering vet vi inte vilken av grenarna som kommer att väljas. Dock skulle en kompilator kunna skapa två olika versioner, en för \ic{A}-grenen och en för 
-\ic{B}-grenen. Sedan under körningstid behöver man kolla på x en gång för att sedan avgöra vilken av de optimerade grenarna man ska använda.
+\ic{B}-grenen. Sedan under körningstid behöver man kolla på \ic{x} en gång för att sedan avgöra vilken av de optimerade grenarna man ska använda.
 Som vi nämnt tidigare har inte kompilatorer samma tidsrestriktion vid optimeringar som vi har under körningstid, vilket kan göra detta till en rimlig lösning. Det finns ändå ett par nackdelar:
 \begin{itemize}
     \item Kan ta väldigt långt tid. Tänk dig \ic{power} funktionen men en specialversion för varje heltal som finns. (Naturligtvis hade man använt någon mekanism för att annotera vad som ska specialiseras och inte)
@@ -32,7 +32,7 @@ Som vi nämnt tidigare har inte kompilatorer samma tidsrestriktion vid optimerin
 \end{itemize}
 
 
-Det finns också kritik mot att partiell evaluering som optimering endast är användbart för konstruerade problem, till exempel utträkning av fakultet eller skalärprodukt. Vi har försökt visa på mer verkliga fall där det kan vara mycket användbart genom att optimera en raytracer och fått goda resultat. 
+Det finns också kritik mot att partiell evaluering som optimering endast är användbart för konstruerade problem, till exempel uträkning av fakultet eller skalärprodukt. Vi har försökt visa på mer verkliga fall där det kan vara mycket användbart genom att optimera en raytracer och fått goda resultat. 
 
 
 \subsection{Placering av optimise}
@@ -72,33 +72,33 @@ take n xs = let
 main = (optimise (take 5)) [1,2,3,4,5,6,7];
 \end{codeEx}
 
-I exemplet ovan skulle en sämre designad optimise-funktion gå in och optimera a2 oberoende av värdet på
-a1, och eftersom värdet på xs inte är känt när funktionen optimeras leder det till
-icke-terminering om man inlinar det rekursiva anropet till take.
+I exemplet ovan skulle en sämre designad optimise-funktion gå in och optimera \ic{a2} oberoende av värdet på
+\ic{a1}, och eftersom värdet på \ic{xs} inte är känt när funktionen optimeras leder det till
+icke-terminering om man infogar det rekursiva anropet till \ic{take}.
     Den första semantiken som presenterades led av detta problem, men löstes i den senare med hjälp av
 en semantik som var latare, inte forcerade evaluering av alla thunkar och närmare semantiken från STG.
 
-Det finns andra sätt förhindra icke terminering, i \cite{mitchell2007supercompiler} 
+Det finns andra sätt förhindra icke-terminering, i \cite{mitchell2007supercompiler} 
 används en vidareutveckling av \cite{home-emb}. Där används ett kriterium för att se om infogad kod kommer att anropa på sig själv utan att minska på sina argument. Uppfylls detta avbryts infogningen. Detta ämnar sig något bättre för optimeringar som arbetar med omskrivnings regler och troligtvis inte lika bra för vår mer evalueringsinriktade metod.
 
 
 
 \subsection{Optimise-with}
 En annan möjlig lösning på problemet ovan är att låta programmeraren själv avgöra hur
-många gånger en funktion får inlinas.
+många gånger en funktion får infogas.
 
 \begin{codeEx}
 main = optimise (take 5) with { inline take 5 } [1,2,3,4,5,6,7];
 \end{codeEx}
 
-I exemplet ovan betyder inline take 5 att take bara får inlinas 5 gånger.
+I exemplet ovan betyder \ic{inline take 5} att \ic{take} bara får infogas $5$ gånger.
 En funktionalitet som skulle kunna gynna optimise, eller användandet av den,
-är att den skulle kunna dektektera när den potentiellt skulle falla in i en
-oändlig inliningloop. Det har inte gjorts till det här arbetet.
+är att den skulle kunna detektera när den potentiellt skulle falla in i en
+oändlig infogningsloop. Det har inte gjorts till det här arbetet.
 
 \subsection{Delning}
 Ett annat problem förknippat med lathet är att optimise måste se till att variabler bara 
-evalueras en gång. Detta ställer till besvär hur man skall optimera let-satser.
+evalueras en gång. Detta ställer till besvär hur man skall optimera \kw{let}-satser.
 
 \begin{codeEx}
 test x y = let
@@ -108,12 +108,12 @@ test x y = let
 main = optimise (test 10) 5;
 \end{codeEx}
 
-Med vår senare semantik inlinas först additionen, och sedan inlinas thunkens innehåll
-som motsvarar a. Det gör att optimise sedan kommer att
+Med vår senare semantik infogas först additionen, och sedan infogas thunkens innehåll
+som motsvarar \ic{a}. Det gör att optimise sedan kommer att
 köras två gånger på samma kod. Med en optimering som tog delning i åtanke 
 skulle dela resultatet av att optimera a och använda det på båda ställen där det används.
 
-En optimerad version är denna, eller en med additionen inlinad. Notera att fib 10 = 55.
+En optimerad version är denna, eller en med additionen infogad Notera att \ic{fib 10 = 55}.
 
 \begin{codeEx}
 test_x y = let
@@ -126,17 +126,17 @@ test_x y = let
 I projektets tidigare fas användes substituering för att göra exempelvis funktionsapplikation.
 Det betyder att syntaxträdet traverseras och argumentvariablerna byts i funktionen
 mot vad argumenten faktiskt är. Detta är långsamt och inte särskilt realistiskt - 
-speciellt inte om man talar om en kompilator. Kompilatorer kan istället använda call-stacks
+speciellt inte om man talar om en kompilator. Kompilatorer kan istället använda anropsstackar
 där man låter funktionsargumenten indexeras in på en stack, så att man slipper
-gå ner i hela syntaxträdet. Det är vanlightvis inte möjlight i kompilerad kod eftersom
-det inte finns någon tillgång till syntaxsträdet.
+gå ner i hela syntaxträdet. Det är vanligtvis inte omöjligt i kompilerad kod eftersom
+det inte finns någon tillgång till syntaxträdet.
 
-För att göra vår tolk mer realistisk byttes substitueringen till en callstack. 
+För att göra vår tolk mer realistisk byttes substitueringen till en anropsstack 
 Det gav också en hastighetsökning av tolken med ungefär 2500\%.
 
 %\subsection{Optimise med anropsstack}
 
-Att översätt optimise till att arbete med en anropsstack var relativt svårt. Varje gång en funktion infogades, eller någon \kw{let} kunde tas bort behövde alla efterkommande indexes räknas om. 
+Att översätt optimise till att arbete med en anropsstack var relativt svårt. Varje gång en funktion infogades, eller någon \kw{let} kunde tas bort behövde alla efterkommande index räknas om. 
 
 
 \end{document}
