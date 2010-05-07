@@ -13,6 +13,7 @@ branch             = gren
 callstack          = anropsstack
 stackframe         = aktiveringspost
 tail call          = svansanrop
+frontend           = framstjärt
 
 ?¿ ^^^ core språk, kärnspråk vvv ?¿
 
