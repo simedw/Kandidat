@@ -172,7 +172,7 @@ mkPretty (Syntax {..})  = PPrinters {..}
     ppAStack = vsep . map ppStackFrame
 
     ppStackFrame :: StackFrame t -> Doc
-    ppStackFrame as = list (map ppAtom as) {-(StackFrame {..}) = (mparens (int lock)) 
+    ppStackFrame as = list (map ppAtom $ snd as) {-(StackFrame {..}) = (mparens (int lock)) 
         <+> semiBraces [ if p == spointer 
                            then mbrackets (ppAtom a) 
                            else ppAtom a 

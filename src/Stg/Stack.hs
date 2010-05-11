@@ -4,10 +4,10 @@ import Stg.AST
 import Stg.Variable
 type ArgStack t = [StackFrame t] 
 
-type StackFrame t = [Atom t]
+type StackFrame t = (Int, [Atom t])
 
 lookupStackFrame :: Int -> ArgStack t -> Atom t
-lookupStackFrame x (a:_) = a !! x
+lookupStackFrame x ((len,a):_) = a !! (len - x - 1)
 
 duplicateFrame :: ArgStack t -> ArgStack t
 duplicateFrame (f : as) = f : f : as
@@ -16,16 +16,17 @@ callFrame :: ArgStack t -> ArgStack t
 callFrame = newFrame . popFrame
 
 newFrame :: ArgStack t -> ArgStack t
-newFrame as = [] : as
+newFrame as = (0,[]) : as
 
 popFrame :: ArgStack t -> ArgStack t
 popFrame = drop 1
 
 pushArgs :: [Atom t] -> ArgStack t -> ArgStack t
-pushArgs args (f : as) = (f ++ args) : as
+pushArgs args ((len,f) : as) = (len + length args ,reverse args ++ f) : as
 
 popArg :: ArgStack t -> ArgStack t
-popArg (f : as) = (: as) . reverse . drop 1 . reverse $ f
+popArg ((len, f) : as) = ((len - 1, tail f ): as) 
+
 
 popArgs :: Int -> ArgStack t -> ArgStack t
 -- popArgs i as = foldr (const popArg) as $ replicate i ()
@@ -33,7 +34,7 @@ popArgs :: Int -> ArgStack t -> ArgStack t
 popArgs i as = iterate popArg as !! i
 
 getCurrentSP :: ArgStack t -> Int
-getCurrentSP (f : as) = length f
+getCurrentSP ((l,f) : as) = l
 
 {-
 data StackFrame t = StackFrame 
@@ -65,11 +66,11 @@ incrLock (a:as) = a { lock = lock a + 1 } : as
 decrLock :: ArgStack t -> ArgStack t
 decrLock (a:as) = 
     let lock' = lock a - 1
-    in if lock' == -1 then decrLock as else a { lock = lock' } : as
+    in if lock' == -1 then decrL	ock as else a { lock = lock' } : as
 
 getSPointer :: ArgStack t -> Int
 getSPointer (StackFrame _ sp _ : _) = sp
 
 incrSPointer :: ArgStack t -> ArgStack t
 incrSPointer (StackFrame lock sp as :as') = StackFrame lock (sp + 1) as : as'
--}
+-}	

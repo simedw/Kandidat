@@ -46,7 +46,7 @@ test = ECase (var "xs")
 
 mkGC :: forall t . Variable t => [t] -> StgState t -> StgState t
 mkGC untouchable st = 
-    let initial = freeVars (code st) `S.union` freeVarsList (cstack st) `S.union` freeVarsList (concat $ astack st)
+    let initial = freeVars (code st) `S.union` freeVarsList (cstack st) `S.union` freeVarsList (concat $ map snd $ astack st)
     in  st{ heap = heapify $ gcStep (initial`S.union` S.fromList untouchable) initial}
   where
     gcStep :: Set t -> Set t -> Set t

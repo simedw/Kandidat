@@ -51,8 +51,8 @@ trUnknown o = case o of
 knownObj :: Variable t => ArgStack t -> Heap t -> Obj t -> Bool
 knownObj astack heap obj = case obj of
     OCon c atoms -> all (isKnownStack astack heap) atoms
---    OPap f atoms -> all (isKnownStack astack heap) atoms
---    OThunk as _ _ -> all (isKnownStack astack heap) as
+    OPap f atoms -> all (isKnownStack astack heap) atoms
+    OThunk as _ _ -> all (isKnownStack astack heap) as
     _ -> False
 
 
