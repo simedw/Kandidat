@@ -212,15 +212,15 @@ child[concept color=red!50!black] {
     \tikzstyle{every state}=[fill=blue,draw=none,text=white]
     \node[state,fill=red!50!black](stg)   {STG};
     \node[state](omega) [below of=stg]          {$\Omega$};
-    \node[state](psi)   [below left  of=omega]  {$\Psi$};
-    \node[state](irr)   [below right of=omega]  {$\Phi$};
-    \path (stg)   edge[line width=2pt, bend left] node {} (omega)
-                  edge[bend right] node {} (psi)
+    \node[state](psi)   [below right  of=omega]  {$\Psi$};
+    \node[state](irr)   [below left of=omega]  {$\Phi$};
+    \path (stg)   edge[line width=2pt, bend left] node {start} (omega)
+                  edge[bend left] node {} (psi)
           (omega) edge node {} (psi)
                   edge node {} (irr)
                   edge[bend left] node {} (stg)
           (irr)   edge node {} (omega)
-                  edge[line width=2pt,bend right] node {} (stg)
+                  edge[line width=2pt,bend left] node {stopp} (stg)
           (psi)   edge node {} (omega)
                   edge node {} (irr);
           
