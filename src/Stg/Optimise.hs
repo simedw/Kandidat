@@ -48,6 +48,14 @@ trUnknown o = case o of
         AUnknown i t -> AVar $ Local i t
         x            -> x
 
+knownObj :: Variable t => ArgStack t -> Heap t -> Obj t -> Bool
+knownObj astack heap obj = case obj of
+    OCon c atoms -> all (isKnownStack astack heap) atoms
+--    OPap f atoms -> all (isKnownStack astack heap) atoms
+--    OThunk as _ _ -> all (isKnownStack astack heap) as
+    _ -> False
+
+
 -- | Lookup atoms if so no locals are on heap
 allocObjStack :: ArgStack t -> Obj t -> Obj t
 allocObjStack astack o = case o of
@@ -185,10 +193,10 @@ omega' stack astack heap code set = case code of
             -- PAP cases??
             _ -> irreducible
     -- Can check other obj aswell :)
-    ELet (NonRec x o@(OCon _ as)) e' | all (isKnown heap) as -> do
+    ELet (NonRec x o) e' | knownObj astack heap o -> do
         x' <- newVar
         omega (ROmega "let known con") (CtOLet x' : stack) 
-              (pushArgs [AVar $ Heap x'] astack) (H.insert x' o heap) e' set
+              (pushArgs [AVar $ Heap x'] astack) (H.insert x' (allocObjStack astack o) heap) e' set
     ELet (NonRec x o) e' -> do
         x' <- newVar
         omega (ROmega "let, allocate on abyss") 
@@ -321,6 +329,8 @@ psi rule st ast h v lbs set = returnJust
 psi' :: Variable t  => ContStack t -> ArgStack t -> Heap t -> Atom t -> [t] ->
                           [StgSettings t] -> StgM t (Maybe (Rule, StgState t)) 
 psi' (cont : stack) astack heap atom lbs settings = case cont of
+    CtOLet _ | isKnownStack astack heap atom
+        -> psi (RPsi "remove letbinding") stack astack heap atom lbs settings
     CtOLet t -> psi (RPsi "add letbinding") 
                      stack astack heap atom (t:lbs) settings
     CtOCase branch -> case lookupAtomStack astack atom of
