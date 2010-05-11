@@ -3,8 +3,12 @@
 
 \section{Inledning}
 
-Vanligtvis optimeras kod endast vid kompileringsfasen. I följande Haskell-exempel 
-skulle en sådan optimering inte ge ett optimalt resultat.
+Vanligtvis optimeras kod endast vid kompileringsfasen. Detta betyder att endast variabler
+vars värden är kända statiskt (när programmet kompileras) kan utnyttjas när koden optimeras. Men när ett program 
+körs kan det ibland finnas mer information tillgänglig som skulle möjliggöra 
+fler optimeringar. I följande exempel, skrivet
+i programmeringsspråket Haskell, skulle en kompilator inte kunna
+utnyttja alla värden vid sin optimering eftersom de inte är kända förrän programmet körs:
 
 \begin{codeEx}
 power :: Integer -> Integer -> Integer
@@ -20,12 +24,13 @@ main = do
 
 \end{codeEx}
 
-Funktionen \miniCode{powers} tar in ett tal \miniCode{n} och en lista \miniCode{xs}, och kör funktionen \miniCode{power n}, 
-som upphöjer varje element i listan till \miniCode{n}.
+Funktionen \miniCode{powers} tar in ett tal \miniCode{n}
+och en lista \miniCode{xs}, och kör funktionen \miniCode{power n}, 
+som upphöjer varje element i listan till \miniCode{n}. 
 %som upphöjer ett tal till \miniCode{n}, på varje element i listan.
 Om indatan \miniCode{n} till 
-\miniCode{powers} är känd statiskt (när programmet kompileras) skulle en kompilator kunna 
-göra en specialiserad version av \miniCode{power} för just det \miniCode{n}-värdet. Till exempel, när \miniCode{n} $\mapsto$ \miniCode{4}:
+\miniCode{powers} faktiskt var känd statiskt skulle en kompilator kunna 
+göra en specialiserad version av \miniCode{power} för just det \miniCode{n}-värdet. Till exempel, när \ic{n} $\mapsto$ \ic{4}:
 % \miniCode{n=4}:
 
 \begin{codeEx}
@@ -41,23 +46,21 @@ istället in från användaren under körningstid. Detta gör att en kompilator 
 har tillräckligt mycket information för att kunna göra en specialiserad version av \miniCode{power}.
 
 I det här projektet presenteras en möjlig lösning på detta problem,
-där programmeraren kan annotera var optimeringar ska ske under körningstid.
+där programmeraren kan annotera var i koden optimeringar ska ske under körningstid.
 Så här skrivs funktionen \ic{powers} om,
 annoterad med var den ska optimeras:
 
 \begin{codeEx}
 powers :: Integer -> [Integer] -> [Integer]
-powers n xs = map (optimise (power n)) xs
+powers n xs = map (|optimise| (power n)) xs
 \end{codeEx}
 
 När nu \ic{powers} anropas med \ic{4} och någon lista \ic{xs} kommer
-den vid evaluering först att optimera \ic{power}-funktionen till att 
+den vid evaluering först att optimera \ic{power}-funktionen till något som 
 ser ut som \ic{power\_4} ovan, sedan körs den optimerade funktionen på varje
-element i listan. Det går inte alltid att räkna med en tidvinst då optimeringen tar en  tid att utföra,
-%Det går inte att räkna med att det alltid kommer att vara
-%snabbare, då optimeringen kan ta lite tid, 
-men för en tillräckligt stor lista 
-\ic{xs} kommer programmet vara snabbare jämfört med samma program utan \ic{optimise}.
+element i listan. Den optimerade funktionen för sig är alltid snabbare än utan \ic{optimise}, men eftersom
+optimeringen kan ta lite tid kommer det sammanlagda resultatet kanske inte alltid att vara
+snabbare om listan \ic{xs} är liten. 
 Ju större listan \ic{xs} blir, desto mer tid sparas.
 
 

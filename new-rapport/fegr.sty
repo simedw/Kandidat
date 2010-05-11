@@ -14,10 +14,22 @@
 \usepackage{fancyheadings}
 \usepackage{mathpartir}
 \usepackage{array}
-% Used for code examples
-\newenvironment{codeEx}
+\usepackage{listings}
+
+% Used for code examples without | a special character
+\newenvironment{codeExN}
 {\verbatim}
 {\endverbatim}
+
+
+\newcommand{\graybox}[1]{\colorbox{lightgray}{#1}}
+
+% used for code examples where |x| makes a grey box around x
+\lstnewenvironment{codeEx}
+{\lstset{ basicstyle=\ttfamily
+        , moredelim=[is][\graybox]{|}{|}
+        } }
+{}
 
 % Used for code inside text
 \newcommand{\miniCode}[1] {\tt#1\rm}

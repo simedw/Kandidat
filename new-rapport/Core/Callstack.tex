@@ -174,11 +174,9 @@ Att mer precist hålla reda på vilka thunkar som behöver vad är svårare att 
 
 
 
-Nu ska vi visa hur anropsstacken kan se ut vid ett anrop till \miniCode{map}.
-
-
+Nu ska vi visa hur anropsstacken kan se ut vid ett anrop till \miniCode{map}. Funkitonen
+ \ic{enumFrom} skapar en oändlig lista \ic{[x, x+1, x+2, ...]}.
 \begin{codeEx}
--- Skapar en oändlig lista [x, x+1, x+2, ...]
 enumFrom x = x : enumFrom (x + 1);
 
 main = map cube (enumFrom 1);

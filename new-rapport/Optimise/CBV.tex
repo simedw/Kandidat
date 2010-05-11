@@ -5,47 +5,52 @@
 
 \subsection{Call-by-value-semantik}
 \label{sec:Optimise:CBV}
+Våran första försök till en semantik var inte helt lyckad, den kunnde komma in i
+oändliga loopar och var för aggresiv i sin optimering. Vi kommer här visa vad den
+gjorde för att optimera de olika uttrycken som finns. För att visa vilket tillstånd
+optimeringen är i har vi valt att skriva symbolen innan ett par hakparanteser för
+att göra det mer lättläst. Så en konfiguration som är i $\Omega$ tillståndet skrivs:
 
-\subsubsection{Funktionsapplikationer}
+\[
+\OMEGA sHe
+\]
+
+
+\paragraph{Funktionsapplikationer}
+Om alla argument till en känd funktion är kända kan vi direkt evaluera detta funktionsanrop,
+vilket visas i regel \eqref{CBV:Fun1}. I \eqref{CBV:Fun2} finns ett argument som
+är känt och vi kommer att infoga hela funktionen. Den infogningen sker via en \cont{OIlining}-continuation
+som kommer substituera in argumenten i funktionskroppen. Om ingen av dessa regler
+matchades så kan vi inte optimera mer, regel \eqref{CBV:FunIrr} visar detta genom
+att använda $\Phi$ tillståndet.
 
 \begin{align}
 \label{CBV:Fun1} \OMEGA sH{f\,\many{k}}  \Rightarrow &\, \mc{f\,\many{k}}sH\\
  & \many{k} \text{ alla kända} \nonumber \\
 \label{CBV:Fun2} \OMEGA sH{f\,\many{x}\, k\,\many{y}}  \Rightarrow &\, \mc{f\,\many{x}\, k\,\many{y}}{\oInline s}H\\
  & \many{x},\many{y} \text{ okänd, } k \text{ är känd} \nonumber \\
-\label{CBV:Fun3} \IRR{\cOFUN{\many{x}}{\alpha}s}He  \Rightarrow &\, \mc{\alpha}s{\heap{\alpha}{\FUN{\many{x}}e}}
+\label{CBV:FunIrr} \OMEGA sH{f\,\many{x}} \Rightarrow &\, \IRR sH{f\,\many{x}}
 \end{align}
 
-I regel \eqref{CBV:Fun1} är alla argument till funktionen kända. Då låter vi STG 
-applicera funktionen precis som under en vanlig körning. I \eqref{CBV:Fun2} finns det 
-åtminstone något argument som är känt, och då infogas funktionen i hopp om
-fler optimeringsmöjligheter.
-När vi har optimerat en funktionskropp så långt det går bygger vi upp funktionen igen \eqref{CBV:Fun3}.
+Då vi inte lägger ut någon continuation för just applikationen finns det ingen regel
+ifrån $\Psi$ samt $\Phi$ tillstånden.
 
 
-\subsubsection{Let-uttryck}
 
-\begin{align}
-\label{CBV:Let1} \OMEGA sH{\eLet x{\THUNK e}{e'}}  \Rightarrow &\, \OMEGA{\oLet x{e'}s}He\\
-\label{CBV:Let2} \PSI{\oLet xes}Hv  \Rightarrow &\, \OMEGA sH{e[v/x]} \\
-\label{CBV:Let3} \IRR{\oLet xes}H{e'}  \Rightarrow &\, \OMEGA{\oLetObj x{\THUNK{e'}}s}He
-\end{align}
+\paragraph{Let-uttryck}
 
-Regel \eqref{CBV:Let1} innebär att vi för varje thunk vi stöter på kommer att försöka optimera
-dess innehåll. Detta är huvudanledningen till många av de problem som diskuteras i \ref{CBV:Problem}.
-I \eqref{CBV:Let2} har optimeringen lyckats evaluera fram ett värde ifrån thunken, och
-därmed är thunken inte längre nödvändig. Då substituerar vi in dess värde i uttrycket. 
-Om vi däremot inte lyckas få fram ett värde måste vi bygga upp \kw{let}:en igen \eqref{CBV:Let3}, 
-men istället för att bygga upp den med en gång lägger vi ut en ny continuation och 
-försöker optimera uttrycket efter \kw{let .. in}.
-
+Om \kw{let}-uttryck binder ett thunk-objekt så har vi valt att först evaluera thunk-uttrycket
+detta för att kunna optimera mera kod som beror på värdet av thunk-uttrycket. Ifall
+man är i tillståndet $\Psi$ \eqref{CBV:LetTPsi} har vi lyckats evaluera thunken till ett värde och kan
+substituera in det värdet i kroppen av \kw{let}. Medans i $\Phi$ \eqref{CBV:LetTIrr} kunnde vi inte
+optimera till ett värde, så vi stoppar tillbaka värdet för thunken och fortsätter att
+optimera kroppen. Notera positionen av $\bullet$ i den regeln ändras för att tala om
+var vi optimerar.
 
 \begin{align}
-\label{CBV:OLet1} \OMEGA sH{\eLet x{\CON{C}{\many{a}}}{e}}  \Rightarrow &\, \OMEGA{\oLetObj x{OBJ}s}{\heap{v}{\CON{C}{\many{a}}}}e\\
- & \many{a} \text{ alla kända, } v \text{ ny variabel} \nonumber \\
-\label{CBV:OLet2}\OMEGA sH{\eLet x{OBJ}{e}}  \Rightarrow &\, \OMEGA{\oLetObj x{OBJ}s}He\\
-\PSI{\oLetObj x{OBJ}s}Hv  \Rightarrow &\, \IRR sH{\eLet x{OBJ}v}\\
-\IRR{\oLetObj x{OBJ}s}He  \Rightarrow &\, \IRR sH{\eLet x{OBJ}e}
+\label{CBV:LetTOmg} \OMEGA sH{\eLet x{\THUNK e}{e'}}  \Rightarrow &\, \OMEGA{\oLet x{e'}s}He\\
+\label{CBV:LetTPsi} \PSI{\oLet xes}Hv  \Rightarrow &\, \OMEGA sH{e[v/x]} \\
+\label{CBV:LetTIrr} \IRR{\oLet xes}H{e'}  \Rightarrow &\, \OMEGA{\oLetObj x{\THUNK{e'}}s}He
 \end{align}
 
 Om objektet inte var en thunk kan två olika saker ske, \eqref{CBV:OLet1} är ifall 
@@ -54,7 +59,7 @@ och fortsätter att optimera det inre uttrycket. I regel \eqref{CBV:OLet2} så
 fortsätter vi bara optimera med det inre uttrycket. Här är alltså objekten
 inte thunkar.
 
-$\Psi$ och $\Phi$ bygger bara upp \kw{let}-uttrycket igen och går vidare med $\Phi$
+$\Psi$ och $\Phi$ bygger bara upp \kw{let}-uttrycket igen och går vidare med $\Phi$ tillståndet
 då det betyder att vi har optimerat klart. Ett problem här är att om vi har en \kw{let}
 i en \kw{case}-granskare så kommer ingen gren att väljas, trots att det finns ett värde.
 
@@ -67,20 +72,27 @@ foo x = case (let y = CON (X 2) in y) of
 I detta fall vet vi att värdet på granskaren är konstruktorn \ic{X} och att \ic{z} är $2$, men vår optimering
 kommer inte att se detta. Det här är ytterligare en brist som löses senare i detta arbete.
 
-\subsubsection{Case}
-\label{cbv:case}
 \begin{align}
-\OMEGA sH{\eCase e{brs}} \Rightarrow &\, \OMEGA{\oCase{brs}s}He\\
-\label{CBV:Case2} \PSI{\oCase{brs}s}Hv \Rightarrow &\, \OMEGA sH{\text{instansiera korrekt gren av brs med v}} \\
-\label{CBV:Case3} \IRR{\oCase{brs}s}He \Rightarrow &\, \IRR sH{\eCase e brs}
+\label{CBV:OLet1} \OMEGA sH{\eLet x{\CON{C}{\many{a}}}{e}}  \Rightarrow &\, \OMEGA{\oLetObj x{OBJ}s}{\heap{v}{\CON{C}{\many{a}}}}e\\
+ & \many{a} \text{ alla kända, } v \text{ ny variabel} \nonumber \\
+\label{CBV:OLet2}\OMEGA sH{\eLet x{OBJ}{e}}  \Rightarrow &\, \OMEGA{\oLetObj x{OBJ}s}He\\
+\PSI{\oLetObj x{OBJ}s}Hv  \Rightarrow &\, \IRR sH{\eLet x{OBJ}v}\\
+\IRR{\oLetObj x{OBJ}s}He  \Rightarrow &\, \IRR sH{\eLet x{OBJ}e}
 \end{align}
 
-Regel \eqref{CBV:Case2} väljer helt enkelt vilken gren som matchar
-värdet som maskinen arbetat fram, och instansiera den. Detta är troligtvis ett
-av de viktigaste stegen i vår optimering då det skalar bort alla onödiga 
+
+\paragraph{Case}
+\label{cbv:case}
+För att kunna optimera ett \kw{case}-uttryk så behöver vi veta vad granskaren är
+så i $\Omega$\eqref{CBV:CaseOmg} tillståndet börjar vi optimera granskaren, vi lägger ut en
+\cont{OCase}-continuation för att komma ihåg att vi var i en \kw{case}.
+
+I $\Psi$\eqref{CBV:CasePsi} tillståndet har att det är ett värde och vi  väljer 
+helt enkelt vilken gren som matchar värdet som maskinen arbetat fram, och instansiera den.
+Detta är troligtvis ett av de viktigaste stegen i vår optimering då det skalar bort alla onödiga 
 grenar, minskar koden och oftast kan fortsätta optimera en bit in det nya uttrycket.
 
-Istället för att skapa en $\eCase e brs$ i \eqref{CBV:Case3} finns även
+Istället för att skapa en $\eCase e brs$ i \eqref{CBV:CaseIrr} finns även
 funktionalitet för att
 optimera varje gren Detta bryter dock semantiken eftersom optimeringen kan fastna
 i en oändlig loopar när den optimerar grenar som programmet aldrig hade exekverat
@@ -97,15 +109,24 @@ Om \ic{x} är okänt under optimeringen och den optimerar i grenarna kommer den
 att infoga \ic{repeat 1} obegränsat. Detta är felaktigt då denna loop bara skulle uppstå
 om \ic{x} någon gång var \kw{False}.
 
-\subsubsection{Atomer}
 \begin{align}
-\OMEGA s{\heap{v}{\THUNK{e}}}v \Rightarrow &\, \OMEGA sHe
+\label{CBV:CaseOmg} \OMEGA sH{\eCase e{brs}} \Rightarrow &\, \OMEGA{\oCase{brs}s}He\\
+\label{CBV:CasePsi} \PSI{\oCase{brs}s}Hv \Rightarrow &\, \OMEGA sH{\text{instansiera korrekt gren av brs med v}} \\
+\label{CBV:CaseIrr} \IRR{\oCase{brs}s}He \Rightarrow &\, \IRR sH{\eCase e brs}
 \end{align}
 
-Den enda omega-regeln som finns för atomer hanterar variabler som på 
-heapen är en thunk. Då börjar vi optimera vad thunken har bundit.
 
-\subsubsection{Gränssnitt mot STG}
+\paragraph{Atomer}
+Om det finns en variabel som kod, och denna pekar på thunk i heapen, så börjar vi
+optimera uttrycket den pekar på. Medans alla andra atomer är värden och vi kan gå
+till $\Psi$ tillståndet.
+\begin{align}
+\OMEGA s{\heap{v}{\THUNK{e}}}v \Rightarrow &\, \OMEGA sHe \\
+\OMEGA sHa \Rightarrow &\, \PSI sHa
+\end{align}
+
+
+\paragraph{Gränssnitt mot STG}
 När vi interagerar med STG-maskinen måste vi ha tydliga regler
 för när maskinen ska sluta evaluera och börja optimera. Detta sker
 antingen då den stöter på en $\OPT t$ för första gången, eller när den
@@ -125,8 +146,15 @@ $a$ till ett värde.
 \mc x{\cOPT as}{\heapp x{\PAP f{a_{1}\ldots a_{n}}}f{\FUN{x_{1}\ldots x_{m}}e}} & \Rightarrow\\
 \OMEGA{\cOFUN{x_{n+1}\ldots x_{m}}as}H{e[a_{1}/x_{1}\ldots a_{n}/x_{n}]} \nonumber
 \end{align}
+
 Nu har vi ett PAP-värde och vi kan börja optimera funktionen. De kända 
 argumenten substitueras in.
+
+\begin{align}
+\label{CBV:Fun3} \IRR{\cOFUN{\many{x}}{\alpha}s}He  \Rightarrow &\, \mc{\alpha}s{\heap{\alpha}{\FUN{\many{x}}e}}
+\end{align}
+ I regel \eqref{CBV:Fun3} kommer att vara för tillstånd
+ $\Phi$ och vi skall återigen bygga upp (en förhopningsvis optimerad) funktion.
 
 \begin{align}
 \mc v{O.\star\,:\, s}{\nheap v{\THUNK e}} & \Rightarrow\\

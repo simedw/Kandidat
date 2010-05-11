@@ -45,11 +45,12 @@ Detta kan bryta semantiken, t.ex. om
 
 \begin{codeEx}
 f x z = case z of
-    { True  -> error -- tex en oändlig loop
+    { True  -> error
     ; False -> x
     };
 \end{codeEx}
 
+I det kodexemplet kan error till exempel vara en oändlig loop. 
 Om vi här försöker optimera i grenarna då \ic{z} är okänd kommer optimeringen
 att loopa, och det skulle programmet inte ha gjort om t.ex. \ic{f} alltid får \ic{False} som
 argument.
