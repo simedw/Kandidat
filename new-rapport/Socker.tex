@@ -144,29 +144,29 @@ har endast sådana. De är enkla i det avseendet att man inte kan mönstermatcha
 Här är insertmetoden skriven i Haskell, vilken sätter in ett element i en redan sorterad
 lista utan att förstöra sorteringen:
 
-\begin{codeEx}
+\begin{codeExN}
   insert :: Ord a => a -> [a] -> [a]
   insert v (x:xs) 
-      | v < x     = v : x : xs
+      | v <= x    = v : x : xs
       | otherwise = x : insert v xs 
   insert v [] = [v]
-\end{codeEx}                  
+\end{codeExN}                  
 
 I sockerspråket skrivs samma funktion istället på det här viset:
 
-\begin{codeEx}
+\begin{codeExN}
   insert v list = case list of
-      Cons x xs -> case v < x of
+      Cons x xs -> case v <= x of
           True  -> v : x : xs
           False -> x : insert v xs
       Nil -> v : Nil
-\end{codeEx}
+\end{codeExN}
 
 I Haskell kan programmeraren explicit definiera egna datatyper, som exempelvis \miniCode{Maybe}:
     
-\begin{codeEx}
+\begin{codeExN}
 data Maybe a = Just a | Nothing
-\end{codeEx}
+\end{codeExN}
 
 I sockerspråket finns ingen sådan konstruktion, och programmeraren kan alltså inte
 definiera datatypen explicit. Istället är det bara att använda

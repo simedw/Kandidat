@@ -1,0 +1,36 @@
+= This is our plan =
+
+Sma saker:
+    s Abstrakt
+    Ta bort "du"
+    Kapitel istallet for sections
+    Paragraphs 
+
+
+Mellan saker:
+    o Inledning
+    o Dela upp core   socker -> [^vdiav^] [v^loc^v] [<-lambda->] -> core
+    <d,o> Resultat
+    s Slutsats  
+
+Stora saker:
+    D Optimise
+    ändra alla kodexempel så att nya koddelar markeras
+
+Poster
+VEM SKA SKAPA? :O VAD SKA SKAPAS? O:
+    Tycker att vi ska ha graf, mindmap, benchmark, kodsnutt
+    bilder från shapes? :`)    buzzwords ovanpå bilden som "2X SPEED", "EXTREMELY FAST", "MENERGY" osv
+
+
+Förslag till optimisen:
+    Skulle vara nice med att först introducera de tre stora optimeringarna:
+        * Räkna ut kända resultat
+        * Välj rätt branch
+        * Infoga kända funktioner
+        
+    Prata om att eftersom inte allt är känt kan vi inte alltid räkna med att få
+    ett värde, därav behöver vi ett sätt att säga om en optimering lyckades eller
+    inte. AKA Psi & Irr.
+    
+    
