@@ -19,7 +19,8 @@ till optimeringen.
 
 \subsubsection{Case-grenar}
       Ibland finns det möjlighet att optimera i en \kw{case}-gren. Detta bryter semantiken
-      då detta kan leda till evaluering av uttryck som vanligtvis inte skulle ha beräknats.
+      då detta kan leda till evaluering av uttryck som vanligtvis inte skulle ha beräknats,
+      se detta exempel:
 \begin{codeEx}
 f x y z = case g z of
     { A -> case h x y of
@@ -33,15 +34,15 @@ f x y z = case g z of
     };
 \end{codeEx}
 
-Om vi nu använder \miniCode{optimise( f 1 2 )}, så är \miniCode{z} okänd, men i
+Vid evaluering av \miniCode{optimise( f 1 2 )}, så är \miniCode{z} okänd, men i
 grenarna finns det \kw{case}-satser som bara beror på \miniCode{x} och \miniCode{y} 
-och rätt gren kan alltså väljas. Vi har stöd för att optimera i sådana här \kw{case}-grenar:
+och rätt gren kan alltså väljas. Det finns  stöd för att optimera i sådana här \kw{case}-grenar:
 
 \begin{codeEx}
   optimise f x y with { casebranches }
 \end{codeEx}
 
-Detta kan bryta semantiken, t.ex. om
+Detta kan ändra programs beteende, exempelvis här:
 
 \begin{codeEx}
 f x z = case z of
@@ -50,7 +51,8 @@ f x z = case z of
     };
 \end{codeEx}
 
-I det kodexemplet kan error till exempel vara en oändlig loop. 
+I det kodexemplet kan \ic{error} till exempel vara en oändlig loop, eller något
+som skapar ett fel under körtid. 
 Om vi här försöker optimera i grenarna då \ic{z} är okänd kommer optimeringen
 att loopa, och det skulle programmet inte ha gjort om t.ex. \ic{f} alltid får \ic{False} som
 argument.

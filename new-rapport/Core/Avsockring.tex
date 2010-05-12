@@ -9,7 +9,7 @@ STG är ett ganska primitivt språk där man t.ex. bara kan anropa funktioner
 och skapa konstruktorer med argument som är atomer. Alla objekt måste även
 explicit annoteras med information om huruvida de är thunkar eller konstruktorer. För att underlätta
 att skriva mycket kod skapade vi ett sockerspråk, och ett
-pass som går igenom koden och avsockrar den till STG.
+pass som går igenom koden och avsockrar den till STG. Här är ett exempel:
 
 \begin{codeEx}
 isPrimer n t = case t * t >= n of
@@ -20,7 +20,7 @@ isPrimer n t = case t * t >= n of
 
 Den här koden kommer från testsviten och är del i ett program som testar
 primalitet. Här används sockerspråket flitigt för att göra koden läsbar
-och hanterlig. I exemplet är \miniCode{isPrimer} är ett funktionsobjekt som i 
+och hanterlig. I exemplet är \miniCode{isPrimer} ett funktionsobjekt som i 
 STG skulle skrivas mer i stil med en lambdafunktion:
 
 \begin{codeEx}          
@@ -58,11 +58,11 @@ Detta gäller även heltal och andra primitiver. $0$ avsockras till
     
 För att göra det lättare att operera på listor och göra booleska
 jämförelser finns infixoperatorerna \ic{\&\&} och \ic{||} som alias för and respektive or
-samt \ic{++} och \ic{:} för append och cons. Under avsockringen byts dessa
+samt \ic{++} och \ic{:} för \ic{append} och \ic{Cons}. Under avsockringen byts dessa
 infixvarianter ut mot motsvarande vanliga funktioner. 
 
 
-I Haskell används också \$ flitigt som funktionsapplikation med låg
+I Haskell används också \ic{\$} flitigt som funktionsapplikation med låg
 högerfixitet, exempelvis i denna kod som kör quicksort på en
 lista sorterad i fallande ordning:
 
@@ -75,15 +75,20 @@ Detta avsockras till motsvarande funktionsanrop:
 \begin{codeEx}
 main = qsort (reverse (take 3 (iterate (\x.x + 1) 0)));
 \end{codeEx}
-      En annan metod är att göra \$ ett alias för apply:
+
+En annan metod är att göra \ic{\$} ett alias för en funktion \ic{apply} som
+helt enkelt utför ett funktionsanrop:
+
 \begin{codeEx}
-main = apply (qsort (apply reverse (apply take3 (iterate (\x.x + 1) 0)));
+main = apply (qsort 
+     ( apply reverse 
+     ( apply (take 3) (iterate (\x.x + 1) 0)));
 
 apply f x = f x;
 \end{codeEx}
 
 Detta ger så stor extrakostnad för något så simpelt som funktionsapplikation
-att det är rimligare att göra det till funktionsanrop direkt.
+att det är bättre att göra det till funktionsanrop direkt.
         
 
 
@@ -106,7 +111,7 @@ att det är rimligare att göra det till funktionsanrop direkt.
 %        forceras alla dess inställningar med hjälp av \kw{case}-satser.%    
 
 
-\subsubsection{Lambdalyftare}
+\subsection{Lambdalyftare}
 \label{sec:LamLift}
 
 I tolkandet av koden underlättar det om man inte har några \kw{let}-bundna funktioner.
@@ -152,7 +157,7 @@ lambda0Lifted = FUN(x y -> let t = THUNK (y >= x) in t)
 
 Notera att \miniCode{listLess} och \miniCode{listMore} 
 inte behöver modifieras eftersom de lyftna funktionerna partialevalueras 
-med samma namn. Här är \miniCode{lesser} \miniCode{lesserLifted}
+med samma namn. \miniCode{lesser} är här funktionen \miniCode{lesserLifted}
 partiellt applicerad på \miniCode{x}.
 
 

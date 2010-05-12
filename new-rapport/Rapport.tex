@@ -1,4 +1,5 @@
 \documentclass[leqno]{article}
+%\documentclass[leqno]{report}
 
 \usepackage{subfiles}
 \usepackage{fegr}
@@ -7,6 +8,7 @@
 \usepackage[swedish]{babel}
 \usepackage{harvard}
 \usepackage{stmaryrd}
+\usepackage{hyperref}
 
 %Stg.tex
 \usepackage{listings}
@@ -18,6 +20,28 @@
 % Opt1
 \usepackage{amssymb}
 %End Opt1
+
+\hypersetup{
+    bookmarks=true,         % show bookmarks bar?
+    unicode=false,          % non-Latin characters in Acrobat’s bookmarks
+    pdftoolbar=true,        % show Acrobat’s toolbar?
+    pdfmenubar=true,        % show Acrobat’s menu?
+    pdffitwindow=false,     % window fit to page when opened
+    pdfstartview={FitH},    % fits the width of the page to the window
+    %pdftitle={My title},    % title
+    %pdfauthor={Author},     % author
+    %pdfsubject={Subject},   % subject of the document
+    %pdfcreator={Creator},   % creator of the document
+    %pdfproducer={Producer}, % producer of the document
+    %pdfkeywords={keywords}, % list of keywords
+    pdfnewwindow=true,      % links in new window
+    colorlinks=true,       % false: boxed links; true: colored links
+    linkcolor=red,          % color of internal links
+    citecolor=green,        % color of links to bibliography
+    filecolor=magenta,      % color of file links
+    urlcolor=cyan           % color of external links
+}
+
 
 \begin{document}
 
@@ -55,6 +79,11 @@
 
 \subfile{FramtidaArbeten}
 
+\subfile{Slutsats}
+
+\clearpage
+\phantomsection
+\addcontentsline{toc}{section}{Referenser} % change section to chapter for book
 \bibliographystyle{agsm}
 \bibliography{references}
 

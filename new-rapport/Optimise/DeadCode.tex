@@ -6,11 +6,12 @@
 
 När optimeringarna har körts och det är dags att bygga upp trädet igen kan
 så kallad `död kod' förekomma. Det vill säga, kod som inte längre 
-behövs eftersom den inte kan nås.
+behövs eftersom den inte kan nås. Här är ett exempel på ett kodstycke med
+död kod:
 
 \begin{codeEx}
-main = let t = getValue in
-            case True of
+main = let t = getValue 
+       in case True of
               { True  -> 15
               ; False -> t
               };
@@ -28,13 +29,14 @@ Vi ser nu att \ic{t} inte längre refereras till i uttrycket \miniCode{15}
 och därför kan \miniCode{let t = getValue} betraktas som `död kod'. 
 
 Död kod tar onödig plats, och leder till att onödigt mycket kommer att 
-allokeras på heapen bara för att tas hand om skräpsamlaren. \ic{Main} skulle
+allokeras på heapen, bara för sedan tas hand om av skräpsamlaren. \ic{Main} skulle
 kunna optimeras till:
 
 \begin{codeEx}
 main = 15;
 \end{codeEx}
 
+\begin{comment}
 Denna process kan mer formellt skrivas som:
 
 \begin{mathpar}
@@ -43,6 +45,7 @@ Denna process kan mer formellt skrivas som:
   {\mathtt{let}\,t\,=\,e_1\,\mathtt{in}\,e_2 \Rightarrow e_2}
 \;
 \end{mathpar}
+\end{comment}
 
 Detta är en kontroll som utförs varje gång vi bygger upp en \miniCode{let} 
 i \iIrr och \iPsi. Att ta fram vilka fria variabler som ett har är dock en 
@@ -51,7 +54,10 @@ prestandaökning att det är värt det. Följande regel beskriver
 var i semantiken som dödkodseliminering kommer in:
 
 \begin{align*}
-\CBNPSI{\oLet xs}{\heap vh}A{lbs}v & \Rightarrow & \CBNPSI sHA{lbs}v\\
+\CBNPSI{\cOLet xS}{\heap vh}A{lbs}a & \rulesep \CBNPSI SHA{lbs}a\\
+& x \text{ ej i } a \nonumber \\
+\CBNIRR{\cOLet xS}{\heap vh}Ae & \rulesep \CBNIRR SHAe\\
+& x \text{ ej i } e \nonumber
 \end{align*}
 
 \end{document}

@@ -18,12 +18,12 @@ power n x = let t1 = n == 0
             } in t4
         };
 \end{codeEx}
-Vi ser att \ic{power 3 5} kommer att upphöja $5$ till $3$, dvs $5 * 5 * 5$
-
-Om vi känner till exponenten men inte basen kan vi göra en specialiserad version av \ic{power}
-för just den exponenten. Hur detta går till ska vi nu visa på ett informellt sätt. 
+Vi ser att \ic{power 3 5} kommer att upphöja $5$ till $3$, dvs $5 * 5 * 5$.
+Precis som innan gäller det att om vi känner till exponenten men inte basen kan vi göra en specialiserad version av \ic{power}, vi ska nu visa hur detta går till på ett informellt sätt. 
+%Om vi känner till exponenten men inte basen kan vi göra en specialiserad version av \ic{power}
+%för just den exponenten. Hur detta går till ska vi nu visa på ett informellt sätt. 
 Senare kommer mer formella regler att ges. Vi antar att programmeraren
-har skrivit följande för att visa att hon vill ha en specialiserad version av \ic{power} för $3$.
+har skrivit följande för att visa att hen vill ha en specialiserad version av \ic{power} för $3$.
 
 \begin{codeEx}
 optimise (power 3)
@@ -49,8 +49,8 @@ sparas undan och vi går vidare in i \ic{exp} som är ett \ic{case}-uttryck.
 \ic{Case}-uttrycket kan få ut värdet från \ic{t1} eftersom den inte innehåller några 
 fria variabler (som i det här fallet bara är \ic{x}). Då \ic{3 == 0} är falskt fås nu: 
 
-\begin{codeEx}
-power_3 x = case False of
+\begin{codeExDiff}
+power_3 x = case |False| of
     { True -> 1
     ; False -> let 
         { t2 = 3 - 1 
@@ -58,7 +58,7 @@ power_3 x = case False of
         ; t4 = x * t3
         } in t4
     };
-\end{codeEx}
+\end{codeExDiff}
 
 Nu kan vi välja \ic{False}-grenen och strunta i den andra. När vi går in i grenen
 sparar vi som tidigare först undan \ic{let}:arna och går sedan till \ic{t4}.
@@ -80,22 +80,8 @@ Denna funktion är mycket mindre och snabbare.
 Detta är dock inte riktigt hela sanningen eftersom heltal boxas i vårt språk, vilket
 också betyder att multiplikationsoperatorn, \ic{*}, är en funktion som först
 evaluerar sina argument och sedan multiplicerar dem med den primitiva 
-multiplikationsoperatorn (\ic{*\#}).
-
-\begin{codeEx}
-a * b
-\end{codeEx}
-
-blir efter inlining
-
-\begin{codeEx}
-case a of
-    { I# a' -> case b of
-        { I# b' -> case  a' *# b' of
-            { r' -> let r = I# r' in r}}}
-\end{codeEx}
-
-Om vi nu infogar alla multiplikationer i \ic{power 3} får vi följande svårbegripliga kod:
+multiplikationsoperatorn (\ic{*\#}), se sektion \ref{sec:boxing}.
+Om vi nu infogar alla multiplikationer i \ic{power 3} får vi följande mastiga kod:
 \begin{codeEx}
 power_3 x = case 
     ( case 
@@ -109,11 +95,11 @@ power_3 x = case
                 { I# d -> case c #* d of
                     { r' -> let r = I# r' in r}}}                
          ) of
-         { I# a -> case x of
-              { I# b -> case a #* b of
+         { I# e -> case x of
+              { I# f -> case e #* f of
                    { r' -> let r = I# r' in r}}}
     ) of
-        { I# c -> case c #* 1 of
+        { I# g -> case g #* 1 of
             { r' -> let r = I# r' in r}};                                     
 \end{codeEx}
 
@@ -124,16 +110,16 @@ Detta kan vi optimera bort, vilket beskrivs i avsnittet om afterburner, och vi f
 
 \begin{codeEx}
 power_3 x = case x of
-    { I# x' -> case x' #* x' of
+    { I# x' -> case x' #* 1 of
         { a -> case x' #* a of
             { b -> case x' #* b of
-                { c -> case x' #* 1 of
+                { c -> case x' #* c of
                     { r' -> let r = I# r' in r}}}}};
 \end{codeEx}
 
-Detta är så långt som vår optimering kommer. \ic{x * 1} skulle naturligtvis
-kunna optimeras till \ic{x}, men vi har inte fokuserat på sådana specialfall.
-I resten av det här avsnittet kommer vi i detalj förklara vart och ett av optimeringsstegen 
-och varför de fungerar som de gör.
+Detta är så långt som vår optimering kommer. \ic{x' *\# 1} skulle naturligtvis
+kunna optimeras till \ic{x'}, men vi har inte fokuserat på sådana aritmetiska
+specialfall. I resten av det här avsnittet kommer vi i detalj förklara vart och
+ett av optimeringsstegen och varför de fungerar som de gör.
 
 \end{document}

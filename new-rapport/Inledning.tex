@@ -30,7 +30,8 @@ som upphöjer varje element i listan till \miniCode{n}.
 %som upphöjer ett tal till \miniCode{n}, på varje element i listan.
 Om indatan \miniCode{n} till 
 \miniCode{powers} faktiskt var känd statiskt skulle en kompilator kunna 
-göra en specialiserad version av \miniCode{power} för just det \miniCode{n}-värdet. Till exempel, när \ic{n} $\mapsto$ \ic{4}:
+göra en specialiserad version av \miniCode{power} för just det \miniCode{n}-värdet. Till exempel, när \ic{n} $\mapsto$ \ic{4}
+skulle en kompilator kunna skapa följande specialiserade funktion:
 % \miniCode{n=4}:
 
 \begin{codeEx}
@@ -39,7 +40,7 @@ power_4 x = x * x * x * x
 \end{codeEx}
 
 Den specialiserade versionen av \miniCode{power} är snabbare än originalet, då den inte är 
-rekursiv och inte behöver titta på värdet som \miniCode{n} har.
+rekursiv och inte behöver inspektera och jämföra värdet på \ic{n}.
 
 I \miniCode{main}-funktionen ovan är dock \miniCode{n} inte känt när programmet kompileras, utan läses 
 istället in från användaren under körningstid. Detta gör att en kompilator inte 
@@ -50,44 +51,86 @@ där programmeraren kan annotera var i koden optimeringar ska ske under körning
 Så här skrivs funktionen \ic{powers} om,
 annoterad med var den ska optimeras:
 
-\begin{codeEx}
+\begin{codeExDiff}
 powers :: Integer -> [Integer] -> [Integer]
 powers n xs = map (|optimise| (power n)) xs
-\end{codeEx}
+\end{codeExDiff}
 
 När nu \ic{powers} anropas med \ic{4} och någon lista \ic{xs} kommer
 den vid evaluering först att optimera \ic{power}-funktionen till något som 
 ser ut som \ic{power\_4} ovan, sedan körs den optimerade funktionen på varje
-element i listan. Den optimerade funktionen för sig är alltid snabbare än utan \ic{optimise}, men eftersom
+element i listan. Den optimerade funktionen är alltid snabbare med \kw{optimise}
+än utan, men eftersom
 optimeringen kan ta lite tid kommer det sammanlagda resultatet kanske inte alltid att vara
 snabbare om listan \ic{xs} är liten. 
 Ju större listan \ic{xs} blir, desto mer tid sparas.
 
+Hur kan man utföra en sådan optimering under körningstid? I den här rapporten
+presenteras en lösning på problemet genom utvecklingen av en tolk för ett
+funktionellt programmeringsspråk som stödjer \ic{optimise}-funktionen. Vi försöker
+att från grunden bygga upp de beståndsdelar som behövs för att förstå projektet.
+I grova drag har följande gjorts i projektet:
+
+\begin{comment}
+Koens kommentar:
+"Bidrag" separat
 
 
-\subsection{Överblick}
+skriv lite mer om rapportens uppbyggnad
+1. i rätt ordning
+2. läsaren? vad menas med detta?
+            bra fråga såklart... låt mig tänka
+            vet inte men hur överblicken såg ut förut så var det referenser
+            först till ektion 3, sen 2 sen 4 osv, han kanske tänkte sig
+            en bit med stöd till läsaren också
+            har nu flyttat om dem så att de är i ordning iaf
+            gott!
+            det blir bra
+            jag tuggar vidare :D
+            fast inte separerat bidrag och överblickish
+            then fire z'missiles! men känns onaturligt
+            jag håller egentligen med. det blir duplicering. hur ska det skrivas
+            på ett naturligt sätt? vet inte riktigt. men ganska likt så som vi hade det fast i ordning och lite mer utvecklat
+            tror jag inte blir helt fel
+vill vi separera bidrag? ja
+\end{comment}
 
-Detta har gjorts:
+
 
 \begin{itemize}
-    \item Vi har gjort ett corespråk som är en utökning av den abstrakta maskinen STG \cite{stg} som används i 
-          GHC-kompilatorn. I sektionen \ref{sec:Core} går vi in djupare i semantiken för både STG och våra utökningar. 
-    \item Vi har gjort ett sockerspråk som översätts till corespråket eftersom det underlättar 
-          programmeringen då corespråket är väldigt primitivt. Hur det är definierat
+    \item Vi har utvecklat ett programmeringsvänligt språk som vi kallar för sockerspråk
+          som sedan kan översättas till andra representationer som en tolk kan arbeta på. Det
+          är smidigt att programmera i detta språk som har en hög abstraktionsnivå. Hur sockerspråket är definierat
           går att läsa i sektion \ref{sec:Socker}.
-    \item Givit den en optimeringsfunktionalitet, som med värden kända under körtid
-          optimerar funktioner och partiellt applicerade funktioner. I sektion \ref{sec:Optimise}
-          kommer vi gå igenom två olika semantiker hur vi kan göra optimeringen.
-          I sektion \ref{sec:Optimise:CBV} berättar vi om hur vår första semantik
-          såg ut och varför den inte fungerar på grund av att den var strikt i sin
-          optimering. Lösningen var en optimering som använde en Abyss som vi kan
-          använda för att göra att den blir lat, se sektion \ref{sec:Optimise:CBN}. 
-    \item Vi har implementerat detta i en tolk, med den har vi visat att det här sättet 
-            att optimera på ger goda resultat på en del program, se sektion \ref{sec:Resultat}.
+          
+    \item Sockerspråket översätts sedan till ett språk som är en utökning 
+          av STG. STG i sin tur är en abstrakt maskin för evaluering av
+          lata funktionella programmeringsspråk \cite{stg}, som används i bland annat
+          Haskell-kompilatorn GHC. Vi förklarar hur både STG och våra utökningar
+          fungerar i sektion \ref{sec:Core}.
+    
+    \item Tolken har vi utökat med en optimeringsfunktion som kan utföra optimeringar
+          när ett program körs. Vi utvecklar en första optimeringsfunktion i sektion
+          \ref{sec:Optimise:CBV}, som visar sig vara för strikt i sin optimering,
+          vilket leder till problem i vissa fall. Men den hjälper ändå till
+          i förståelsen för nästa sektion, \ref{sec:Optimise:CBN}, som visar hur
+          den slutliga, lata, optimeringsfunktionen fungerar.
+    
+    \item För att kunna få en uppfattning om hur bra optimeringen fungerar har
+          vi utfört prestandatest i vår tolk för några program där vi jämför
+          evalueringstid med och utan optimering under körningstid, 
+          vilka presenteras i sektion \ref{sec:Resultat}
+    
 \end{itemize}
 
+Figur \ref{figure:overviewIntro} ger en översikt över projektets uppbyggnad. Den kommer
+att återkomma i de olika avsnitten med skuggade rutor som visar var
+vi befinner oss just nu.
+
 \overviewIntro
-\comment{
+
+
+\begin{comment}
 Olles text rör ej :'/
 För att kunna göra det här arbetet krävs det ett programmeringsspråk
 att arbeta i. Vi har skapat en tolk efter STG, som är en modell för hur
@@ -98,7 +141,7 @@ varför vi också har skapat ett språk till - sockerspråket -
 som är lättare att programmera i och mer liknar andra funktionella
 språk som exempelvis Haskell. Sockerspråket kan sedan översättas till
 STG-representationen och evalueras i tolken.
-}
+\end{comment}
 \subsection{Bakgrund : Partiell evaluering}
 Detta arbete handlar till stor del om partiell evaluering. Men vad innebär det?
 I funktionella språk är funktioner första klassens objekt och kan t.ex.
@@ -123,8 +166,8 @@ in  zipWith (f 3) list1 list2
 
 Funktioner som har några, men inte alla argument applicerade kallas 
 partiellt applicerade. Att börja optimera en sådan funktion genom att evaluera med de nya värdena
-insatta medans resterand argument är okända, att partialevaluera,
-är inget som vanligtvis görs i Haskellimplementationer, 
+insatta medan resterande argument är okända, att partialevaluera,
+är inget som vanligtvis görs i Haskell-implementationer, 
 men är vad som undersöks i detta projekt. Funktionen \ic{optimise} är
 tänkt att användas på en funktion som är partiellt applicerad. Då kan optimise göra en
 partiell evaluering av funktionen, så långt det är möjligt utan de okända argumenten.

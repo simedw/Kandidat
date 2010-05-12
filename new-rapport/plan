@@ -1,0 +1,43 @@
+= This is our plan =
+
+Vi börjar alltså i tolkens pipeline <--- engelska?
+
+Småsaker:
+    Abstrakt [dan har jobbat på det] <-- Utokning av stg
+    Ta bort "du" -in progress... men var någonstans är alla?-
+    Kapitel istallet for sections
+    Paragraphs
+    [x] Sätt figure nr på figurer
+    trestegsraketen för varje figur
+    core/olika maskiner : skriva främst och först om STG, sen om GRIN
+    
+
+
+Mellan saker:
+    [x] Inledning [================/] kolla gärna igenom! :)
+        [x] Fixa figuren så att den är bredare
+    [x] Dela upp core   socker -> [^vdiav^] [v^loc^v] [<-lambda->] -> core
+    <d,o> Resultat
+        * Regexp, varför dåligt?
+        * Bild på shapes
+        * De nya graferna
+    s Slutsats  [=========?         ]
+    [x] Skriv om relaterade arbeten, \cite ska inte vara ett objekt i meningarna
+
+Stora saker:
+    D Optimise [=============/     ]
+    ändra alla kodexempel så att nya koddelar markeras
+
+
+
+Förslag till optimisen:
+    Skulle vara nice med att först introducera de tre stora optimeringarna:
+        * Räkna ut kända resultat
+        * Välj rätt branch
+        * Infoga kända funktioner
+        
+    Prata om att eftersom inte allt är känt kan vi inte alltid räkna med att få
+    ett värde, därav behöver vi ett sätt att säga om en optimering lyckades eller
+    inte. AKA Psi & Irr.
+    
+    

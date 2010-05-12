@@ -3,10 +3,10 @@
 
 \subsection{Anropsstack}
 \label{sec:CallStack}
-%Termen substitution används både för den abstrakta att byta ut, 
+% Termen substitution används både för den abstrakta att byta ut, 
 % samt för den hjärndöda substituionen
 % vi behöver nog ett namn för hjärndöd substitution: Cerebellum disconectus?}
-\subsubsection{Aktiveringsposter}
+% \subsubsection{Aktiveringsposter}
 
 Till en början använde vår tolk sig av naiv substitution, vilket innebär att man
 traverserar syntaxträdet och byter ut variabler mot deras värde, exempelvis vid
@@ -56,53 +56,53 @@ Eftersom argumenten skall ligga i aktiveringsposten så ger vi dem indicier som 
 offset. Vi visar detta med \miniCode{<x,n>} där \miniCode{x} är vad variabeln kallades 
 förut och \miniCode{n} är dess offset.
 
-\begin{codeEx}
-map <f,0> <xs,1> = case <xs,1> of
+\begin{codeExDiff}
+map |<f,0>| |<xs,1>| = case |<xs,1>| of
     { Cons y ys -> let
-        { a = THUNK (<f,0> y)
-        ; b = THUNK (map <f,0> ys)
+        { a = THUNK (|<f,0>| y)
+        ; b = THUNK (map |<f,0>| ys)
         ; c = CON (Cons a b)
         } in c
-    ; Nil -> <xs,1>};
-\end{codeEx}
+    ; Nil -> |<xs,1>|};
+\end{codeExDiff}
 
 
 Eftersom variabler som binds med både \miniCode{case} och \miniCode{let} 
 ska använda aktiveringsposten så ska även dessa ges indicier.
 
-\begin{codeEx}
+\begin{codeExDiff}
 map <f,0> <xs,1> = case <xs,1> of
-    { Cons <y,2> <ys,3> -> let
-        { <a,4> = THUNK (<f,0> <y,2>)
-        ; <b,5> = THUNK (map <f,0> <ys,3>)
-        ; <c,6> = CON (Cons <a,4> <b,5>)
-        } in <c,6>
+    { Cons |<y,2>| |<ys,3>| -> let
+        { |<a,4>| = THUNK (<f,0> |<y,2>|)
+        ; |<b,5>| = THUNK (map <f,0> |<ys,3>|)
+        ; |<c,6>| = CON (Cons |<a,4>| |<b,5>|)
+        } in |<c,6>|
     ; Nil -> <xs,1>};
-\end{codeEx}
+\end{codeExDiff}
 
-Här får vi ett problem med att thunkarna kommer att evalueras någon 
+Här får vi ett problem med att \obj{THUNK}-objekten kommer att evalueras någon 
 annanstans, och därmed i en annan aktiveringspost. Det betyder att indicierna som 
-används utanför thunkarna i \miniCode{map} inte gäller i thunkarna. Vi kommer därför att evaluera
+används utanför \obj{THUNK}-objekten i \miniCode{map} inte gäller i thunkarna. Vi kommer därför att evaluera
 thunkar i en egen aktiveringspost. Det kan dock vara så att thunken ändå använder sig
 av de lokala variabler som finns i den yttre funktionen. I exemplet har vi till exempel att 
 \miniCode{<a,4> = THUNK (<f,0> <y,2>)} där f och y är kommer utifrån. Därför 
-måste thunken veta vilka lokala variabler i \miniCode{map} den använder, så att de kan
-läggas på dess aktiveringspost. 
+måste \obj{THUNK}-en ha information om vilka lokala variabler i \miniCode{map} 
+som den använder, så att de kan läggas på dess aktiveringspost. 
 
 Noterbart är även att när \miniCode{let} allokerar kommer den att byta ut alla lokala variabler
 mot vad de refererar till i aktiveringsposten. Vi får följande: 
 
 %(Cons pekar på ett heapobjekt och ligger alltså inte i aktiveringsposten):
 
-\begin{codeEx}
+\begin{codeExDiff}
 map <f,0> <xs,1> = case <xs,1> of
     { Cons <y,2> <ys,3> -> let
-        { <a,4> = THUNK [<f,0>, <y,2>]  (<f,0> <y,1>)
-        ; <b,5> = THUNK [<f,0>, <ys,3>] (map <f,0> <ys,1>)
+        { <a,4> = THUNK |[<f,0>, <y,2>]|  (<f,0> <y,1>)
+        ; <b,5> = THUNK |[<f,0>, <ys,3>]| (map <f,0> <ys,1>)
         ; <c,6> = CON (Cons <a,4> <b,5>)
         } in <c,6>
     ; Nil -> <xs,1>};
-\end{codeEx}
+\end{codeExDiff}
 
 Konstruktorn \miniCode{Cons} får inget index eftersom det inte är en variabel
 utan ett namn för att kunna särskilja den från andra konstruktorer. 
@@ -174,8 +174,9 @@ Att mer precist hålla reda på vilka thunkar som behöver vad är svårare att 
 
 
 
-Nu ska vi visa hur anropsstacken kan se ut vid ett anrop till \miniCode{map}. Funkitonen
- \ic{enumFrom} skapar en oändlig lista \ic{[x, x+1, x+2, ...]}.
+Nu ska vi visa hur anropsstacken kan se ut vid ett anrop till \miniCode{map}.
+Funkitonen \ic{enumFrom} skapar en oändlig lista \ic{[x, x+1, x+2, ...]}.
+ 
 \begin{codeEx}
 enumFrom x = x : enumFrom (x + 1);
 
@@ -200,7 +201,7 @@ Arg list
 \end{codeEx}
 
 Maskinen ser att \miniCode{map} tar två argument, och funktionsapplikationen 
-kan då köras utan att ett PAP-objekt behöver skapas.
+kan då köras utan att ett \obj{PAP}-objekt behöver skapas.
 
 Vid funktionsapplikation tas den nuvarande aktiveringsposten bort och ersätts 
 med funktionsens aktiveringspost. Detta är för att alla anrop betraktas vara
@@ -269,10 +270,11 @@ Anropstacken blir:
 [cube, list, 1, list']
 \end{codeEx}
 
-När variabler bundna till \miniCode{let}-thunkar allokeras, som \miniCode{<a,4>}
+När variabler bundna till \kw{let}-thunkar allokeras, som \miniCode{<a,4>}
 i \miniCode{map}, skapas ett heapobjekt, men inte med samma aktiveringspost.
 Istället görs ett uppslag av varje variabel i thunkens variabellista, och
-sen allokeras thunken med en anropsstack efter dessa uppslag. 
+sen allokeras thunken med en anropsstack efter dessa uppslag. Hur går 
+\kw{let}-bindningen till i \ic{map}? Så här ser koden ut:
 
 \begin{codeEx}
 map <f,0> <xs,1> = case <xs,1> of
