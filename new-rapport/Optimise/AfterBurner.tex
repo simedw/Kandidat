@@ -20,8 +20,7 @@ var i semantiken som afterburnern kommer in:
  & \text{där } obj = \text{afterburn} (\FUN{\many{a}}e)
 \end{align*}
 
-\subsubsection{Gemensam case-granskare}
-
+\paragraph{Gemensam case-granskare} 
 Att \kw{case}:a på samma uttryck två gånger kommer i ett funktionellt språk alltid att ge
 samma resultat då alla variabler egentligen är konstanter. För varje \kw{case}-gren
 vi går in i vet vi att alla nästlade \kw{case} på samma uttryck måste välja samma
@@ -44,7 +43,7 @@ test x = case x of
 Om vi sedan kör optimeringen av gemensamma \kw{case}-granskare erhålls:
 \begin{codeEx}
 test x = case x of
-            I# a -> case a #* b of
+            I# a -> case a #* a of
                 r' -> let r = I# r'
                     in r
 \end{codeEx}

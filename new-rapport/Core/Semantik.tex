@@ -10,7 +10,7 @@
 \newcommandx\rangem[1][usedefault, addprefix=\global, 1=]{#1_{1}\,\ldots\,#1_{m}}
 
 
-Så här ser BNF-grammatiken ut för corespråket:
+Så här ser BNF-grammatiken ut för STG:
 
 
 \begin{equation*}
@@ -59,14 +59,16 @@ ha stött på begrepp som används när man beskriver abstrakta maskiner
 och deras semantik, kommer vi att bygga upp förståelsen via ett exempel
 och introducera nya koncept när de behövs. 
 
-Optimeringen har fått ett eget objekt, se sektionerna 
-\ref{sec:Optimise:CBV} och \ref{sec:Optimise:CBN}.
+Optimeringen har fått ett eget objekt, \obj{OPT}, se sektionerna 
+\ref{sec:Optimise:CBV} och \ref{sec:Optimise:CBN}. I fortsättningen kommer STG
+med den här utökningen att refereras till som bara STG och när ursprungsversionen
+åsyftas kommer detta att markeras explicit.
 
-\subsubsection{Abstrakt maskin}
+\paragraph{Abstrakt maskin}
 
 En abstrakt maskin kan beskrivas av regler som bestämmer varje steg i en stegvis evaluering.
 Varje regel beskriver, om man är i ett visst tillstånd, vilket tillstånd man skall gå vidare till.
-Med tillstånd så menas ett uttryck och en heap som separeras av ett semikolon (;) vi kommer senare behöva utöka tillstånden.
+Ett tillstånd är en konfiguration av ett uttryck och en heap som separeras av ett ($\csep$) vi kommer senare behöva utöka konfigurationerna. Heapen kommer vi att symbolisera med bokstaven $H$.
 Så vi har en samling regler och man väljer en som matchar mot det tillstånd man har, och om 
 ingen regel matchas så är man klar.
 
@@ -74,17 +76,17 @@ ingen regel matchas så är man klar.
 \everymath{\displaystyle}
 
 
-\tikz\node [baseline,draw] (till1) {Föregående tillstånd};
-\tikz\node [draw] (tillsep) {Tillstånden separeras av $\Rightarrow$};
+\tikz\node [baseline,draw] (till1) {Nuvarande tillstånd};
+\tikz\node [draw] (tillsep) {Tillstånden separeras av $\rulesep$};
 \tikz\node [draw] (till2) {Nästa tillstånd};
 
 \begin{equation*}
-        \tikz[baseline]{\node[draw,anchor=base] (m1) 
-            {$ Expr \; ; \; Heap$};
-        } \tikz[baseline]{\node[anchor=base](msep){$\Rightarrow$};}
+        \tikz[baseline]{\node[anchor=base] (m1) 
+            {\conf{}{$ e \csep H$}};
+        } \tikz[baseline]{\node[anchor=base](msep){$\rulesep$};}
         \tikz[baseline]{
-            \node[draw,anchor=base] (m2)
-            {$ Expr \; ; \; Heap$};
+            \node[anchor=base] (m2)
+            {\conf{}{$ e \csep H$}};
         } 
 \end{equation*}
 
@@ -97,7 +99,7 @@ ingen regel matchas så är man klar.
 %        \path[->] (esep) edge [out=90, in=-90] (m1);
 \end{tikzpicture}
 
-\subsubsection{Substitution}
+\paragraph{Substitution}
 
 Låt oss säga att vi har en funktion $f$ som använder sina två 
 argument, $x$ och $y$. Om vi betraktar uttrycket som funktionens 
@@ -144,7 +146,7 @@ maskinen stöter på ett \kw{let}-uttryck allokeras det på heapen, vilket
 beskrivs mer formellt av följande regel:
 
 \begin{align*}
-\mathtt{let\;\mathrm{x\mathtt{=}e}\; in\; code}\,;\, Heap\,\Rightarrow\, & \mathtt{code[v/x]}\,;\, Heap[v\mapsto e] \\
+\conf{}{\mathtt{let\;\mathrm{x\mathtt{=}e}\; in\; code} \csep H}\,\rulesep\, & \conf{}{\mathtt{code[v/x]} \csep H[v\mapsto e]} \\
  & v\; \text{ ny variabel} \nonumber
 \end{align*}
 
@@ -164,7 +166,7 @@ allokering ska ske på en ny plats i heapen.
 Maskinens tillstånd är nu:
 
 \begin{align*}
-\mathtt{map\; cube\; list}\,;\, Heap[list\mapsto[2,3,5,7,11],cube\mapsto\lambda x.x\cdot x\cdot x,\ldots]
+\conf{}{\mathtt{map\; cube\; list} \csep H[list\mapsto[2,3,5,7,11],cube\mapsto\lambda x.x\cdot x\cdot x,\ldots]}
 \end{align*}
 
 
@@ -177,10 +179,11 @@ Som uttryck i maskinens tillstånd ligger nu ett anrop till
 \miniCode{map}-funktionen, vilket vi därför ska försöka oss på.
 Här låter vi oss inspireras av imperativa språk som ofta lägger argumenten
 på en stack före funktionsanrop. Vi kommer därför uppdatera tillstånden så att de
-nu också innefattar en stack.
+nu också innefattar en stack, dessa kommer att få bokstaven $S$ i reglerna så de
+ser ut så här.
 
 \begin{equation*} 
-Expr \; ; Stack \; ; \; Heap \; \Rightarrow \; Expr \; ; \; Stack \; ; \; Heap
+\conf{}{e \csep S \csep H} \; \rulesep \; \conf{}{e \csep S \csep H}
 \end{equation*} 
 
 I regeln har vi placerat stacken mellan uttrycket och heapen, och kolon används
@@ -188,13 +191,15 @@ för att separera element på den. Den tomma stacken skrivs som $\epsilon$.
 Formellt erhålls följande regel för funktionsapplikation:
 
 \[
-f\; a_{1}\;\ldots\; a_{n}\,;\, Stack\,;\, Heap\Rightarrow f\,;\, a_{1}:\ldots:a_{n}:Stack\,;\, Heap\]
+\conf{}{f\; a_{1}\;\ldots\; a_{n}\csep S \csep H}\rulesep \conf{}{f\csep a_{1}:\ldots:a_{n}:S\csep H}
+\]
 
 
 Efter att ha utförs funktionsapplikations-regeln blir maskinens tillstånd:
 
 \[
-\mathtt{map\,\mathrm{;}\, cube\,:\, list\,:\,\epsilon}\,;\, Heap\]
+\conf{}{\mathtt{map} \csep \mathtt{cube} \casep \mathtt{list} \casep \epsilon \csep H}
+\]
 
 För att kunna gå vidare krävs det nu att vi har koden för \ic{map} så att vi vet
 vad vi skall sätta in variabler i. Så här är \ic{map} definierad:
@@ -218,7 +223,8 @@ argument från stacken.
 Formellt:
 
 \[
-f\,;\, a_{1}:\ldots:a_{n}:Stack\,;\, Heap[f\mapsto\lambda x_{1}\ldots x_{n}.e]\Rightarrow e[a{}_{1}/x_{1}\ldots a_{n}/x_{n}];\, Stack\,;\, Heap\]
+\conf{}{f \csep a_{1} \casep \ldots \casep a_{n} \casep S \csep H[f\mapsto\lambda x_{1}\ldots x_{n}.e]}\rulesep \conf{}{e[a{}_{1}/x_{1}\ldots a_{n}/x_{n}] \csep S \csep H}
+\]
 
 
 Här behöver vi ersätta alla funktionens argument $x_{1}\ldots x_{n}$ mot
@@ -227,7 +233,8 @@ således $e[a{}_{1}/x_{1}\ldots a_{n}/x_{n}]$, som i vårt fall betyder att
 \ic{f} substitueras med \ic{cube} och \ic{xs} med \ic{list}. Därefter kommer maskinens tillstånd att vara följande:
 
 \[
-\mathtt{case\; list\; of\,\lbrace\ldots\rbrace};\,\epsilon\,;\, Heap\]
+\conf{}{\mathtt{case\; list\; of\,\lbrace\ldots\rbrace} \csep \epsilon \csep H}
+\]
 
 
 I heapen pekar \ic{list} på listan \ic{[2,3,5,7,11]}, men detta är egentligen syntaktiskt socker
@@ -250,8 +257,9 @@ blir den grenen med \miniCode{x} substituerat mot \miniCode{2} och \miniCode{xs}
 Detta åstadkoms med följande formella regel:
 
 \begin{multline*}
-case\; v\; of\;\{\ldots;C\; x_{1}\,\ldots\, x_{n}\;\rightarrow e;\ldots\}\,;\, Stack\,;\, Heap[v\mapsto C\; a_{1}\ldots a_{n}]\\
-\Rightarrow e[a_{1}/x_{1}\,\ldots\, a_{n}/x_{n}]\,;\, Stack\,;\, Heap\end{multline*}
+\conf{}{\mathtt{case}\; v\; \mathtt{of}\;\{\ldots;C\; x_{1}\,\ldots\, x_{n}\;\rulesep e;\ldots\} \csep S \csep H[v\mapsto C\; a_{1}\ldots a_{n}]}\\
+\rulesep \conf{}{e[a_{1}/x_{1}\,\ldots\, a_{n}/x_{n}] \csep S \csep H}
+\end{multline*}
 
 
 Det som står i granskaren, uttrycket mellan \miniCode{case} och \miniCode{of}, är i vårt
@@ -270,7 +278,8 @@ där $\bullet$ står för platsen där resultatet ska läggas in när det har ev
 blir följande:
 
 \[
-case\; e\; of\;\{\ldots\}\,;\, Stack\,;\, Heap\Rightarrow e\,;\, case\;\bullet\; of\;\{\ldots\}:Stack\,;\, Heap\]
+\conf{}{\mathtt{case}\; e\; \mathtt{of}\;\{\ldots\} \csep S \csep H} \rulesep \conf{}{e \csep \mathtt{case}\;\bullet\; \mathtt{of}\;\{\ldots\} \casep S \csep  H}
+\]
 
 
 Det här uttrycket kommer att evalueras till ett värde, som t.ex. en konstruktor.
@@ -279,7 +288,8 @@ rätt gren. Vi vill återanvända grenväljar-regeln som vi definierade
 ovan, så därför inför vi följande regel som ställer in maskinens tillstånd för det:
 
 \[
-v\,;\, case\;\bullet\; of\;\{\ldots\}:Stack\,;\, Heap\Rightarrow case\; v\; of\;\{\ldots\}\,;\, Stack\,;\, Heap\]
+\conf{}{v \csep \mathtt{case}\;\bullet\; \mathtt{of}\;\{\ldots\} \casep S \csep H}\rulesep \conf{}{\mathtt{case}\; v\; \mathtt{of}\;\{\ldots\} \casep S \csep H}
+\]
 
 
 För att återgå till vårt löpande exempel så är koden för tillfället:
@@ -296,14 +306,14 @@ Nu skall a bindas till ett uttryck, \miniCode{cube 2}. I ett traditionellt imper
 En sådan senarelagd beräkning kallas för en \emph{thunk}. Det som händer nu är att
 \ic{a} binds till thunken \miniCode{cube 2}. På heapen tillåts flera olika
 sorters objekt: konstruktorer, lambdafunktioner och nu även thunkar.
-Vi behöver kunna skilja dem åt, så vi inför ny notation för dessa objekt: \\[0.5cm]
+Vi behöver kunna skilja dem åt, så vi inför ny notation för dessa objekt: \\[0.3cm]
 \begin{tabular}{ccc}
 Föregående syntax & Faktisk syntax & Beskrivning\tabularnewline
 \hline
 $C\;\range[a]$ & $\CON C{\range[a]}$ & Konstruktor\tabularnewline
 $\lambda\range[x].e$ & $\FUN{\range[x]}e$ & Lambdafunktion\tabularnewline
 - & $\THUNK e$ & Senarelagd beräkning\tabularnewline
-\end{tabular} \\[0.5cm]
+\end{tabular} \\[0.3cm]
 
 Så här skrivs \miniCode{map}-funktionen i STG-språket utan något syntaktiskt socker:
 
@@ -340,8 +350,7 @@ det \miniCode{main} som har kallat på \miniCode{map} och eftersom vi skriver ut
 kommer den att evaluera thunkarna. Vi tänker oss fallet då den börjar evaluera variabeln \miniCode{a}:
 
 \begin{align*}
-x\,;\, Stack\,;\, & Heap[x\mapsto\THUNK e] \Rightarrow  \\
- & e\,;\, Upd\, x\,\bullet\,:\, Stack\,;\, Heap[x\mapsto BLACKHOLE]
+\conf{}{x \csep S \csep & H[x\mapsto\THUNK e]} \rulesep \conf{}{e \csep Upd\, x\,\bullet \casep S \csep H[x\mapsto \BH]}
 \end{align*}
 
 För att evaluera en en thunk flyttar vi dess uttryck till maskinens kod
@@ -350,18 +359,18 @@ för evaluering. Den kommer också att lägga ut en \cont{Upd}-continuation, vil
 en gång, och därför kommer vi när \miniCode{e} har evaluerats till ett värde att spara
 det så att \miniCode{x} binds till det nya värdet och om \miniCode{x}'s värde skulle behövas
 igen kan man returnera det direkt. Under evalueringen av \miniCode{x} sätter
-vi även värdet \miniCode{x} till BLACKHOLE. Detta sker av två anledningar.
+vi även värdet \miniCode{x} till \obj{BLACKHOLE}. Detta sker av två anledningar.
 \begin{enumerate}
 \item Tänk om \miniCode{x} beror på sig själv, eller flera variabler beror på varandra utan
-att producera värden. Ifall man evaluerade utan att sätta variabeln till BLACKHOLE
-skulle maskinen falla in i en oändlig loop. Att använda BLACKHOLE ger oss ett sätt att
+att producera värden. Ifall man evaluerade utan att sätta variabeln till \obj{BLACKHOLE}
+skulle maskinen falla in i en oändlig loop. Att använda \obj{BLACKHOLE} ger oss ett sätt att
 upptäcka det och maskinen kan då berätta för programmeraren att något har gått fel
 istället för att loopa oändligt.
 \item Skräpinsamlingen kommer att gå igenom alla heap- och stackobjekt
 samt koden, för att hitta vilka värden som fortfarande kan nås via den nuvarande
 koden och stacken. Thunken kan referera till objekt som inte längre
 behövs för evalueringen, men skräpinsamlaren kommer inte att se att dessa objekt skulle
-kunna tas bort. Om man sätter värdet till BLACKHOLE
+kunna tas bort. Om man sätter värdet till \obj{BLACKHOLE}
 kommer samlaren veta att alla variabler som används av den variabeln finns
 i maskinens kod.
 \end{enumerate}
@@ -369,7 +378,8 @@ Det som saknas för thunkar är nu regeln som uppdaterar dem när de
 är klara. Det sker via denna regel:
 
 \[
-v\,;\, Upd\, x\,\bullet:Stack\,;\, Heap\Rightarrow v\,;\, Stack\,;\, Heap[x\mapsto Heap[v]]\]
+\conf{}{v \csep Upd\, x\,\bullet \casep S \csep H} \rulesep \conf{}{v \csep S \csep H[x\mapsto H[v]]}
+\]
 
 Om $v$ är ett värde så uppdateras $x$ med vad $v$ har för värde.
 
@@ -385,13 +395,13 @@ max x y = case x < y of
 
 Om man skriver \miniCode{max 100} så är det en ny funktion som
 ger tillbaka det största talet av 100 och funktionens enda argument. För att
-detta ska fungera behövs ett nytt heapobjekt som vi kallar för PAP, vilket står för partiell
-applikation. En PAP innehåller de hittills applicerade argumenten och en referens till funktionen.
+detta ska fungera behövs ett nytt heapobjekt som vi kallar för \obj{PAP}, vilket står för partiell
+applikation. En \obj{PAP} innehåller de hittills applicerade argumenten och en referens till funktionen.
 Regeln blir följande:
 
 \begin{align*}
-f\,;\, Arg\, a_{1}:\ldots:&Arg\, a_{m}:Stack\,;\, Heap[f\mapsto\FUN{\range[x]}e \Rightarrow \\
- & p\,;\, Stack\,;\, Heap[x\mapsto\PAP f{\rangem[a]}]
+\conf{}{f \csep \mobj{Arg}\, a_{1} \casep \ldots \casep & \mobj{Arg}\, a_{m} \casep S \csep H[f\mapsto\FUN{\range[x]}e} \\
+& \rulesep  \conf{}{p\csep S\csep H[x\mapsto\PAP f{\rangem[a]}]}
 \end{align*}
 
 
@@ -402,8 +412,8 @@ regeln som verkligen gör applikationen av dessa partiellt applicerade
 objekt.
 
 \begin{align*}
-p\,;\, & Arg\, a_{n+1}:Stack\,;\, Heap[p\mapsto\PAP f{\range[a]} \Rightarrow \\
- & f\,;\, Arg\, a_{1}:\ldots:Arg\, a_{n}:Arg\, a_{n+1}:Stack\,;\, Heap
+\conf{}{p \csep \mobj{Arg}\, a_{n+1} \casep S \csep H[p\mapsto\PAP f{\range[a]}} \\
+\rulesep \conf{}{f \csep Arg\, a_{1} \casep \ldots \casep \mobj{Arg}\, a_{n} \casep \mobj{Arg}\, a_{n+1} \casep S \csep H}
 \end{align*}
 
 

@@ -39,7 +39,12 @@
 
 %\subsection{Introduktion}
 
+Figur \ref{figure:overviewSugar} visar var vi befinner oss just nu:
+
 \overviewSugar
+
+Vi är alltså i början av tolkens pipeline, vid koden som är skriven i sockerspråket
+som parsas till ett abstrakt syntaxträd.
 
 För att undersöka optimeringsmöjligheterna behövs ett språk att arbeta med. 
 Detta språk behöver inte vara lika rikt som Haskell, men bekvämt nog
@@ -51,7 +56,7 @@ för listor i Haskell: \miniCode{[5,0,4]} är socker för \miniCode{5 : 0 : 4 : 
 
 Sockerspråket är så likt Haskell att det går enkelt att översätta mellan språken.
 Det är också designat så att det är lätt att översätta och avsockra det till 
-corespråket som introduceras i nästa kapitel. I den här sektionen
+STG-språket som introduceras i nästa kapitel. I den här sektionen
 förklaras istället hur sockerspråket ser ut och hur det används, och hur
 det skiljer sig från Haskell.
 
@@ -128,11 +133,7 @@ att läsa i sektion \ref{sec:Optimise:With}.
     En gren kan antingen vara att mönstermatcha mot en konstruktor och binda
 dess konstruktionsvariabler, eller att matcha mot vad som helst.
 
-
 \subsection{Jämförelse med Haskell}
-%\NOTE{
-%Omdiskuterat avsnitt Koen. Ska det bort? Ska det läggas någon annanstans?
-%}
 
     En egenskap som saknas i sockerspråket men som ofta används flitigt i Haskell är 
 möjligheten att mönstermatcha närhelst en variabel binds, t.ex. i vänsterledet
@@ -144,29 +145,31 @@ har endast sådana. De är enkla i det avseendet att man inte kan mönstermatcha
 Här är insertmetoden skriven i Haskell, vilken sätter in ett element i en redan sorterad
 lista utan att förstöra sorteringen:
 
-\begin{codeExN}
+\begin{codeEx}
   insert :: Ord a => a -> [a] -> [a]
   insert v (x:xs) 
       | v <= x    = v : x : xs
       | otherwise = x : insert v xs 
   insert v [] = [v]
-\end{codeExN}                  
+\end{codeEx}                  
 
 I sockerspråket skrivs samma funktion istället på det här viset:
 
-\begin{codeExN}
+\begin{codeEx}
   insert v list = case list of
-      Cons x xs -> case v <= x of
-          True  -> v : x : xs
-          False -> x : insert v xs
-      Nil -> v : Nil
-\end{codeExN}
+      { Cons x xs -> case v <= x of
+          { True  -> v : x : xs
+          ; False -> x : insert v xs
+          }
+      ; Nil -> v : Nil
+      }
+\end{codeEx}
 
 I Haskell kan programmeraren explicit definiera egna datatyper, som exempelvis \miniCode{Maybe}:
     
-\begin{codeExN}
+\begin{codeEx}
 data Maybe a = Just a | Nothing
-\end{codeExN}
+\end{codeEx}
 
 I sockerspråket finns ingen sådan konstruktion, och programmeraren kan alltså inte
 definiera datatypen explicit. Istället är det bara att använda
@@ -192,5 +195,15 @@ in  h t1 t2
 \end{codeEx}
 
 Här går det inte, till skillnad från i Haskell, att byta plats på \kw{t1} och \kw{t2}.
+
+Sammanfattningsvis är sockerspråket nästan en delmängd av Haskell. Ett program
+skrivet i sockerspråket kan köras i Haskell med förändringarna
+\begin{itemize}
+    \item \kw{data}-deklarationer läggs till
+    \item \ic{(:)} byts ut till \ic{Cons}
+    \item nyckelordet letrec behövs för rekursiva let-bindningar
+    \item lambdauttryck byts från formen \ic{(\textbackslash x . x)} till \ic{(\textbackslash x -> x)}
+    \item \ic{if}-satser behöver användas istället för \ic{if}-funktionen 
+\end{itemize}
 
 \end{document}

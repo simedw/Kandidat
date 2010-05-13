@@ -11,12 +11,13 @@ I det här avsnittet beskrivs hur kod ser ut efter optimering och
 olika tidsjämförelser sker med och utan optimise. 
 Vi testar CBN-semantiken med anropsstack.
 
-\subsection{Raytracer}
-
 Det finns massor av platser i kod där optimise kan placeras, men alla dessa är tyvärr 
 inte bra val. Det finns flera fallgropar att undvika för få ut så stor 
 prestandavinst som möjligt. Vi ska illusterar detta igenom att undersöka ett 
 något större exempel, en raytracer.
+
+\subsection{Raytracer}
+
 
 En raytracer är ett program som målar upp en bild genom att skicka ut strålar från en punkt
 i ett rum och sedan se vad varje stråle träffar
@@ -96,8 +97,8 @@ eftersom alla aktiveringspostindex står med:
                          } in and <1,t.ag> <2,t.ai>)
                    } in and <2,t.ad> <3,t.af>)
              } in case <1,x1> of
-               { D# i.c -> case prim("/.")# <6,i.c> 0.5 of
-                   { {i.e} -> case prim(">.")# <7,i.e> -1.0 of
+               { D# i.c -> case <6,i.c> /.# 0.5 of
+                   { {i.e} -> case <7,i.e> >.# -1.0 of
                        { {i.e} -> case <8,i.e> of
                            { True  -> <5,t.ac>
                            ; False  -> $False
@@ -116,16 +117,16 @@ men optimeringen tar mycket längre tid:
 \begin{codeEx}
   i.bp = FUN <2> (p -> case <0,p> of
    { Pos x1 y1 -> case <1,x1> of
-      { D# i.c -> case prim("/.")# <3,i.c> 0.5 of
-         { {i.e} -> case prim(">.")# <4,i.e> -1.0 of
+      { D# i.c -> case <3,i.c> /.# 0.5 of
+         { {i.e} -> case <4,i.e> >.# -1.0 of
             { {i.e} -> case <5,i.e> of
-               { True  -> case prim("<.")# <4,i.e> 1.0 of
+               { True  -> case <4,i.e> <.# 1.0 of
                   { {i.e} -> case <6,i.e> of
                      { True  -> case <2,y1> of
-                        { D# i.c -> case prim("/.")# <7,i.c> 0.5 of
-                           { {i.e} -> case prim(">.")# <8,i.e> -1.0 of
+                        { D# i.c -> case <7,i.c> /.# 0.5 of
+                           { {i.e} -> case <8,i.e> >.# -1.0 of
                               { {i.e} -> case <9,i.e> of
-                                 { True  -> case prim("<.")# <8,i.e> 1.0 of
+                                 { True  -> case <8,i.e> <.# 1.0 of
                                     { {i.e} -> <10,i.e>
                                     }
                                  ; False  -> $False
@@ -179,7 +180,13 @@ map (map (shapes
 \end{codeEx}
 
 \subsubsection{Körningstider}
+
+
+\begin{figure}[H]
 \includegraphics{shapes.eps}
+\caption{Logaritmisk graf över körningstid för raytrace, med och utan optimise.}
+\label{fig:Resultat:shapes:graf}
+\end{figure}
 
 I grafen ser vi att optimeringen utan \kw{casebranches} (CB) påslaget är en
 magnitud snabbare per bildstorlek (antal pixlar) redan vid ett lågt antal pixlar.
@@ -230,13 +237,20 @@ gör någon som helst skillnad.
 
 
 \subsubsection{Körningstider}
+
+
+\begin{figure}[H]
 \includegraphics{power.eps}
+\caption{Logaritmisk graf över körningstid för power med känd exponent.
+Med och utan optimise.}
+\label{fig:Resultat:shapes:graf}
+\end{figure}
 
 I början presterar den optimerade funktionen precis som förväntat, men runt \ic{exp 50}
 börjar optimise ta betydligt längre tid på sig. Detta beror på att optimise inte kör med linjär tidsåtgång i detta fallet. 
 
 % Kanske borde förklaras bättre. Varför har den inte det? :(
-\comment{
+\begin{comment}
     \subsection{Expertis}
     Optimise är bra på:
     \begin{itemize}
@@ -282,7 +296,7 @@ börjar optimise ta betydligt längre tid på sig. Detta beror på att optimise 
     \end{itemize}
 
     }
-}
+\end{comment}
 
 
 \end{document}

@@ -7,6 +7,7 @@
 \usepackage{epstopdf}
 \usetikzlibrary{mindmap,trees,arrows,automata}
 
+\usepackage{float}
 \usepackage{graphicx}
 \usepackage{rotating}
 \usepackage{listings}
@@ -16,18 +17,16 @@
 \usepackage{array}
 \usepackage{listings}
 
-% Used for code examples without | a special character
-\newenvironment{codeExN}
-{\verbatim}
-{\endverbatim}
-
-
-\newcommand{\graybox}[1]{\colorbox{lightgray}{#1}}
-
-% used for code examples where |x| makes a grey box around x
+% Used for code examples without | as a special character
 \lstnewenvironment{codeEx}
-{\lstset{ basicstyle=\ttfamily
-        , moredelim=[is][\graybox]{|}{|}
+{\lstset{ basicstyle= \ttfamily }}
+{}
+
+
+% used for code examples where |x| marks x
+\lstnewenvironment{codeExDiff}
+{\lstset{ basicstyle=\color{gray} \ttfamily
+        , moredelim=[is][\color{black}]{|}{|}
         } }
 {}
 
@@ -36,6 +35,10 @@
 \newcommand{\ic}[1] {\miniCode{#1}}
 \newcommand{\many}[1]{\overline{#1}}
 
+% Used for objects in löpande text
+
+\newcommand{\obj}[1] {\emph{#1}}
+\newcommand{\mobj}[1] {\text{\obj{#1}}}
 
 
 % Used for keywords
@@ -64,13 +67,17 @@ Notering!
 \newcommand{\iPsi}{$\Psi$}
 \newcommand{\oOmega}{$\Omega$}
 
+\newcommand{\conf}[2]{\text{\large$#1$}\Big[#2\Big]}
+\newcommand{\csep}{\,\text{\Large;}\,}
+\newcommand{\casep}{\,:\,}
+\newcommand{\rulesep}{\,\Rightarrow\,}
+
 %CBV semantic
-\newcommand{\OPTMac}[2]{\text{\large$#1$}\Big[#2\Big]}
-\global\long\def\mc#1#2#3{#1\,;\,#2\,;\,#3}
+\global\long\def\mc#1#2#3{\conf{}{#1\csep#2\csep#3}}
   % stack ; heap ; expr
-\global\long\def\OMEGA#1#2#3{\OPTMac{\Omega}{#3\,;\,#1\,;\,#2}}
-\global\long\def\PSI#1#2#3{\OPTMac{\Psi}{#3\,;\,#1\,;\,#2}}
-\global\long\def\IRR#1#2#3{\OPTMac{\Phi}{#3\,;\,#1\,;\,#2}}
+\global\long\def\OMEGA#1#2#3{\conf{\Omega}{#3\csep#1\csep#2}}
+\global\long\def\PSI#1#2#3{\conf{\Psi}{#3\csep#1\csep#2}}
+\global\long\def\IRR#1#2#3{\conf{\Phi}{#3\csep#1\csep#2}}
 
 
 \global\long\def\red#1#2{#1\Rightarrow#2}
@@ -90,20 +97,20 @@ Notering!
 \global\long\def\heapp#1#2#3#4{H[#1\mapsto#2\,;\,#3\mapsto#4]}
 
 
-\global\long\def\OPT#1{OPT(#1)}
+\global\long\def\OPT#1{\mobj{OPT}(#1)}
 
 
-\global\long\def\PAP#1#2{PAP(#1\,#2)}
+\global\long\def\PAP#1#2{\mobj{PAP}(#1\,#2)}
 
-\global\long\def\CON#1#2{CON(#1\,#2)}
+\global\long\def\CON#1#2{\mobj{CON}(#1\,#2)}
 
-\global\long\def\FUN#1#2{FUN(#1\to#2)}
-
-
-\global\long\def\THUNK#1{THUNK\,#1}
+\global\long\def\FUN#1#2{\mobj{FUN}(#1\to#2)}
 
 
-\global\long\def\cOPT#1#2{OPT\,#1\,:\,#2}
+\global\long\def\THUNK#1{\mobj{THUNK}\,#1}
+
+
+\global\long\def\cOPT#1#2{\mobj{OPT}\,#1\,:\,#2}
 
 
 \global\long\def\cOFUN#1#2#3{OFUN\,(#1\to\bullet)_{#2}\,:\,#3}
@@ -118,13 +125,13 @@ Notering!
 \global\long\def\oLetObj#1#2#3{O\mathtt{let\,}#1=#2\,\mathtt{in}\,\bullet\,:\,#3}
 
 
-\global\long\def\oFun#1#2#3{OFUN\,#1\,#2\,:\,#3}
+\global\long\def\oFun#1#2#3{\mobj{OFUN}\,#1\,#2\,:\,#3}
 
 
-\global\long\def\oInline#1{OInlining\,:\,#1}
+\global\long\def\oInline#1{\mobj{OInlining}\,:\,#1}
 
 
-\global\long\def\BH{BLACKHOLE}
+\global\long\def\BH{\mobj{BLACKHOLE}}
 
 
 \global\long\def\eCase#1#2{\mathtt{case}\,#1\,\mathtt{of}\,#2}
@@ -134,110 +141,156 @@ Notering!
 
 
 % CBN %
-\global\long\def\CBNMC#1#2#3#4{#1;#2;#3;#4}
+\global\long\def\CBNMC#1#2#3#4{\conf{}{#1\csep#2\csep#3\csep#4}}
 
-\global\long\def\CBNOMEGA#1#2#3#4{\OPTMac{\Omega}{#4;#1;#2;#3}}
-\global\long\def\CBNPSI#1#2#3#4#5{\OPTMac{\Psi}{#5;#1;#2;#3;#4}}
-\global\long\def\CBNIRR#1#2#3#4{\OPTMac{\Phi}{#4;#1;#2;#3}}
+\global\long\def\CBNOMEGA#1#2#3#4{\conf{\Omega}{#4\csep#1\csep#2\csep#3}}
+\global\long\def\CBNPSI#1#2#3#4#5{\conf{\Psi}{#5\csep#1\csep#2\csep#3\csep#4}}
+\global\long\def\CBNIRR#1#2#3#4{\conf{\Phi}{#4\csep#1\csep#2\csep#3}}
 
 % pixxX %
 
 \newcommand{\overviewIntro}
 {
-\begin{center}
-\begin{tikzpicture}
-\path[mindmap,concept color=black,text=white]
-node[concept] {Tolk}
-[clockwise from=30]
-child[concept color=green!50!black] {
-  node[concept] {Frontend}
-  [clockwise from=90]
-  child { node[concept] {Parser} }
-  child { node[concept] {Avsockrare} }
-  child { node[concept] {Lambda- lyftare} }
-}
-child[concept color=red!50!black] {
-    node[concept] {Core}
-    [counterclockwise from=200]
-    child[concept] { node[concept] {STG} }
-    %child[concept] { node[concept] {Garbage Collector} }
-    child[concept color=blue!50!black] {
-        node[concept] {Optimise}
-        [clockwise from=20]
-        child { node[concept] {Omega} }
-        child { node[concept] {Psi} }
-        child { node[concept] {Irr} }
-        child { node[concept] {After burner} }
-    }
-};
-%    child[concept color=orange] { node[concept] {theoretical} };
-\end{tikzpicture}
-\end{center}
+    \begin{figure}[H]
+    \label{figure:overviewIntro}
+    \centering
+        \begin{tikzpicture}[->,shorten >=1pt,auto,node distance=4.2cm,
+                            semithick]
+        \tikzstyle{every state}=[rectangle,minimum size=2.0cm]
+        \node[state](socker)                      {Sockerkod};
+        \node[state](stg)    [right of=socker]    {STG-kod};
+        \node[state](stgint) [right of=stg]       {STG-tolk};
+        \node[state]                  (opt)       [below of=stg]         {Optimering};
+        \path (socker)    edge node {avsockring}   (stg)
+              (stg) edge node {} (stgint)
+              (stgint)       edge[bend left]  node {} (opt)
+              (opt)       edge[bend left] node {} (stgint)
+              
+              ;
+        \end{tikzpicture} 
+    \caption{Översikt}
+    \end{figure}
 }
 
-\newcommand{\overviewCore}
+\newcommand{\overviewStg}
 {
-\begin{center}
-\begin{tikzpicture}%[transform canvas={scale=0.5}]
-    \path[mindmap,scale=0.75,concept color=red!50!black,text=white]
-        node[concept,scale=0.75] {Core}
-        [counterclockwise from=200]
-        child[concept,scale=0.95] { node[concept] {STG} };
-\end{tikzpicture}
-\end{center}
+    \begin{figure}[H]
+    \label{figure:overviewStg}
+    \centering
+        \begin{tikzpicture}[->,shorten >=1pt,auto,node distance=4.2cm,
+                            semithick]
+        \tikzstyle{every state}=[rectangle,minimum size=2.0cm]
+        \node[state](socker)                      {Sockerkod};
+        \node[state,fill=gray!30!white](stg)    [right of=socker]    {STG-kod};
+        \node[state](stgint) [right of=stg]       {STG-tolk};
+        \node[state]                  (opt)       [below of=stg]         {Optimering};
+        \path (socker)    edge node {avsockring}   (stg)
+              (stg) edge node {} (stgint)
+              (stgint)       edge[bend left]  node {} (opt)
+              (opt)       edge[bend left] node {} (stgint)
+              
+              ;
+        \end{tikzpicture} 
+        \caption{Översikt}
+    \end{figure}
+}
+
+\newcommand{\overviewStgInt}
+{
+    \begin{figure}[H]
+    \label{figure:overviewStgInt}
+    \centering
+        \begin{tikzpicture}[->,shorten >=1pt,auto,node distance=4.2cm,
+                            semithick]
+        \tikzstyle{every state}=[rectangle,minimum size=2.0cm]
+        \node[state](socker)                      {Sockerkod};
+        \node[state](stg)    [right of=socker]    {STG-kod};
+        \node[state,fill=gray!30!white](stgint) [right of=stg]       {STG-tolk};
+        \node[state]                  (opt)       [below of=stg]         {Optimering};
+        \path (socker)    edge node {avsockring}   (stg)
+              (stg) edge node {} (stgint)
+              (stgint)       edge[bend left]  node {} (opt)
+              (opt)       edge[bend left] node {} (stgint)
+              
+              ;
+        \end{tikzpicture} 
+        \caption{Översikt}
+    \end{figure}
 }
 
 \newcommand{\overviewOptimise}
 {
-\begin{center}
-\begin{tikzpicture}%[transform canvas={scale=0.5}]
-    \path[mindmap,scale=0.75,concept color=blue!50!black,text=white]
-        node[concept,scale=0.75] {Optimise}
-        [clockwise from=20]
-        child { node[concept,scale=0.95] {Omega} }
-        child { node[concept,scale=0.95] {Psi} }
-        child { node[concept,scale=0.95] {Irr} }
-        child { node[concept] {After burner} };
-\end{tikzpicture}
-\end{center}
+    \begin{figure}[H]
+    \label{figure:overviewOptimise}
+    \centering
+        \begin{tikzpicture}[->,shorten >=1pt,auto,node distance=4.2cm,
+                            semithick]
+        \tikzstyle{every state}=[rectangle,minimum size=2.0cm]
+        \node[state](socker)                      {Sockerkod};
+        \node[state](stg)    [right of=socker]    {STG-kod};
+        \node[state](stgint) [right of=stg]       {STG-tolk};
+        \node[state,fill=gray!30!white]                  (opt)       [below of=stg]         {Optimering};
+        \path (socker)    edge node {avsockring}   (stg)
+              (stg) edge node {} (stgint)
+              (stgint)       edge[bend left]  node {} (opt)
+              (opt)       edge[bend left] node {} (stgint)
+              
+              ;
+        \end{tikzpicture} 
+        \caption{Översikt}
+    \end{figure}
 }
 
 \newcommand{\overviewSugar}
 {
-\begin{center}
-\begin{tikzpicture}%[transform canvas={scale=0.5}]
-    \path[mindmap,scale=0.75,concept color=green!50!black,text=white]
-        node[concept,scale=0.75] {Frontend}
-        [clockwise from=90]
-        child { node[concept,scale=0.95] {Parser} }
-        child { node[concept,scale=0.95] {Avsockrare} }
-        child { node[concept,scale=0.95] {Lambda- lyftare} };
-\end{tikzpicture}
-\end{center}
+    \begin{figure}[H]
+    \label{figure:overviewSugar}
+    \centering
+        \begin{tikzpicture}[->,shorten >=1pt,auto,node distance=4.2cm,
+                            semithick]
+        \tikzstyle{every state}=[rectangle,minimum size=2.0cm]
+        \node[state,fill=gray!30!white](socker)                      {Sockerkod};
+        \node[state](stg)    [right of=socker]    {STG-kod};
+        \node[state](stgint) [right of=stg]       {STG-tolk};
+        \node[state]                  (opt)       [below of=stg]         {Optimering};
+        \path (socker)    edge node {avsockring}   (stg)
+              (stg) edge node {} (stgint)
+              (stgint)       edge[bend left]  node {} (opt)
+              (opt)       edge[bend left] node {} (stgint)
+              
+              ;
+        \end{tikzpicture} 
+    \caption{Översikt}
+    \end{figure}
 }
+
 
 \newcommand{\stgOptimise}
 {
-\begin{center}
-\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=2.8cm,
-                    semithick]
-    \tikzstyle{every state}=[fill=blue,draw=none,text=white]
-    \node[state,fill=red!50!black](stg)   {STG};
-    \node[state](omega) [below of=stg]          {$\Omega$};
-    \node[state](psi)   [below right  of=omega]  {$\Psi$};
-    \node[state](irr)   [below left of=omega]  {$\Phi$};
-    \path (stg)   edge[line width=2pt, bend left] node {start} (omega)
-                  edge[bend left] node {} (psi)
-          (omega) edge node {} (psi)
-                  edge node {} (irr)
-                  edge[bend left] node {} (stg)
-          (irr)   edge node {} (omega)
-                  edge[line width=2pt,bend left] node {stopp} (stg)
-          (psi)   edge node {} (omega)
-                  edge node {} (irr);
-          
-    
-    
-\end{tikzpicture}
-\end{center}
+    \begin{figure}[H]
+    \label{fig:Optimise:states}
+    \centering
+        \begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=2.8cm,
+                            semithick]
+            \tikzstyle{every state}=[fill=blue,draw=none,text=white]
+            \node[state,fill=red!50!black,rectangle](stg)   {STG};
+            \node[state](omega) [below of=stg]          {$\Omega$};
+            \node[state](psi)   [below right  of=omega]  {$\Psi$};
+            \node[state](irr)   [below left of=omega]  {$\Phi$};
+            \path (stg)   edge[line width=2pt, bend left] node {start} (omega)
+                          edge[bend left] node {} (psi)
+                  (omega) edge node {} (psi)
+                          edge node {} (irr)
+                          edge[bend left] node {} (stg)
+                  (irr)   edge node {} (omega)
+                          edge[line width=2pt,bend left] node {stopp} (stg)
+                  (psi)   edge node {} (omega)
+                          edge node {} (irr);
+                  
+            
+            
+        \end{tikzpicture}
+        \caption{Hur tillstånden kan gå mellan varandra}
+    \end{figure}
 }
+

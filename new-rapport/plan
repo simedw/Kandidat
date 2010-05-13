@@ -1,5 +1,32 @@
 = This is our plan =
 
+
+Småsaker:
+    Abstrakt [dan har jobbat på det] <-- Utokning av stg
+    Ta bort "du" -in progress... men var någonstans är alla?-
+    Kapitel istallet for sections
+    Paragraphs
+    [x] Sätt figure nr på figurer
+    trestegsraketen för varje figur
+    core/olika maskiner : skriva främst och först om STG, sen om GRIN
+    
+
+
+Mellan saker:
+    [x] Inledning [================/] kolla gärna igenom! :)
+        [x] Fixa figuren så att den är bredare
+    [x] Dela upp core   socker -> [^vdiav^] [v^loc^v] [<-lambda->] -> core
+    <d,o> Resultat
+        * Regexp, varför dåligt?
+        * Bild på shapes
+        * De nya graferna
+    s Slutsats  [=========?         ]
+    [x] Skriv om relaterade arbeten, \cite ska inte vara ett objekt i meningarna
+
+Stora saker:
+    D Optimise [=============/     ]
+    ändra alla kodexempel så att nya koddelar markeras
+
 Sma saker:
     s Abstrakt
     Ta bort "du"

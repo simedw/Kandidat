@@ -1,22 +1,70 @@
 \documentclass[Rapport]{subfiles}
 \begin{abstract}
 
-Vi har utvecklat en lat semantik för optimering av partiellt applicerade funktioner 
-under körningstid i ett funktionellt språk. För att möjliggöra detta har vi även implementerat en tolk 
-med STG som corespråk. STG används även i Haskellkompilatorn GHC som en intern 
-representation av koden i kompileringsfasen.
-% använder sig av STG, som används i exempelvis Haskellkompilatorn GHC, som
-%intern representation av koden. 
-I vårt språk ges möjligheten att annotera var koden
-ska optimeras under körningstid, vilket möjliggör fler optimeringar än de som kan
-göras statiskt.
-Vi introducerar tolken, de byggstenar den består av och STG grundligt och ger 
-sedan en formell modell över hur optimeringen kan göras under körningstid.
-Vi visar sedan våra praktiska resultat och ser att optimeringen
-ger stora tidsvinster i de fall då en funktion som partiellt applicerats med värden, som inte är kända
-statiskt, optimeras och sedan körs ett relativt stort antal gånger.
+\NOTE{
+Koens kommentarer:
+
+Vad är viktigast - semantiken eller tolken (eller optimeringsmöjligheten?)
+Har vi gjort en utökning av STG?
+
+\paragraph{Kanske:}
+`Vi har gjort en utökning av STG för att optimera partiellt applicerade funktioner under korningstid. Vi konkretiserat detta med att utveckla en tolk.'
+
+
+Förvirrat att prata om semantiken
+
+Mycket "vi"
+
+För mycket bakgrund att prata om GHC och STG... Anta att STG är känt?
+
+}
 
 \NOTE{
-Detta är en $\beta$-rapport.
+Ytterligare kommentarer från Koen som står på framsidan som antagligen rör
+hela rapporten:
+
+Blanda inte
+\begin{itemize}
+    \item nuvarande läget / slutprodukt
+    \item anleddningar varför det finns med i proojektet eller ej
+    \item temporala (först gjorde vi...)
+    \item val mellan alternativa lösningar
+\end{itemize}
+
+}
+
+%Vi har utvecklat en lat semantik för optimering av partiellt applicerade funktioner 
+%under körningstid i ett funktionellt språk. För att möjliggöra detta har vi även 
+%implementerat en tolk med STG som corespråk.
+
+%, som använts i Haskellimplementationer.
+
+%STG används även i Haskellkompilatorn GHC som en intern 
+%representation av koden i kompileringsfasen.
+
+% använder sig av STG, som används i exempelvis Haskellkompilatorn GHC, som
+%intern representation av koden. 
+
+
+
+
+% Vi har gjort en utokning av STG for optimering av partiellt applicerade funktioner under korningstid i ett lat funktionellt sprak. Vi konkretiserat detta med att utveckla en tolk.
+
+Vi har utvecklat en tolk med möjligheten att optimera partiellt applicerade
+funktioner under körningstid i ett lat funktionellt språk. Tolken använder
+STG, som också används i Haskellimplementationer, som corespråk.
+
+Språket har modifierats för användaren ska kunna annotera var koden
+ska optimeras under körningstid. Detta visas ge fler möjligheter till
+optimeringar än de som kan göras statiskt.
+
+Vi introducerar tolken, de byggstenar den består av och STG grundligt och ger 
+sedan ett formellt schema beskrivande semantiken över hur optimeringen kan göras under 
+körningstid. Sedan visas de praktiska resultat som fås: optimeringen ger stora 
+tidsvinster i de fall då en funktion som partiellt applicerats med värden, 
+som inte är kända statiskt, optimeras och sedan körs ett relativt stort antal gånger.
+
+\NOTE{
+Detta är snart den slutgitliga rapporten! ($\gamma$)
 }
 \end{abstract}

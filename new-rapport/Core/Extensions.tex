@@ -13,9 +13,10 @@ fortfarande vara thunkar, kallas vek normalform
 (engelska weak head normal form, förkortas whnf). Normalform, däremot, så
 forceras alla konstruktorns argument att också evalueras till normalform.
 Alltså till ett värde, dvs konstruktor eller funktion. Reglerna för dessa
-återfinns i appendix \ref{sec:printcont}
+finns i appendix \ref{sec:printcont}
 
 \subsection{Boxing}
+\label{sec:boxing}
 
 För att få en uniform representation av användardefinierade datatyper, skapade
 med en konstruktor, och primitiva datatyper som \ic{Int}, \ic{Double} och \ic{Char}, ges även 
@@ -42,10 +43,14 @@ evaluerat före det boxas igen.
 
 \subsection{IO}
 Tolken har en primitiv form av IO: den har konstant indata vid körning och
-skriver ut det som \ic{main}-funktionen returnerar. Funktionerna getInt, 
-getIntList, getDouble, getDoubleList och getString finns
-till hands under körning om användaren har angett någon eller några av dessa
-i anropet till tolken. Dessa är konstanta under körningstid och gör det
+skriver ut det som \ic{main}-funktionen returnerar. Funktionerna 
+\ic{getInt}, 
+\ic{getIntList},
+\ic{getDouble},
+\ic{getDoubleList} och 
+\ic{getString} 
+finns till hands under körning om användaren har angett någon eller några av
+dessa i anropet till tolken. Dessa är konstanta under körningstid och gör det
 lättare att testa programmen genom att ändra deras indata utan att modifiera
 källkoden.
 

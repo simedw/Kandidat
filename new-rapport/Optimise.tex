@@ -11,13 +11,13 @@
 \overviewOptimise
 
 Nu när sockerspråket (sektion 2) och corespråket (sektion 3) är förklarade
-kan kan vi börja undersöka optimeringen som är själva kärnan i arbetet.
+kan undersökningen av optimeringen, som är själva kärnan i arbetet, påbörjas.
 I introduktionen i detta avsnitt kan du läsa om vad optimering och 
 optimering under körningstid innebär. 
 
 För att optimera under körningstid har olika semantiker tagits fram och undersökts.   
 Den första av dem, som kommer att refereras till som CBV- eller call-by-value-semantiken, 
-kan du läsa om i avsnitt 4.2. Den hade vissa nackdelar, så i 
+beskrivs i avsnitt 4.2. Den hade vissa nackdelar, så i 
 efterföljande avsnitt presenteras en bättre lösning som kallas för CBN- eller call-by-name-semantiken.
 
 Denna kunde också tjäna på andra optimeringar, som t.ex.
@@ -75,24 +75,28 @@ i vårt språk, och vi ska nu förklara dessa i kronologisk ordning.
 
 \subsection{Optimeringtillstånd}
 
-Vi kommer uttrycka våran optimering på ett liknande sätt som corespråket. Vi optimerar
+% exotiskt att skriva dessa i optimisefilen
+% och inte i en ny fil i optimisekatalogen
+%  mvh Dan
+
+Vi kommer uttrycka vår optimering på ett liknande sätt som övriga STG. Vi optimerar
 koden genom att evaluera den på ett speciellt sätt. En skillnad mellan optimering och
 evaluering är att optimeringen sker med okända uttryck (t.ex. fria variabler). 
-Det gör att vi inte alltid kan få ett värde av en optmering av uttryck, i dessa
+Det gör att vi inte alltid kan få ett värde \footnote{ Det vill säga en primitiv eller en variabel som inte
+är en thunk.}  av en optmering av uttryck, i dessa
 fall måste vi bygga upp ett uttryck som kommer räkna ut det okända värdet. Förhopningsvis
 är det nya uttrycket för att räkna ut värdet bättre än det gamla.
 
-Vi kommer att se optimeringen som ett specialtillstånd i corespråket, som används
+Vi kommer att se optimeringen som ett specialtillstånd för STG, som används
 för att visa att vi evaluerar inuti en funktion (under lambda), vilket alltså medför
-att det finns fria variabler. Målet med optimeringen är att i slutet av optimeringen
+att det finns fria variabler. Målet  är att i slutet av optimeringen
 ha skapat en ny funktion som är snabbare än orginalfunktionen.
 
 Det som vår optimering kan göra faller under dessa kategorier:
 
 \paragraph{ Beräkna kända uttryck. }
-
-Detta är ganska enkelt, i detta fall går det att använda den vanliga
-maskinen för vårat corespråk. Om det t.ex står \ic{7 * 191} i koden så kan vi evaluera
+Dessa fall är ganska enkla att optimera här går det att använda den vanliga
+maskinen för STG. Om det t.ex står \ic{7 * 191} i koden så kan vi evaluera
 det som vanligt och sedan använda resultatet \ic{1337} i koden.
 
 \paragraph{ Infoga funktionsdefinitioner. }
@@ -100,7 +104,8 @@ det som vanligt och sedan använda resultatet \ic{1337} i koden.
 Att infoga funktioner kan se som något enkelt, men det finns vissa fällor att se upp
 för. Det gäller att se till att man inte infogar funktioner som i sin tur infogar funktioner etc.
 Man får vara försiktig så optimeringen terminerar, detta blir ett problem om man
-optimerar inuti alla grenar till ett \kw{case}-uttryck.
+optimerar inuti alla grenar till ett \kw{case}-uttryck. Detta kan exemplifieras
+med funktionen \ic{sum}, som summerar en heltalslista:
 
 \begin{codeEx}
 sum xs = case xs of
@@ -118,15 +123,15 @@ igen i \ic{Cons}-fallet.
 
 I \kw{case}-uttryck kan man veta vilket värde en granskare har, detta kan man använda
 för att välja rätt gren. När vi hittar en \kw{case} börjar vi optimera granskaren,
-men eftersom det inte är säkert att en optimering kan lyckas eller inte behöver vi
-något sätt att visa det. 
+men eftersom det inte är avgörbart på förhand om en optimering lyckas eller inte
+behöver vi något sätt att visa det. 
 
 I vår implementation har vi valt att visa detta genom att ha tre olika tillstånd
-för våran optimering, vilka dessa är och vad de betyder kommer beskrivs senare.
+för vår optimering, vilka dessa är och vad de betyder kommer beskrivs senare.
 
 \paragraph{ Byta ut uttryck mot semantiskt ekvialenta uttryck.}
 
-Vårat core-språk följer vissa lagar, dessa kan man använda för att skria om uttryck
+Vårt core-språk följer vissa lagar, dessa kan man använda för att skria om uttryck
 till ekvialenta uttryck. Vi har i vissa fall använt dessa lagar för att skriva om
 uttrycken till andra uttryck som är enklare att optimera.
 
@@ -137,22 +142,40 @@ igen. För att veta vad som skall byggas upp används stacken för att lägga ut
 om vilket uttryck man tidigare har optimerat och som man behöver bygga upp igen ifall det
 inte blev ett värde. Så många uttryck får en egen continuation för detta syfte.
 
-\stgOptimise
+
 
 Som lösning har vi valt att ha tre olika tillstånd, dessa har vi valt att kalla
 $\Omega, \Psi$ samt $\Phi$. Dessa används för att optimeringen skall veta var den
-är.
+är. 
 
-\textbf{Omega} $\Omega$, är att vi vill optimera till ett värde. I detta tillstånd
+\paragraph{Omega $\Omega$} Är att maskinen vill optimera till ett värde. I detta tillstånd
 inspekterar vi uttrycket och försöker evaluera det till ett värde om det går.
 
-\textbf{Psi} $\Psi$, är att vi har optimerat till ett värde. I detta tillstånd
+\paragraph{Psi $\Psi$} Är att maskinen har optimerat till ett värde. I detta tillstånd
 har vi ett värde och försöker bygga upp uttrycket igen från stacken, med kunskapen att vi vet
 att det är ett värde.
 
-\textbf{Irr} $\Phi$, är att vi har misslyckats att optimera till ett värde, kortform för Irreducible.
+\paragraph{Irr $\Phi$} Är att maskinen misslyckats att optimera till ett värde, kortform för Irreducible.
 I detta tillstånd har vi att vi inte hade tillräckligt med information att få ett
 värde. Så vi bygger upp ett uttryck igen med information från stacken.
+
+\paragraph{}
+I figur \ref{fig:Optimise:states} ses att evaluering alltid börjar i den vanliga maskinen
+ (visas som STG) och går till $\Omega$. Detta sker när vid optimering av en funktion
+ 
+och slutar med att $\Phi$ bygger upp funktionen och går tillbaka till den vanliga maskinen.
+
+%\begin{figure}[H]
+\stgOptimise
+%\caption{Hur tillstånden kan gå mellan varandra}
+%\label{fig:Optimise:states}
+%\end{figure}
+
+
+
+
+
+
 
 \subfile{Optimise/CBV}
 
