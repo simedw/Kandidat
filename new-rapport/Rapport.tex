@@ -1,5 +1,5 @@
-\documentclass[leqno]{article}
-%\documentclass[leqno]{report}
+%\documentclass[leqno]{article}
+\documentclass[leqno]{report}
 
 \usepackage{subfiles}
 \usepackage{fegr}
@@ -10,13 +10,15 @@
 \usepackage{stmaryrd}
 \usepackage{hyperref}
 
+
+
 %Stg.tex
 \usepackage{listings}
 \usepackage{fancybox}
 \usepackage{calc}
 \usepackage{amsmath}
 \usepackage{xargs}[2008/03/08]
-%\usepackage[margin=3cm]{geometry}
+\usepackage[margin=3cm]{geometry}
 % End Stg.tex
 % Opt1
 \usepackage{amssymb}
@@ -46,15 +48,63 @@
 
 \begin{document}
 
+\begin{comment}
 \title{Optimering under körningstid}
-\date{}
+\date{\today}
 \author{Simon  Edwardsson
    \and Olle   Fredriksson
    \and Daniel Gustafsson
    \and Dan    Rosén
    }
-   
+\thanks{Handledare: Koen Claessen}
+ 
 \maketitle
+\end{comment}
+
+\begin{titlepage}
+ 
+\begin{center}
+ 
+ 
+% Upper part of the page
+% \includegraphics[width=0.15\textwidth]{./logo}\\[1cm]
+ 
+\textsc{\LARGE Chalmers Tekniska Högskola \\[0.6cm] Göteborgs Universitet}\\[1.5cm]
+ 
+ 
+ 
+% Title
+\HRule \\[0.4cm]
+{ \huge \bfseries Optimering under körningstid}\\[0.3cm]
+ 
+\HRule \\[0.5cm]
+ 
+\textsc{\Large Kandidatuppsats}\\[1.5cm]
+% Author and supervisor
+\begin{minipage}{0.4\textwidth}
+\begin{flushleft} \large
+\emph{Författare:}\\
+Simon Edwardsson \\
+Olle Fredriksson \\
+Daniel Gustafsson \\
+Dan Rosén
+\end{flushleft}
+\end{minipage}
+\begin{minipage}{0.4\textwidth}
+\begin{flushright} \large
+\emph{Handledare:} \\
+Bitr. Prof. Koen Claessen
+\end{flushright}
+\end{minipage}
+ 
+\vfill
+ 
+% Bottom of the page
+{\large \today}
+ 
+\end{center}
+ 
+\end{titlepage}
 
 \subfile{Abstract}
 \newpage
@@ -84,11 +134,16 @@
 
 \subfile{FramtidaArbeten}
 
-\subfile{Slutsats}
+\chapter{Palindrom}
+\begin{itemize}
+    \item Koen e ok
+    \item tut
+    \item majsjam
+\end{itemize}
 
 \clearpage
 \phantomsection
-\addcontentsline{toc}{section}{Referenser} % change section to chapter for book
+\addcontentsline{toc}{section}{Litteraturförteckning} % change section to chapter for book
 \bibliographystyle{agsm}
 \bibliography{references}
 

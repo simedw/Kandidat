@@ -1,13 +1,12 @@
 \documentclass[../Optimise]{subfiles}
 \begin{document}
 
-\subsection{Välkänd case-lag}
+\section{Välkänd case-lag}
+\label{sec:CaseLaw}
 
 Väldigt ofta uppstår en \kw{case}-sats inuti granskaren tillhörande en annan \kw{case}-sats, 
 vilket är svårt att optimera vidare.
-Vi utnyttjar i dessa tillfällen en identitet hos \kw{case}-satser. \cite{santos}
-
-
+Vid dessa tillfällen utnyttjas en identitet hos \kw{case}-satser. \cite{santos}
 
 \begin{tabular}{ m{5cm} m{0.5cm} m{5cm} }
 \begin{codeEx}
@@ -32,7 +31,13 @@ Vi utnyttjar i dessa tillfällen en identitet hos \kw{case}-satser. \cite{santos
 \\
 \end{tabular}
 
-Nu är det lättare att applicera flera av våra andra optimeringar, 
-t.ex. gemensam \kw{case}-granskare. 
+Nu är det lättare att applicera flera andra optimeringar, 
+exempelvis gemensam \kw{case}-granskare. 
+I det här projektet är det här implementerat som att när $\Omega$-tillståndet hanterar ett 
+uttryck som har en \kw{case} i en \kw{case} så skyfflas de om enligt ovan.
+
+Ifall en \kw{case}-sats ska byggas upp och uttrycket också är en \kw{case}-sats i
+$\Phi$-tillståndet kan dessa också skyfflas runt. Detta kan erbjuda nya möjligheter
+för optimering så därför blir nästa tillstånd återigen $\Omega$ som kan fortsätta optimera.
 
 \end{document}

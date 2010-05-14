@@ -2,11 +2,12 @@
 \documentclass[../Optimise]{subfiles}
 \begin{document}
 
-\subsection{Introduktion till optimise}
+\section{Introduktion till optimise}
 
-Vi börjar med att återigen betrakta powerfunktionsexemplet från introduktionen. Vi är
-intresserade av att se vilka optimeringar som krävs för att den skall transformeras till den
-mer optimala kod som visades.
+Vi börjar med att återigen betrakta powerfunktionsexemplet från introduktionen. Det som är
+intressant är att se vilka optimeringar som krävs för att den skall transformeras till den
+mer optimala kod som visades. Här kommer funktionen:
+
 \begin{codeEx}
 power n x = let t1 = n == 0
     in case t1 of
@@ -18,20 +19,21 @@ power n x = let t1 = n == 0
             } in t4
         };
 \end{codeEx}
-Vi ser att \ic{power 3 5} kommer att upphöja $5$ till $3$, dvs $5 * 5 * 5$.
-Precis som innan gäller det att om vi känner till exponenten men inte basen kan vi göra en specialiserad version av \ic{power}, vi ska nu visa hur detta går till på ett informellt sätt. 
-%Om vi känner till exponenten men inte basen kan vi göra en specialiserad version av \ic{power}
-%för just den exponenten. Hur detta går till ska vi nu visa på ett informellt sätt. 
-Senare kommer mer formella regler att ges. Vi antar att programmeraren
-har skrivit följande för att visa att hen vill ha en specialiserad version av \ic{power} för $3$.
+
+Om funktionen appliceras på $3$ och $5$, alltså \ic{power 3 5}, kommer den att upphöja $5$ till $3$, dvs $5 * 5 * 5$.
+Precis som innan gäller det att om exponenten är känd men inte basen kan en 
+specialiserad version av \ic{power} skapas. Detta visas först på ett informellt sätt, 
+och senare kommer mer formella regler att ges. Anta att programmeraren
+har skrivit följande för att visa att hon vill ha en specialiserad version av \ic{power} för $3$.
 
 \begin{codeEx}
 optimise (power 3)
 \end{codeEx}
 
-Vi börjar med att byta ut alla \ic{n} mot $3$ i \ic{power}. Ingenting görs med 
-\ic{x} eftersom den är okänd. Vi ger också ett nytt namn till den optimerade funktionen
-så att vi kan behålla originalet om den skulle behövas i någon annan del av koden.
+Först byts alla \ic{n} ut mot $3$ i funktionskroppen. Ingenting görs med 
+\ic{x} eftersom den är okänd. Den optimerade funktionen får också ett nytt namn
+så att originalet finns kvar om det skulle behövas i någon annan del av koden.
+
 \begin{codeEx}
 power_3 x = let t1 = 3 == 0
     in case t1 of
@@ -44,10 +46,10 @@ power_3 x = let t1 = 3 == 0
         };
 \end{codeEx}
 
-Vi börjar nu gå igenom trädet. Först möter vi \ic{let t1 = ... in exp} vilket 
-sparas undan och vi går vidare in i \ic{exp} som är ett \ic{case}-uttryck. 
-\ic{Case}-uttrycket kan få ut värdet från \ic{t1} eftersom den inte innehåller några 
-fria variabler (som i det här fallet bara är \ic{x}). Då \ic{3 == 0} är falskt fås nu: 
+Nu traverseras trädet. Först kommer \ic{let t1 = ... in exp} som 
+sparas undan så att \ic{exp}, som är ett \ic{case}-uttryck, kan behandlas. 
+\ic{Case}-uttrycket kan få ut värdet från \ic{t1} eftersom \ic{t1} inte innehåller några 
+fria variabler (i det här fallet är bara \ic{x} en fri variabel). Då \ic{3 == 0} är falskt fås nu: 
 
 \begin{codeExDiff}
 power_3 x = case |False| of
@@ -60,53 +62,72 @@ power_3 x = case |False| of
     };
 \end{codeExDiff}
 
-Nu kan vi välja \ic{False}-grenen och strunta i den andra. När vi går in i grenen
-sparar vi som tidigare först undan \ic{let}:arna och går sedan till \ic{t4}.
-Den kan bytas ut mot sitt värde i \ic{let}-uttrycket, och på samma sätt  kan \ic{t3}
-och \ic{t2} infogas så att vi till slut kommer fram till följande funktion:
+Nu kan \ic{False}-grenen väljas och den andra kan tas bort. När grenen traverseras
+sparas först \ic{let}:arna undan och optimeringen kommer till \ic{t4} som kommer
+efter \ic{let}-bindningarna.
+\ic{t4} kan bytas ut mot sitt värde i \ic{let}-uttrycket, och på samma sätt  kan \ic{t3}
+och \ic{t2} infogas så att den slutliga funktionen blir följande:
 
 \begin{codeEx}
 power_3 x = x * power (3-1) x;
 \end{codeEx}
 
-Härifrån kan vi fortsätta genom att infoga \ic{power (3-1) x} och optimera den
-koden på samma sätt. Till sist får vi följande kod:
+Härifrån fortsätter optimeringen genom att infoga \ic{power (3-1) x} och optimera den
+koden på samma sätt. Till sist erhålls följande kod:
 
 \begin{codeEx}
 power_3 x = x * x * x * 1;
 \end{codeEx}
 
 Denna funktion är mycket mindre och snabbare.
-Detta är dock inte riktigt hela sanningen eftersom heltal boxas i vårt språk, vilket
+Men i STG-språket boxas egentligen heltal, vilket
 också betyder att multiplikationsoperatorn, \ic{*}, är en funktion som först
 evaluerar sina argument och sedan multiplicerar dem med den primitiva 
-multiplikationsoperatorn (\ic{*\#}), se sektion \ref{sec:boxing}.
-Om vi nu infogar alla multiplikationer i \ic{power 3} får vi följande mastiga kod:
+multiplikationsoperatorn \ic{*\#} (se sektion \ref{sec:boxing} om boxing).
+Om nu alla multiplikationer i \ic{power 3} infogas som de ser ut i STG 
+fås egentligen följande mastiga kod:
+
 \begin{codeEx}
 power_3 x = case 
     ( case 
         ( case 
             ( case x of
-                { I# a -> case x of
-                    { I# b -> case a #* b of
+                { I# x.a -> case x of
+                    { I# x.b -> case x.a #* x.b of
                         { r' -> let r = I# r' in r}}}
             ) of
             { I# c -> case x of
-                { I# d -> case c #* d of
+                { I# x.c -> case c #* x.c of
                     { r' -> let r = I# r' in r}}}                
          ) of
-         { I# e -> case x of
-              { I# f -> case e #* f of
+         { I# d -> case x of
+              { I# x.d -> case d #* x.d of
                    { r' -> let r = I# r' in r}}}
     ) of
-        { I# g -> case g #* 1 of
+        { I# e -> case e #* 1 of
             { r' -> let r = I# r' in r}};                                     
 \end{codeEx}
 
+Här kan vi använda en identitet för \kw{case}-satser som beskrivs i 
+sektion \ref{sec:CaseLaw}, som gör att koden ser ut så här:
 
-Vi \ic{case}:ar flera gånger på \ic{x} och använder konstruktorn \ic{I\#} för att boxa värden
+\begin{codeEx}
+power_3 x = case x of
+    { I# x.a -> case x of
+        { I# x.b -> case x of
+            { I# x.c -> case x of
+                { I# x.d -> case x.a #* 1 of
+                    { a -> case x.b #* a of
+                        { b -> case x.c #* b of
+                            { c -> case x.d #* c of
+                                { r' -> let r = I# r' in r}}}}};
+\end{codeEx}
+
+Detta avslöjar att här görs \ic{case} flera gånger på \ic{x} och 
+konstruktorn \ic{I\#} används för att boxa värden
 när de ändå bara ska \ic{case}:as fram.
-Detta kan vi optimera bort, vilket beskrivs i avsnittet om afterburner, och vi får följande funktion:
+Detta kan optimeras bort, vilket beskrivs i avsnittet om afterburner
+(sektion \ref{sec:Afterburner}) och vi får följande funktion:
 
 \begin{codeEx}
 power_3 x = case x of
@@ -117,9 +138,10 @@ power_3 x = case x of
                     { r' -> let r = I# r' in r}}}}};
 \end{codeEx}
 
-Detta är så långt som vår optimering kommer. \ic{x' *\# 1} skulle naturligtvis
-kunna optimeras till \ic{x'}, men vi har inte fokuserat på sådana aritmetiska
-specialfall. I resten av det här avsnittet kommer vi i detalj förklara vart och
-ett av optimeringsstegen och varför de fungerar som de gör.
+Detta är så långt som optimeringen kommer. \ic{x' *\# 1} skulle naturligtvis
+kunna optimeras till \ic{x'}, men i det här projektet ligger inte fokus på sådana 
+aritmetiska identiteter eller andra liknande
+specialfall. I resten av det här avsnittet förklaras i detalj alla
+optimeringssteg och varför de fungerar som de gör.
 
 \end{document}

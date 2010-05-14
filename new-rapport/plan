@@ -1,30 +1,64 @@
 = This is our new plan =
 
-Ta bort "du", kolla användning av "vi" -in progress... men: var någonstans är alla?-
-            * Optimise-avsnittet. skriv om med maskinen tex istället
+globalt
+
+    [ ] Manuell genomläsning
+        [?] trestegsraketen för varje figur
+
+    Ta bort "du", kolla användning av "vi" -in progress... 
+        men: var någonstans är alla?-
+        * Optimise-avsnittet. skriv om med maskinen tex istället
 
     skapa semantik <-> ändra beteende
+    
+    [ ] Rättstavning
 
-trestegsraketen för varje figur
+diskussion
+    [ ] diskutera varför reglerna designades på 
+        det här sättet och inte på något annat sätt
+
+        de måste ju ändå designa dem på något sätt?
+        vilka val har vi gjort? vad har våra andra alternativ varit?
+        vi har valt att skapa en viss abstraktion med 
+
+        svårt att isolera olika delar
+
+        bra sak: traversera en enda gång och göra flera saker samtidigt
+
+        balansgång
+
+        i evalueringsform. vi optimerar inte saker ännu inte används
+        tracing jit säger Daniel
+        hur gör man det jit säger Simon
+        Daniel pratar om execution-paths
+        det finns troligtvis bättre modeller men vi har inte gjort dem
+        vi har inte heller kollat så djupt i litteraturen
+            och det var kul att komma på själva
+            och det var inte så bra gjort av oss
+            men vi får göra så för det är ett kandiatarbete
+
+        istället för att använda omega, psi, irr använda alfa, beta, gamma
+        Schönfinkelisation tycker Daniel är kul.
 
 resultat
-    exponentialitet
-    [x] grafer på shapes
-    koppla till optimiseregler
-    
-Sockerspråket: Varför valde vi inte att göra det till en delmängd av Haskell?
+    [x] olinjaritet
+    [x] grafer (på shapes)
+    [x] förklara grafer
+    [ ] koppla till optimiseregler
 
-Rättstavning
-Manuell genomläsning
+Framtida arbete
+    [x] olinjaritet
 
+Sockerspråket: 
+    [/] Varför valde vi inte att göra det till en delmängd av Haskell?
+        frågan är omotiverad /Dan
 
-
-
-
+Slutsats
+    [x] är lite väl(digt) kort
+    NU MERGAT MED FRAMTIDA ARBETE
 
 
 = This is our old plan =
-
 
 ska man ha ett abstrakt pa engelska ocksa?
 
@@ -96,3 +130,5 @@ Blanda inte
 \end{itemize}
 
 }
+
+

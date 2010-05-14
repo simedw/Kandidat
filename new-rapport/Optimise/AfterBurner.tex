@@ -1,15 +1,16 @@
 \documentclass[../Optimise]{subfiles}
 \begin{document}
 
-\subsection{Afterburner}
+\section{Afterburner}
+\label{sec:Afterburner}
 
-Alla optimeringar har hittills i det här arbetet har arbetat tillsammans, i en gemensam
+Alla optimeringar hittills i det här arbetet har arbetat tillsammans, i en gemensam
 traversering av syntaxträdet som följer en gemensam semantik för att nå det önskade resultatet. 
 Detta är bra ur tidssynpunkt men gör det ibland svårt att byta ut enskilda delar i koden
-eftersom man då ofta behöver ändra på många ställen på samma gång.
+eftersom många ställen då ofta behöver ändras på samma gång.
 
 Det finns även en del optimeringar som behöver se större delar av syntaxträdet
-samtidigt för att kunna vara verksamma. Dessa optimeringar är som regel mycket långsammare att utföra.
+samtidigt för att kunna vara verksamma. Dessa optimeringar är som regel långsammare att utföra.
 
 Vi har valt att utföra ett antal sådana optimeringar efter att de vanliga
 optimeringana har körts, därav namnet `after burner'. Följande regel beskriver
@@ -23,7 +24,7 @@ var i semantiken som afterburnern kommer in:
 \paragraph{Gemensam case-granskare} 
 Att \kw{case}:a på samma uttryck två gånger kommer i ett funktionellt språk alltid att ge
 samma resultat då alla variabler egentligen är konstanter. För varje \kw{case}-gren
-vi går in i vet vi att alla nästlade \kw{case} på samma uttryck måste välja samma
+som optimeringen går in i är det säkert att alla nästlade \kw{case}:ar på samma uttryck måste välja samma
 gren som den första.
 
 \begin{codeEx}
@@ -41,7 +42,7 @@ test x = case x of
             }   }   };
 \end{codeEx}
 
-Om vi sedan kör optimeringen av gemensamma \kw{case}-granskare erhålls:
+Om optimeringen för gemensamma \kw{case}-granskare sedan körs erhålls följande:
 \begin{codeEx}
 test x = case x of
             { I# a -> case a #* a of
@@ -50,15 +51,16 @@ test x = case x of
             }   };
 \end{codeEx}
 
-Generellt:
+Generellt sett kan regeln uttryckas som följande:
 \begin{codeEx}
 case x of
     C a b -> e1
     D a b -> e2
 \end{codeEx}
 
-Vi söker upp \ic{case x} i \ic{e1} och initierar 
-\ic{C}-grenen med \ic{a} och \ic{b} som värden. I \ic{e2} gör vi samma sak fast initierar \ic{D}-grenen.
+\ic{case x} söks upp i \ic{e1} och 
+\ic{C}-grenen initieras med \ic{a} och \ic{b} som värden. I \ic{e2} görs samma 
+sak men i det fallet är det \ic{D}-grenen som initieras.
 
 
 \end{document}

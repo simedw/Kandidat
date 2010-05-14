@@ -1,7 +1,10 @@
 \documentclass[Rapport]{subfiles}
 \begin{document}
 
-\section{Framtida arbete}
+\chapter{Slutsats och framtida arbete}
+
+Vi har i denna rapport presenterat en utökning av STG-språket med ett nytt objekt, \obj{OPT}, för att annotera kod som ska optimeras under körningstid. Vi presenterar även ett tillhörande evalueringschema som bevarar STG:s lata semantik. 
+
 En avgränsning för vårt projekt var att jobba inom ramen för en tolk. 
 Detta av flera anledningar, men främst för att det är lättare att göra prototyper för 
 olika regler för optimise. Nu när vi har tagit fram fungerande optimeringssemantik 
@@ -17,33 +20,35 @@ Det hade varit intressant att utöka vårt språk så att det skulle kunna
 användas som backend till någon större kompilator, eller något runtime-system.
 Vi har hela tiden haft detta i åtanke och det är delvis därför vi ej har någon 
 typcheckare, eftersom det redan förväntas vara gjort.
-
-
-En typcheckare och stöd för bland annat algebraiska datatyper i en 
+En typcheckare och stöd för bland annat algebraiska datatyper och typklasser i en 
 frontend hade varit trevligt då det är lätt att skriva fel när man skriver
 program till vårt språk. 
 
 
-Något som föll lite utanför ramen för vårt arbete är att rigoröst bevisa
-korrektheten hos optimisefunktionen, för att se att en optimerad funktion
-gör samma sak som dess icke-optimerade motsvarighet. Vi har endast använt oss av en testsvit
-och exempelprogram för att testa optimise. 
-
-Ett steg för att förvissa sig om korrektheten skulle vara att göra QuickCheck-egenskaper och generatorer för att se att en optimerad funktion gör samma sak som en ooptimerad. 
+Vi har inte formellt bevisat att vår utökning bevarar semantiken. Dock klarar vår referensimplementation en mängd olika testfall vilket ger oss stort förtroende för dess korrekthet. Vår referensimplementation är för närvarande en tolk. 
+Ett steg för att förvissa sig om korrektheten skulle vara att göra 
+QuickCheck\footnote{http://www.cs.chalmers.se/\textasciitilde rjmh/QuickCheck/}-egenskaper 
+och generatorer för att se att en optimerad funktion gör samma sak som en ooptimerad. 
 Ett annat sätt att säkerställa att den
 gör vad som förväntas skulle vara att formalisera reglerna och bevisa
-att de är korrekta, exempelvis med hjälp av en bevisassistent såsom Agda.
+att de är korrekta, exempelvis med hjälp av en bevisassistent som 
+Agda\footnote{http://wiki.portal.chalmers.se/agda/}.
 
-\subsection{Utveckling av optimeringen}
+\section{Utveckling av optimeringen}
+
+Inledande prestandatester visar i ett par väl valda exempel upp emot åtta gångers
+tidsvinst. Dock finns det fall där vi inte får någon väsentlig förbättring eller
+till och med en försämring. Vi har ännu inte testat vår implementation på något riktigt stort
+projekt. 
 
 Optimeringsfunktionaliteten som presenteras i den här rapporten är inte
 komplett. Det finns mycket utrymme för att lägga till fler optimeringar
-som skulle kunna förbättra koden ytterligare. Det som finns i åtanke är
+som skulle kunna förbättra koden ytterligare. Det som ligger nära till hands är
 delning, smartare hantering av rekursiva funktioner och tvingad strikthet.
 
-Dessa är genomförbara utvecklingar, och skall inte ses som omöjliga önskningar.
-Anledningen till att de inte finns med och är implementerade är tidsbrist,
-någon avgränsning fick ske.
+Dessa är genomförbara utvecklingar, och ska inte ses som omöjliga önskningar.
+Anledningen till att de inte finns med och är implementerade är tidsbrist, vilket
+framtvingade avgränsningar.
 
 \paragraph{Delning}
 Den powerfunktion som vi har fokuserat på i det här arbetet har linjär
@@ -60,47 +65,56 @@ power n x = case n == 0 of
     }
 \end{codeEx}
 
-Optimeringssemantiken, som den är nu, kommer infoga \ic{a} två gånger,
-liknande call by name, men inte call by need. Anledningen är att beräkningen
+Optimeringssemantiken, som den är nu, kommer att infoga \ic{a} två gånger,
+liknande call-by-name, men inte call-by-need. Anledningen är att beräkningen
 \ic{a} lagras i en thunk på abyssen, och när senare multiplikationen ska
-infogas så infogas även \ic{a}, och två gånger. Det resultatet sparas
+infogas infogas även \ic{a}, och detta två gånger. Det resultatet sparas
 inte.
 
-    Just nu är det svår att återskapa thunkar efter de optimeras både på grund
-av att de kan refereras till i andra thunkar och konstruktörer, och på grund
-av anropsstacken. Detta problem är 
+    Just nu är det svårt att återskapa thunkar efter att de optimerats både på grund
+av att de kan refereras till i andra thunkar och konstruktorer, och på grund
+av anropsstacken. Detta problem är inte löst.
 
 \paragraph{Rekursiva funktioner}
 \label{sec:future-regexp}
 Ibland är inte utrullning det bästa, som i fallet för reguljära uttryck.
 Betrakta funktionen \ic{match :: RegExp -> String -> Bool}, som givet
-ett reguljärt uttryck och en sträng ger tillbaka en boolean om strängen
+ett reguljärt uttryck och en sträng ger tillbaka en boolean som talar om huruvida strängen
 satisfierar uttrycket. Om man skulle rulla ut funktionen på den okända strängen
 skulle man få en godtyckligt stor funktion, eftersom strängen kan vara 
 obegränsat lång.
 
-    Istället vill man specialisera match-funktionen på olika regexpar, och
+    Istället vill man specialisera \ic{match}-funktionen på olika reguljära uttryck,
 som i sin tur kan anropa varandra. Som det är nu kan inte funktionen som
 optimeras anropa sig själv, eller andra funktioner som den har skapat.
 
-    I det här regexp-fallet vill en skapa specialiserade match-
+    I det här fallet vill man skapa specialiserade match-
 funktioner för olika reguljäruttryck, 
-som \ic{(a.b)*}, \ic{a.b}, \ic{a} och \ic{b}, och de i sin tur
+som \ic{(a.b)*}, \ic{a.b}, \ic{a} och \ic{b}, och att de i sin tur
 kan kalla på varandra.
 
 \paragraph{Tvingad strikthet}
-I vissa fall så vill man tvinga fram strikthet, som i fallet 
+I vissa fall vill man tvinga fram strikthet, som i fallet 
 \ic{optimise (sum . zipWith (*) getIntList)} som skulle kunna bli en utrullad,
-optimerad skalärprodukt. Just nu sker inte detta för att anropet till nästa
-\ic{zipWith} är lat eftersom det skapar ett \ic{Cons}-objekt, där elementet är de första
+optimerad skalärprodukt. Just nu sker inte detta eftersom anropet till nästa
+\ic{zipWith} är lat då det skapar ett \ic{Cons}-objekt, där elementet är de första
 elementen i listorna adderat, och resten av listan är ihopzippningen av resten
 av listorna. \ic{Cons} ska inte evaluera sina argument, och därför stannar
-optimeringen. Om rekursiva funktioner skulle vara implementerat som i föregående
-avsnitt så kunde göra ett anrop till sig själv igen.
+optimeringen. Om rekursiva funktioner skulle vara implementerade som i nämnt ovan
+skulle den kunna göra ett anrop till sig själv igen.
 
     I fallet med skalärprodukt vill man hellre att hela getIntList-listan 
 utrullas. Då behöver man någon slags strikthetsnotation. Antingen i koden 
 för \ic{zipWith}, eller som argument till \kw{optimise}. Tex att \ic{Cons} ska vara strikt i 
 sitt andra argument.
+
+\paragraph{Välkänd caselag}
+Som visas i resultatet, och diskuteras i sektion
+\ref{sec:diskussion_om_exponentialitet} så ger den nuvarande implementationen
+av välkänd caselag tillsammans med \kw{casebranch}-optimeringen 
+en komplexitet på optimeringen som inte är linjär. Reglerna för när denna
+omskyffling ska ske kan justeras till linjär komplexitet. Exempelvis skulle man
+kunna flagga att en gren inte behöver optimeras igen efter omskyfflingen. 
+Något sådant sätt att markera grenar finns inte just nu.
 
 \end{document}

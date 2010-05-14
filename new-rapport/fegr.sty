@@ -8,6 +8,7 @@
 \usetikzlibrary{mindmap,trees,arrows,automata}
 
 \usepackage{float}
+%\usepackage{graphicx}
 \usepackage{graphicx}
 \usepackage{rotating}
 \usepackage{listings}
@@ -16,13 +17,17 @@
 \usepackage{mathpartir}
 \usepackage{array}
 \usepackage{listings}
-
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
 % for strikethrough in the preface
 % \usepackage{ulem}
 
 % Used for code examples without | as a special character
 \lstnewenvironment{codeEx}
 {\lstset{ basicstyle= \ttfamily }}
+{}
+
+\lstnewenvironment{codeExSMALL}
+{\lstset{ basicstyle= \ttfamily, linesep=0.01cm }}
 {}
 
 

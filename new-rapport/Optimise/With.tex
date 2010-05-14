@@ -2,25 +2,25 @@
 \documentclass[../Optimise]{subfiles}
 \begin{document}
 
-\subsection{Optimise ... with ...}
+\section{Optimise ... with ...}
 \label{sec:Optimise:With}
 
 Det är finns specialfall där brott mot den lata STG-semantiken hade varit 
 fördelaktigt.  Sådana fall är svåra att identifiera maskinellt, så därför 
-ombeds användaren ge ytterligare argument till optimeringsfunktionen när 
-dessa specialfall uppstår. Notationen är följande:
+kan användaren ge ytterligare argument till optimeringsfunktionen när 
+de uppstår. Notationen är följande:
 
 \begin{codeEx}
 optimise f x with { options }
 \end{codeEx}
 
-Här är det möjligt att genom att ge keywordet `\kw{with}' efter optimise ge olika direktiv
+Här är det möjligt att genom nyckelordet `\kw{with}' efter optimise ge olika direktiv
 till optimeringen.
 
-\subsubsection{Case-grenar}
+\paragraph{Case-grenar}
       Ibland finns det möjlighet att optimera i en \kw{case}-gren. Detta bryter semantiken
-      då detta kan leda till evaluering av uttryck som vanligtvis inte skulle ha beräknats,
-      se detta exempel:
+      då det kan leda till evaluering av uttryck som vanligtvis inte skulle ha beräknats,
+      som exempelvis följande:
 \begin{codeEx}
 f x y z = case g z of
     { A -> case h x y of
@@ -34,7 +34,7 @@ f x y z = case g z of
     };
 \end{codeEx}
 
-Vid evaluering av \miniCode{optimise( f 1 2 )}, så är \miniCode{z} okänd, men i
+Vid evaluering av \miniCode{optimise(f 1 2 )} är \miniCode{z} okänd, men i
 grenarna finns det \kw{case}-satser som bara beror på \miniCode{x} och \miniCode{y} 
 och rätt gren kan alltså väljas. Det finns  stöd för att optimera i sådana här \kw{case}-grenar:
 
@@ -51,31 +51,31 @@ f x z = case z of
     };
 \end{codeEx}
 
-I det kodexemplet kan \ic{error} till exempel vara en oändlig loop, eller något
-som skapar ett fel under körtid. 
-Om vi här försöker optimera i grenarna då \ic{z} är okänd kommer optimeringen
+I kodexemplet kan \ic{error} till exempel vara en oändlig loop, eller något
+som skapar ett fel när det körs. 
+Om grenarna optimeras trots att \ic{z} är okänd kommer optimeringen
 att loopa, och det skulle programmet inte ha gjort om t.ex. \ic{f} alltid får \ic{False} som
 argument.
 
-\subsubsection{Infogningsräknare}
-När vi har valt en utökning som bryter mot semantiken kan vi inte alltid vara säkra på
-att programmet terminerar. Därför kan en infogningsräknare användas för att garantera
+\paragraph{Infogningsräknare}
+När en utökning som bryter mot semantiken är vald kan är det inte säkert
+att programmet terminerar, på grund av oändliga infogningar. 
+Därför kan en infogningsräknare användas för att garantera
 att det det högst sker ett visst antal infogningar.
 
 Det går både att begränsa det globala antalet infogningar samt antalet infogningar för specifika funktioner.
 
 I ett kodavsnitt som använder \ic{repeat}-funktionen skulle det vara dumt att
-försöka infoga den tills det inte går mer, eftersom funktionen är oändlig,
+försöka infoga den tills det inte går mer, eftersom funktionen är oändligt rekursiv,
 men ibland kanske det skulle vara önskvärt att den iallafall är infogad ett par steg.
-Det kan vi ange med hjälp av följande syntax som betyder att vi tillåter
-$10$ infogningar av just den funktionen:
+Det kan anges med hjälp av följande syntax som betyder att
+$10$ infogningar av just den funktionen tillåts:
 
 \begin{codeEx}
 optimise ... with { inline repeat 10 }
 \end{codeEx}
 
-Om vi istället vill begränsa antalet infogningar oavsett vilken funktion det gäller
-skriver vi på ett liknande sätt:
+På ett liknande sätt skrivs en begränsning av antalet infogningar oavsett vilken funktion det gäller:
 
 \begin{codeEx}
 optimise ... with { inlinings 10 }

@@ -2,7 +2,7 @@
 \begin{document}
 
 
-\section{Diskussion}
+\chapter{Diskussion}
     
 Vi har gjort en tolk för ett funktionellt programmeringsspråk
 med en semantik som följer STG-maskinen som används i Haskellkompilatorn GHC.
@@ -22,12 +22,12 @@ foo x = case x of
 
 \end{codeEx}
 
-Vid statiskt optimering vet vi inte vilken av grenarna som kommer att väljas. Dock skulle en kompilator kunna skapa två olika versioner, en för \ic{A}-grenen och en för 
-\ic{B}-grenen. Sedan under körningstid behöver man kolla på \ic{x} en gång för att sedan avgöra vilken av de optimerade grenarna man ska använda.
+Vid statisk optimering vet vi inte vilken av grenarna som kommer att väljas. Dock skulle en kompilator kunna skapa två olika versioner, en för \ic{A}-grenen och en för 
+\ic{B}-grenen. Sedan, under körningstid, behöver man bara titta på \ic{x} en gång för att sedan avgöra vilken av de optimerade grenarna man ska använda.
 Som vi nämnt tidigare har inte kompilatorer samma tidsrestriktion vid optimeringar som vi har under körningstid, vilket kan göra detta till en rimlig lösning. Det finns ändå ett par nackdelar:
 \begin{itemize}
-    \item Det kan ta väldigt långt tid. Tänk dig \ic{power}-funktionen men en specialversion för varje heltal som finns. (Naturligtvis hade man använt någon mekanism för att annotera vad som ska specialiseras och inte)
-    \item Det kan vara svårt att förutse vad som kommer att används ofta och därför är värt att specialisera. Vår optimise körs bara om den någon gång anropas.
+    \item Det kan ta väldigt långt tid. Tänk dig \ic{power}-funktionen men en specialversion för varje heltal som finns. (Naturligtvis hade man använt någon mekanism för att annotera vad som ska specialiseras och inte.)
+    \item Det kan vara svårt att förutse vad som kommer att användas ofta och därför är värt att specialisera. Vår \ic{optimise}-funktion körs bara om den någon gång anropas.
     \item Små program kan blir mycket stora när en version av varje indata måste lagras.
 \end{itemize}
 
@@ -37,9 +37,9 @@ Det finns också kritik mot att partiell evaluering som optimering endast är an
 
 \paragraph{Placering av optimise}
 
-Vi valde att programmeraren själv skulle  specificera var i koden vi skulle optimera. Det har har visat sig att detta inte alltid är trivialt och som programmerare måste man ta hänsyn till flera olika saker för att få bra prestanda. Att sätta optimise på helt fel ställe kan till och med göra programmet flera gånger långsammare.
+Vi valde att programmeraren själv skulle  specificera var i koden vi skulle optimera. Det har har visat sig att detta inte alltid är trivialt och som programmerare måste man ta hänsyn till flera olika saker för att få bra prestanda. Att sätta \ic {optimise} på helt fel ställe kan till och med göra programmet flera gånger långsammare.
 
-Vi kunde istället ha gjort som man gör i de flesta just in time-kompilatorer. De noterar så kallade hotspots i koden, delar av koden som körs många gånger, och börjar sedan antingen optimera eller kompilera de delarna. Då kan vi inte längre använda våra semantikförstörande utökningar (se \ref{sec:Optimise:With}) vilket ofta krävs för att få någon verklig prestandavinst. 
+Vi kunde istället ha gjort som man gör i de flesta just in time-kompilatorer. De noterar så kallade hotspots i koden, delar av koden som körs många gånger, och börjar sedan antingen optimera eller kompilera de delarna. Då skulle vi inte längre kunna använda våra semantikförstörande utökningar (se \ref{sec:Optimise:With}) vilket ofta krävs för att få någon verklig prestandavinst. 
 
 
 
@@ -49,7 +49,7 @@ Vi kunde istället ha gjort som man gör i de flesta just in time-kompilatorer. 
 \paragraph{Implementerbarhet i kompilator}
 Vi valde att göra en tolk eftersom det ofta är enklare än att implementera en kompilator.
 En tolk innebär att man känner till syntaxträdet hos koden, vilket vanligtvis kompilerad
-kod inte gör, vilket gör att om det skulle implementeras i en kompilator skulle
+kod inte gör. Om det skulle implementeras i en kompilator skulle
 denna information behöva kompileras ner för att finnas tillgänglig när programmet körs.
 
 
@@ -76,14 +76,18 @@ I exemplet ovan skulle en sämre designad optimise-funktion gå in och optimera 
 \ic{a1}, och eftersom värdet på \ic{xs} inte är känt när funktionen optimeras leder det till
 icke-terminering om man infogar det rekursiva anropet till \ic{take}.
     Den första semantiken som presenterades led av detta problem, men löstes i den senare med hjälp av
-en semantik som var latare, inte forcerade evaluering av alla thunkar och närmare semantiken från STG.
+en semantik som var latare, inte forcerade evaluering av alla thunkar och låg närmare semantiken för STG.
 
 %%% Flytta till relaterade arbeten?
-Det finns andra sätt förhindra icke-terminering, i \cite{mitchell2007supercompiler} 
-används en vidareutveckling av \cite{home-emb}. Där används ett kriterium för att se om infogad kod kommer att anropa på sig själv utan att minska på sina argument. Uppfylls detta avbryts infogningen. Detta ämnar sig något bättre för optimeringar som arbetar med omskrivningsregler och troligtvis inte lika bra för vår mer evalueringsinriktade metod.
-
+Det finns andra sätt förhindra icke-terminering.
+Det finns ett kriterium för att se om infogad kod kommer att anropa sig själv 
+utan att minska på sina argument. Om kriteriet uppfylls avbryts infogningen 
+\cite{mitchell2007supercompiler}. Detta lämpar sig bra för optimeringar som 
+arbetar med omskrivningsregler och troligtvis inte lika bra för vår mer 
+evalueringsinriktade metod som arbetar mer på mikronivå.
 
 \begin{comment}
+% jag håller med / dan
 \subsection{Optimise-with}
 En annan möjlig lösning på problemet ovan är att låta programmeraren själv avgöra hur
 många gånger en funktion får infogas, som här:
@@ -99,8 +103,8 @@ oändlig infogningsloop. Det har inte gjorts till det här arbetet.
 \end{comment}
 
 \paragraph{Delning}
-Ett annat problem förknippat med lathet är att optimise måste se till att variabler bara 
-evalueras en gång. Detta ställer till besvär hur man skall optimera \kw{let}-satser.
+Ett annat problem förknippat med lathet är att \ic{optimise} måste se till att variabler bara 
+evalueras en gång. Detta ställer till besvär med hur man skall optimera \kw{let}-satser.
 Ett exempel på delning är detta:
 
 \begin{codeEx}
@@ -112,11 +116,11 @@ main = optimise (test 10) 5;
 \end{codeEx}
 
 Med vår senare semantik infogas först additionen, och sedan infogas thunkens innehåll
-som motsvarar \ic{a}. Det gör att optimise sedan kommer att
-köras två gånger på samma kod. Med en optimering som tog delning i åtanke 
-skulle dela resultatet av att optimera a och använda det på båda ställen där det används.
+som motsvarar \ic{a}. Det gör att \ic{optimise} sedan kommer att
+köras två gånger på samma kod. En optimering som hade delning i åtanke 
+skulle dela resultatet av att optimera \ic{a} och använda det på båda ställen där det används.
 
-En optimerad version är denna, eller en med additionen infogad
+En optimerad version är denna, eller en med additionen infogad:
 \footnote{Notera att \ic{fib 10 = 55}}:
 
 \begin{codeEx}
@@ -127,20 +131,45 @@ test_x y = let
 
 \paragraph{Anropsstack}
 
-I projektets tidigare fas användes substituering för att göra exempelvis funktionsapplikation.
+I en tidig fas i projektet användes substituering för att göra exempelvis funktionsapplikation.
 Det betyder att syntaxträdet traverseras och argumentvariablerna byts i funktionen
 mot vad argumenten faktiskt är. Detta är långsamt och inte särskilt realistiskt - 
 speciellt inte om man talar om en kompilator. Kompilatorer kan istället använda anropsstackar
 där man låter funktionsargumenten indexeras in på en stack, så att man slipper
-gå ner i hela syntaxträdet. Det är vanligtvis inte omöjligt i kompilerad kod eftersom
+gå ner i hela syntaxträdet. Traversering är vanligtvis inte möjligt i kompilerad kod eftersom
 det inte finns någon tillgång till syntaxträdet.
 
-För att göra vår tolk mer realistisk byttes substitueringen till en anropsstack 
-Det gav också en hastighetsökning av tolken med ungefär 2500\%.
+För att göra vår tolk mer realistisk byttes substitueringen mot en anropsstack. 
+Det gav också en hastighetsökning för tolken med ungefär 2500\%.
 
 %\subsection{Optimise med anropsstack}
 
-Att översätt optimise till att arbete med en anropsstack var relativt svårt. Varje gång en funktion infogades, eller någon \kw{let} kunde tas bort behövde alla efterkommande index räknas om. 
+Att översätta optimise till att arbete med en anropsstack var relativt svårt. 
+Varje gång en funktion infogas, eller ett \kw{let}-uttryck tas bort behöver alla efterkommande index räknas om. 
 
+\paragraph{Olinjär optimeringsstid}
+\label{sec:diskussion_om_exponentialitet} %diskussion_om_exponentialitet
+Både i raytracern och i powerexemplet ser man att optimeringen kan ta mycket tid.
+Boven i dramat är det som refererats till \kw{casebranch}-optimeringen. I
+\ic{powers}-exemplet är den implicit då denna optimering sker automatiskt
+om det bara finns en gren i \kw{case}-satsen. Detta är exakt det som sker 
+vid primitiva aritmetiska operationer, när talet boxas och avboxas.
+
+Anledningen till detta är hur välkänd caselag \ref{sec:CaseLaw} är 
+implementerad. Eftersom $\Phi$-tillståndet återigen försöker optimera \kw{case}-uttrycken
+när den har skyfflat runt dem så kommer optimeringen gå igenom hela uttrycket igen.
+Detta leder till att samma uttryck kommer att försöka optimeras lika många gånger
+som det finns \kw{case}-uttryck.  
+
+Detta leder till att optimeringen i powerexemplet tar lång tid eftersom den har lika
+många \kw{case}-uttryck i varandra som talet man skall höja upp med.
+Detta förklarar också varför det tar så lång tid att genomföra optimeringen
+i raytracerexemplet med \ic{casebranches}. Vissa av funktionerna blir mycket stora med alla infogningar
+av tranformationer, och de kommer alla ge upphov till onödiga omskyfflingar.
+Det testexempel som finns på raytracern har konstant bild som ska målas, det
+testar inte att från indata måla upp en bild. Den enda parametern som
+justeras är storleken på bilden som genereras.
+
+% Olle: "jag har en ko, en höna och en mus"
 
 \end{document}

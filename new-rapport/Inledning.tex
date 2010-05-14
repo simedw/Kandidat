@@ -1,7 +1,7 @@
 \documentclass[Rapport]{subfiles}
 \begin{document}
 
-\section{Inledning}
+\chapter{Inledning}
 
 Vanligtvis optimeras kod endast vid kompileringsfasen. Detta betyder att endast variabler
 vars värden är kända statiskt (när programmet kompileras) kan utnyttjas när koden optimeras. Men när ett program 
@@ -46,7 +46,7 @@ I \miniCode{main}-funktionen ovan är dock \miniCode{n} inte känt när programm
 istället in från användaren under körningstid. Detta gör att en kompilator inte 
 har tillräckligt mycket information för att kunna göra en specialiserad version av \miniCode{power}.
 
-I det här projektet presenteras en möjlig lösning på detta problem,
+I det här rapporten presenteras en möjlig lösning på detta problem,
 där programmeraren kan annotera var i koden optimeringar ska ske under körningstid.
 Så här skrivs funktionen \ic{powers} om,
 annoterad med var den ska optimeras:
@@ -56,18 +56,19 @@ powers :: Integer -> [Integer] -> [Integer]
 powers n xs = map (|optimise| (power n)) xs
 \end{codeExDiff}
 
-När nu \ic{powers} anropas med \ic{4} och någon lista \ic{xs} kommer
+När nu \ic{powers} anropas med argumenten \ic{4} och någon lista \ic{xs} kommer
 den vid evaluering först att optimera \ic{power}-funktionen till något som 
 ser ut som \ic{power\_4} ovan, sedan körs den optimerade funktionen på varje
-element i listan. Den optimerade funktionen är alltid snabbare med \kw{optimise}
-än utan, men eftersom
-optimeringen kan ta lite tid kommer det sammanlagda resultatet kanske inte alltid att vara
-snabbare om listan \ic{xs} är liten. 
+element i listan.
+
+Den optimerade funktionen är alltid snabbare med \kw{optimise} än utan, men eftersom
+optimeringen tar lite tid kommer det sammanlagda resultatet inte alltid att vara
+snabbare, speciellt då listan \ic{xs} är liten. 
 Ju större listan \ic{xs} blir, desto mer tid sparas.
 
 Hur kan man utföra en sådan optimering under körningstid? I den här rapporten
 presenteras en lösning på problemet genom utvecklingen av en tolk för ett
-funktionellt programmeringsspråk som stödjer \ic{optimise}-funktionen. Vi försöker
+funktionellt programmeringsspråk som stödjer den ovannämnda \ic{optimise}-funktionen. Vi försöker
 att från grunden bygga upp de beståndsdelar som behövs för att förstå projektet.
 I grova drag har följande gjorts i projektet:
 
@@ -99,8 +100,9 @@ vill vi separera bidrag? ja
 
 \begin{itemize}
     \item Vi har utvecklat ett programmeringsvänligt språk som vi kallar för sockerspråk
-          som sedan kan översättas till andra representationer som en tolk kan arbeta på. Det
-          är smidigt att programmera i detta språk som har en hög abstraktionsnivå. Hur sockerspråket är definierat
+          som sedan kan översättas till andra representationer som en tolk kan arbeta på. Målet med sockerspråket är att erbjuda en hög abstraktionsnivå vilket gör det enklare att skriva mer komplexa program.
+%Det är smidigt att programmera i detta språk som har en hög abstraktionsnivå.
+Hur sockerspråket är definierat
           går att läsa i sektion \ref{sec:Socker}.
           
     \item Sockerspråket översätts sedan till ett språk som är en utökning 
@@ -109,17 +111,20 @@ vill vi separera bidrag? ja
           Haskell-kompilatorn GHC. Vi förklarar hur både STG och våra utökningar
           fungerar i sektion \ref{sec:Core}.
     
-    \item Tolken har vi utökat med en optimeringsfunktion som kan utföra optimeringar
-          när ett program körs. Vi utvecklar en första optimeringsfunktion i sektion
-          \ref{sec:Optimise:CBV}, som visar sig vara för strikt i sin optimering,
+    \item För att kunna kör STG-kod behövdes en tolk, i sektion \ref{sec:Tolken} förklaras de implementationsmässiga detaljer om denna.
+    
+    \item Tolken har vi sedan utökat med en optimeringsfunktion som kan utföra optimeringar
+          när ett program körs. Först utvecklas en optimeringsfunktion i sektion 
+          %Vi utvecklar en första optimeringsfunktion i sektion
+          \ref{sec:Optimise:CBV}, den visar sig vara för strikt i sin optimering,
           vilket leder till problem i vissa fall. Men den hjälper ändå till
           i förståelsen för nästa sektion, \ref{sec:Optimise:CBN}, som visar hur
-          den slutliga, lata, optimeringsfunktionen fungerar.
+          den slutliga optimeringsfunktionen fungerar.
     
     \item För att kunna få en uppfattning om hur bra optimeringen fungerar har
           vi utfört prestandatest i vår tolk för några program där vi jämför
           evalueringstid med och utan optimering under körningstid, 
-          vilka presenteras i sektion \ref{sec:Resultat}
+          detta presenteras i sektion \ref{sec:Resultat}
     
 \end{itemize}
 
@@ -131,6 +136,11 @@ vi befinner oss just nu.
 
 
 \begin{comment}
+
+      ^
+      |
+ovan för olles text
+
 Olles text rör ej :'/
 För att kunna göra det här arbetet krävs det ett programmeringsspråk
 att arbeta i. Vi har skapat en tolk efter STG, som är en modell för hur
@@ -141,12 +151,16 @@ varför vi också har skapat ett språk till - sockerspråket -
 som är lättare att programmera i och mer liknar andra funktionella
 språk som exempelvis Haskell. Sockerspråket kan sedan översättas till
 STG-representationen och evalueras i tolken.
+
+under olles text
+       |
+       V
 \end{comment}
-\subsection{Bakgrund : Partiell evaluering}
-Detta arbete handlar till stor del om partiell evaluering. Men vad innebär det?
-I funktionella språk är funktioner första klassens objekt och kan t.ex.
-skickas med som argument till andra funktioner eller returneras från
-andra funktioner. Tag exempelvis funktionen \miniCode{zipWith}, här skriven i Haskell:
+
+\section{Bakgrund : Partiell evaluering}
+Detta arbete handlar till stor del om partiell evaluering. Vi ska nu försöka ge en kort förklaring. % Men vad innebär det?
+I funktionella språk är funktioner första klassens objekt och kan till exempel
+skickas med som argument till andra funktioner eller returneras från funktioner. Tag exempelvis funktionen \miniCode{zipWith}, här skriven i Haskell:
 
 \begin{codeEx}
 zipWith :: (a -> b -> c) -> [a] -> [b] -> [c]
@@ -166,7 +180,7 @@ in  zipWith (f 3) list1 list2
 
 Funktioner som har några, men inte alla argument applicerade kallas 
 partiellt applicerade. Att börja optimera en sådan funktion genom att evaluera med de nya värdena
-insatta medan resterande argument är okända, att partialevaluera,
+insatta medan resterande argument är okända, att partiellt evaluera,
 är inget som vanligtvis görs i Haskell-implementationer, 
 men är vad som undersöks i detta projekt. Funktionen \ic{optimise} är
 tänkt att användas på en funktion som är partiellt applicerad. Då kan optimise göra en

@@ -2,7 +2,7 @@
 \documentclass[Rapport]{subfiles}
 \begin{document}
 
-\section{Optimise}
+\chapter{Optimise}
 \label{sec:Optimise}
 % svårt att låta bli att alla dessa avsnitt börjar med 
 % 'i det här avsnittet [ ska vi undersöka / beskrivs / förklaras ... ]'
@@ -10,22 +10,21 @@
 
 \overviewOptimise
 
-Nu när sockerspråket (sektion 2) och STG (sektion 3) är förklarade
+Nu när sockerspråket (sektion \ref{sec:Socker}) och STG (sektion \ref{sec:STG}) är förklarade
 kan undersökningen av optimeringen, som är själva kärnan i arbetet, påbörjas.
-I introduktionen i detta avsnitt kan du läsa om vad optimering och 
-optimering under körningstid innebär. 
+I detta avsnitts introduktion förklaras vad optimering är och 
+vad det innebär att göra det under körningstid. 
 
-För att optimera under körningstid har olika semantiker tagits fram och undersökts.   
+För att optimera under körningstid har olika lösningar, som följer olika semantiker, tagits fram och undersökts.   
 Den första av dem, som kommer att refereras till som CBV- eller call-by-value-semantiken, 
-beskrivs i avsnitt 4.2. Den hade vissa nackdelar, så i 
-efterföljande avsnitt presenteras en bättre lösning som kallas för CBN- eller call-by-name-semantiken.
+beskrivs i avsnitt \ref{sec:Optimise:CBV}. Den har vissa nackdelar, så i 
+efterföljande avsnitt presenteras en semantik, som kallas för CBN- eller call-by-name-semantiken, för en bättre lösning .
 
-Denna kunde också tjäna på andra optimeringar, som t.ex.
-dödkodseliminering (sektion 4.5), 
-välkänd caselag (sektion 4.6) och 
-afterburner (sektion 4.7).
-
-Hur optimeringen fungerar tillsammans med anropsstacken visas i det sista avsnittet 4.8.
+Lösningen tjänar också på andra optimeringar, som t.ex.
+dödkodseliminering (sektion \ref{sec:DeadCode}), 
+välkänd caselag (sektion \ref{sec:CaseLaw}) och 
+afterburner (sektion \ref{sec:Afterburner}).
+Hur optimeringen fungerar tillsammans med anropsstacken visas i det sista avsnittet, \ref{sec:CBN:Callstack}.
 
 \subfile{Optimise/Intro}
 
@@ -73,39 +72,39 @@ i vårt språk, och vi ska nu förklara dessa i kronologisk ordning.
 
 \end{comment}
 
-\subsection{Optimeringtillstånd}
+\section{Optimeringtillstånd}
 
 % exotiskt att skriva dessa i optimisefilen
 % och inte i en ny fil i optimisekatalogen
 %  mvh Dan
 
-Vi kommer uttrycka vår optimering på ett liknande sätt som övriga STG. Vi optimerar
-koden genom att evaluera den på ett speciellt sätt. En skillnad mellan optimering och
-evaluering är att optimeringen sker med okända uttryck (t.ex. fria variabler). 
-Det gör att vi inte alltid kan få ett värde\footnote{ Det vill säga en primitiv eller en variabel som inte
-är en thunk.}  av en optmering av uttryck, i dessa
-fall måste vi bygga upp ett uttryck som kommer räkna ut det okända värdet. Förhopningsvis
-är det nya uttrycket för att räkna ut värdet bättre än det gamla.
+Optimeringen kommer att uttryckas på ett sätt som liknar semantiken för STG. Koden optimeras
+ genom att den evalueras på ett speciellt sätt. En skillnad mellan optimeringsevalueringen och en vanlig
+evaluering är att optimeringen sker med okända uttryck (t.ex. fria variabler), 
+vilket gör att det inte alltid går att få ett värde\footnote{ Det vill säga en primitiv eller en variabel som inte
+är en thunk.}  när ett uttryck optimeras. I dessa
+fall måste ett nytt uttryck byggas upp som kommer att räkna ut det okända värdet. 
+Förhoppningen är att är det nya, optimerade uttrycket mer effektivt än det gamla.
 
-Vi kommer att se optimeringen som ett specialtillstånd för STG, som används
-för att visa att vi evaluerar inuti en funktion (under lambda), vilket alltså medför
-att det finns fria variabler. Målet  är att i slutet av optimeringen
-ha skapat en ny funktion som är snabbare än orginalfunktionen.
+Vi ser optimeringen som ett speciellt tillstånd som STG-maskinen befinna sig i. 
+Detta tillstånd används för att maskinen ska veta att den evaluerar inuti en funktion
+(under lambda), vilket alltså medför att det finns fria variabler. 
+Målet är att optimeringen till slut ska ha skapat en ny funktion som är snabbare 
+än originalfunktionen.
 
-Det som vår optimering kan göra faller under dessa kategorier:
+Det som optimeringen kan göra faller under dessa kategorier:
 
-\paragraph{ Beräkna kända uttryck. }
-Dessa fall är ganska enkla att optimera här går det att använda den vanliga
-maskinen för STG. Om det t.ex står \ic{7 * 191} i koden så kan vi evaluera
-det som vanligt och sedan använda resultatet \ic{1337} i koden.
+\paragraph{ Beräkning av kända uttryck }
+Dessa fall är ganska enkla att optimera, eftersom det går att använda den vanliga
+maskinen för STG. Om det t.ex. står \ic{7 * 191} i koden så kan den evalueras
+som vanligt och resultatet \ic{1337} kan sedan användas i koden.
 
-\paragraph{ Infoga funktionsdefinitioner. }
+\paragraph{ Infogning av funktionsdefinitioner }
 
-Att infoga funktioner kan se som något enkelt, men det finns vissa fällor att se upp
-för. Det gäller att se till att man inte infogar funktioner som i sin tur infogar funktioner etc.
-Man får vara försiktig så optimeringen terminerar, detta blir ett problem om man
-optimerar inuti alla grenar till ett \kw{case}-uttryck. Detta kan exemplifieras
-med funktionen \ic{sum}, som summerar en heltalslista:
+Att infoga funktioner kan ses som något enkelt, men det finns vissa fällor att se upp
+för. Det gäller att se till att funktioner som i sin tur infogar funktioner osv inte infogas,
+eftersom det kan leda till att optimeringen inte terminerar. Detta kan hända om optimeringen körs på alla grenar
+i \kw{case}-uttryck. Ett exempel är funktionen \ic{sum}, som summerar en heltalslista:
 
 \begin{codeEx}
 sum xs = case xs of
@@ -119,50 +118,51 @@ sum xs = case xs of
 Om man optimerar \ic{sum} inuti grenarna så finns det risk att man infogar \ic{sum}
 igen i \ic{Cons}-fallet.
 
-\paragraph{ Välja rätt gren i \kw{case}-uttryck. }
+\paragraph{ Val av rätt gren i \kw{case}-uttryck }
 
-I \kw{case}-uttryck kan man veta vilket värde en granskare har, detta kan man använda
-för att välja rätt gren. När vi hittar en \kw{case} börjar vi optimera granskaren,
+I \kw{case}-uttryck kan är ibland granskarens värde känt. Detta kan användas
+för att välja rätt gren. När optimeringen kommer till en \kw{case}-sats optimeras först granskaren,
 men eftersom det inte är avgörbart på förhand om en optimering lyckas eller inte
-behöver vi något sätt att visa det. 
+behöver det finnas ett sätt att visa det. 
 
 I vår implementation har vi valt att visa detta genom att ha tre olika tillstånd
-för vår optimering, vilka dessa är och vad de betyder kommer beskrivs senare.
+för optimeraren. Vilka dessa är och vad de betyder kommer att beskrivas senare.
 
-\paragraph{ Byta ut uttryck mot semantiskt ekvialenta uttryck.}
+\paragraph{ Utbyte av uttryck mot semantiskt ekvivalenta uttryck}
 
-STG-språket följer vissa lagar, dessa kan man använda för att skria om uttryck
-till ekvialenta uttryck. Vi har i vissa fall använt dessa lagar för att skriva om
-uttrycken till andra uttryck som är enklare att optimera.
+STG-språket följer vissa lagar, som kan användas för att skriva om uttryck
+till andra ekvivalenta uttryck. I vissa fall används dessa lagar för att skriva om
+uttryck till något som är lättare att optimera.
 
 \paragraph{}
 
-Då optimeringen kan misslyckas med att ge ett värde behöver vi kunna bygga upp uttryck
-igen. För att veta vad som skall byggas upp används stacken för att lägga ut continuations
-om vilket uttryck man tidigare har optimerat och som man behöver bygga upp igen ifall det
-inte blev ett värde. Så många uttryck får en egen continuation för detta syfte.
+Då optimeringen kan misslyckas med att ge ett värde behöver uttrycken kunna byggas upp
+igen. För att veta vad som skall byggas upp läggs continuations på stacken
+som berättar vilket uttryck som tidigare optimerades och som ska byggas upp igen om det
+inte blir ett värde. Många uttryck får en egen continuation för att kunna göra denna
+uppbyggnad igen.
 
 
 
-Som lösning har vi valt att ha tre olika tillstånd, dessa har vi valt att kalla
-$\Omega, \Psi$ samt $\Phi$. Dessa används för att optimeringen skall veta var den
-är. 
+Som lösning har vi valt att använda tre olika tillstånd under optimeringen. Dessa har vi valt att kalla
+$\Omega, \Psi$ och $\Phi$. De används för att optimeringen skall veta vilket skede den
+befinner sig i. 
 
-\paragraph{Omega $\Omega$} Är att maskinen vill optimera till ett värde. I detta tillstånd
-inspekterar vi uttrycket och försöker evaluera det till ett värde om det går.
+\paragraph{Omega $\Omega$} Detta tillstånd befinner sig maskinen i när den vill optimera något till ett värde. Här
+inspekteras uttrycket och evalueras till ett värde om det är möjligt.
 
-\paragraph{Psi $\Psi$} Är att maskinen har optimerat till ett värde. I detta tillstånd
-har vi ett värde och försöker bygga upp uttrycket igen från stacken, med kunskapen att vi vet
-att det är ett värde.
+\paragraph{Psi $\Psi$} Detta är maskinens tillstånd när den har optimerat något till ett värde. I detta tillstånd
+försöker maskinen bygga upp uttrycket igen utifrån stacken, med vetskapen om att vi har
+något som är ett värde.
 
-\paragraph{Irr $\Phi$} Är att maskinen misslyckats att optimera till ett värde, kortform för Irreducible.
-I detta tillstånd har vi att vi inte hade tillräckligt med information att få ett
-värde. Så vi bygger upp ett uttryck igen med information från stacken.
+\paragraph{Irr $\Phi$} Detta tillstånd kommer maskinen till om den har misslyckats att optimera till ett värde. Irr är alltså kortform för Irreducible.
+I detta tillstånd fanns det inte tillräckligt med information att få ett
+värde, så vi bygger upp ett uttryck igen med information från stacken.
 
 \paragraph{}
 I figur \ref{fig:Optimise:states} ses att evaluering alltid börjar i den vanliga maskinen
- (visas som STG) och går till $\Omega$. Detta sker när vid optimering av en funktion
-och slutar med att $\Phi$ bygger upp funktionen och går tillbaka till den vanliga maskinen.
+ (visas som STG) och går till $\Omega$. Detta sker vid optimering av en funktion.
+När optimeringen är klar bygger $\Phi$ upp funktionen igen och går tillbaka till den vanliga maskinen.
 
 %\begin{figure}[H]
 \stgOptimise
@@ -170,6 +170,8 @@ och slutar med att $\Phi$ bygger upp funktionen och går tillbaka till den vanli
 %\label{fig:Optimise:states}
 %\end{figure}
 
+Figuren visar också att optimeringstillstånden använder sig av varandra, vilket
+händer beroende på uttrycket som maskinen har när den kommer till tillståndet.
 
 
 

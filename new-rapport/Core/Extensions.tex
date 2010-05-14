@@ -37,11 +37,17 @@ x + y = case x of
     }   }   };
 \end{codeEx}
 
-Funktionen \ic{+} är den operator för addition som användaren av vårt språk 
+Funktionen \ic{+} är den operator för addition som användaren av språket
 får använda medan \ic{+\#} är den primitiva additionen som inte exporteras till 
 användaren. Notera att \ic{x' +\# y'}
 forceras med hjälp av en \kw{case}-sats för att det resulterande talet ska vara fullt
 evaluerat före det boxas igen.
+
+Då språket inte har ett typsystem skapades en speciell funktion för primitiver
+på \kw{Double}. Precis som i OCaml\footnote{http://ocaml.inria.fr} har dessa
+givits namn med \ic{.} som suffix, exempelvis \ic{+.}, \ic{*.}, \ic{<.}.
+Liknande namngivningsschema finns för \kw{Char}, men med \ic{:} som suffix,
+exempelvis görs likhet på \kw{Char} görs med \ic{==:}.
 
 \paragraph{IO}
 Tolken har en primitiv form av IO: den har konstant indata vid körning och

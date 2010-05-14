@@ -1,6 +1,6 @@
 \documentclass[../Core]{subfiles}
 \begin{document}
-\subsection{En semantik för STG}
+\section{En semantik för STG}
 \label{sec:SemStg}
 
 
@@ -100,14 +100,12 @@ regel ser ut så här:
 %        \path[->] (esep) edge [out=90, in=-90] (m1);
 \end{tikzpicture}
 
-Så vi har en samling regler och man väljer en som matchar mot det tillstånd man har, och om 
-ingen regel matchas så är man klar.
+Så vi har en samling regler och väljer en som matchar mot det tillstånd maskinen befinner sig i, och om ingen regel matchar så är evalueringen klar.
 
 \paragraph{Substitution}
 
 Låt oss säga att vi har en funktion $f$ som använder sina två 
-argument, $x$ och $y$. Om vi betraktar uttrycket som funktionens 
-kropp består av separat är $x$ och $y$ 
+argument, $x$ och $y$. Om vi betraktar uttrycket som funktionenskroppen består av separat är $x$ och $y$ 
 \emph{fria variabler}. Det skulle inte gå att evaluera funktionskroppen utan
 att känna till vad de är. Känner man till $x$ och $y$:s värden, låt oss säga
 $x \mapsto True$ och $y \mapsto 9$, så kan man \emph{substituera} in dem i 
@@ -123,10 +121,10 @@ eftersträva rent abstrakt, men det finns också andra sätt att implementera
 substitution, genom att t.ex. göra ett uppslag i en tabell varje gång 
 evalueringen kommer till en fri variabel. 
 
-\subsubsection{Reglerna}
+\subsection{Reglerna}
 
 För att visa hur reglerna
-för STG  fungerar, ska vi visa hur följande program skulle evalueras med dem.
+för STG  fungerar, visar vi hur följande program skulle evalueras.
 Reglerna som presenteras här är de vanliga STG-reglerna\cite{marlow2006making},
 med vissa förenklingar.
 
@@ -139,9 +137,8 @@ main = let list = [2,3,5,7,11]
 
 Kodens ingångsfunktionen är \miniCode{main}, som börjar med ett \kw{let}-uttryck.
 Precis som i Sockerspråket är de verktyg för att binda variabler, vilket betyder att man ger ett
-namn, som kan användas i uttrycket som följer efter \kw{in},
-till ett värde. I det här fallet får
-en lista som består av de fem första primtalen namnet \miniCode{list}.
+namn till ett värde. Namnet kan användas i uttrycket som följer efter \kw{in}.
+I det här fallet får en lista som består av de fem första primtalen namnet \miniCode{list}.
 \kw{Let} kan användas för att associera andra sorters värden än listor,
 t.ex. datastrukturer, numeriska värden eller funktioner.
 
@@ -159,15 +156,17 @@ beskrivs mer formellt av följande regel:
 I regeln ovan går maskinen från \kw{let}-uttrycket till
 uttrycket som står efter \kw{in}, alltså \ic{code},
 och \ic{v} läggs på heapen och pekar på \ic{e}.
-Heap{[}{]} betyder inte att heapen bara innehåller det som är inuti
+H{[} {]} betyder inte att heapen bara innehåller det som är inuti
 hakparenteserna utan är en notation för att visa att heapen
 uppdateras med en variabelbindning.
 
-Anledningen till att vi skapar en ny variabel \ic{v} är för att om
-denna kod körs flera gånger (den kan vara rekursiv eller anropas av andra funktioner
-fler gånger) måste \ic{e} bindas till en ny plats i heapen. Då det är variabler som
-denoterar plats på just heapen måste vi skapa en ny variabel för att visa att denna
-allokering ska ske på en ny plats i heapen.
+Anledningen till att en ny variabel \ic{v} skapas är för att förhindra namnkrockar på heapen. Namnkrockar kan annars ske när koden körs flera gånger (den kan vara rekursiv eller anropas av andra funktioner fler gånger). 
+
+%Anledningen till att vi skapar en ny variabel \ic{v} är för att om
+%denna kod körs flera gånger (den kan vara rekursiv eller anropas av andra funktioner
+%fler gånger) måste \ic{e} bindas till en ny plats i heapen. Då det är variabler som
+%denoterar plats på just heapen måste vi skapa en ny variabel för att visa att denna
+%allokering ska ske på en ny plats i heapen.
 
 Maskinens tillstånd är nu:
 
@@ -178,15 +177,14 @@ Maskinens tillstånd är nu:
 
 Den observanta läsaren märker att även \miniCode{cube} ligger på heapen, vilket
 beror på att funktioner definierade på toppnivå läggs på heapen före körning.
-Alltså ligger även även \miniCode{map} och andra funktioner definierade
+Alltså ligger även \miniCode{map} och andra funktioner definierade
 i standardbiblioteket där.
 
 \paragraph{Funktionsanrop} Som uttryck i maskinens tillstånd ligger nu ett anrop till
-\miniCode{map}-funktionen, vilket vi därför ska försöka oss på.
-Här låter vi oss inspireras av imperativa språk som ofta lägger argumenten
+\miniCode{map}-funktionen. %, vilket vi därför ska försöka oss på.
+För att evaluera detta låter vi oss inspireras av imperativa språk som ofta lägger argumenten
 på en stack före funktionsanrop. Vi kommer därför uppdatera tillstånden så att de
-nu också innefattar en stack, dessa kommer att få bokstaven $S$ i reglerna så de
-ser ut så här.
+nu också innefattar en stack. Stacken betecknas $S$ och reglerna har nu följande syntax.
 
 \begin{equation*} 
 \conf{}{e \csep S \csep H} \; \rulesep \; \conf{}{e \csep S \csep H}

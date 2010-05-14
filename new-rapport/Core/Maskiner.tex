@@ -7,7 +7,7 @@
 % optimering. Vi ville fokusera på optimeringen och valde därför att skriva en tolk.
 
 
-\subsection{Olika maskiner}
+\section{Olika maskiner}
 \label{sec:Core:Mask}
 
 För att evaluera program skrivna i ett funktionellt programmeringsspråk
@@ -18,14 +18,14 @@ Haskell) skriva ett program som kopierar maskinens funktionalitet. Det går ocks
 kompilera dem till något lågnivåspråk som C, assemblyspråk eller LLVM.
 
 
-Av de olika maskiner vi undersökte ansåg vi att STG var lämpligast. I G-maskinen och TIM så är
-instruktionerna på låg nivå, liknande assemblerinstruktioner men för att manipulera
-ett tänkt syntaxträd. STG och Grin, är å andra sidan, mer som ett funktionellt
+Av de olika maskiner vi undersökte ansågs STG var lämpligast. I G-maskinen och TIM  är
+instruktionerna på låg nivå, liknande assemblerinstruktioner. Men istället för skifta register manipuleras ett tänkt syntaxträd. STG och Grin, är å andra sidan mer som ett funktionellt
 programmeringsspråk vilket skulle underlätta arbetet på optimeringen.
 
 STG är förhållandevis enkel att implementera, och är tillräckligt explicit för att
-tillåta oss göra de utökningar för att kunna optimera under körningstid som vi vill
-göra. Medan många av Grin-maskinens fördelar kommer från att den känner till alla funktioner i hela
+tillåta oss göra de utökningar som optimering under körningstid kräver.
+%för att kunna optimera under körningstid som vi vill göra.
+Medan många av Grin-maskinens fördelar kommer från att den känner till alla funktioner i hela
 programmet (funktioner i andra moduler kopieras in när de används). Den här informationen
 använder Grin sedan för att göra en stor graf över vilka funktioner som kallar på
 vilka andra funktioner. Detta gör att vi tror att det blir enklare att jobba med STG 

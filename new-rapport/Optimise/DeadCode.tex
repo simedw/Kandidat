@@ -1,11 +1,11 @@
 \documentclass[../Optimise]{subfiles}
 \begin{document}
 
-\subsection{Dödkodseliminering}
+\section{Dödkodseliminering}
 \label{sec:DeadCode}
 
 När optimeringarna har körts och det är dags att bygga upp trädet igen kan
-så kallad `död kod' förekomma. Det vill säga, kod som inte längre 
+så kallad `död kod' förekomma. Det vill säga kod som inte längre 
 behövs eftersom den inte kan nås. Här är ett exempel på ett kodstycke med
 död kod:
 
@@ -17,7 +17,7 @@ main = let t = getValue
               };
 \end{codeEx}
 
-Detta exemplet är trivialt att optimera då värdet i casegranskaren är känt, och 
+Detta exemplet är trivialt att optimera då värdet i \kw{case}-granskaren är känt, och 
 den korrekta grenen kan väljas.
 
 \begin{codeEx}
@@ -29,7 +29,7 @@ Vi ser nu att \ic{t} inte längre refereras till i uttrycket \miniCode{15}
 och därför kan \miniCode{let t = getValue} betraktas som `död kod'. 
 
 Död kod tar onödig plats, och leder till att onödigt mycket kommer att 
-allokeras på heapen, bara för sedan tas hand om av skräpsamlaren. \ic{Main} skulle
+allokeras på heapen, bara för sedan tas hand om av skräpsamlaren. \ic{main} skulle
 kunna optimeras till:
 
 \begin{codeEx}
@@ -47,9 +47,9 @@ Denna process kan mer formellt skrivas som:
 \end{mathpar}
 \end{comment}
 
-Detta är en kontroll som utförs varje gång vi bygger upp en \miniCode{let} 
-i \iIrr och \iPsi. Att ta fram vilka fria variabler som ett har är dock en 
-ganska kostsam operation så det kan finnas fall då det inte ger så mycket
+Detta är en kontroll som utförs varje gång en \miniCode{let} byggs up 
+i \iIrr och \iPsi. Att ta fram vilka fria variabler som ett uttryck har är dock en 
+kostsam operation så det kan finnas fall då det inte ger så mycket
 prestandaökning att det är värt det. Följande regel beskriver
 var i semantiken som dödkodseliminering kommer in:
 
