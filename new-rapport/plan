@@ -1,53 +1,57 @@
-= This is our plan =
+= This is our new plan =
+
+Ta bort "du", kolla användning av "vi" -in progress... men: var någonstans är alla?-
+            * Optimise-avsnittet. skriv om med maskinen tex istället
+
+    skapa semantik <-> ändra beteende
+
+trestegsraketen för varje figur
+
+resultat
+    exponentialitet
+    [x] grafer på shapes
+    koppla till optimiseregler
+    
+Sockerspråket: Varför valde vi inte att göra det till en delmängd av Haskell?
+
+Rättstavning
+Manuell genomläsning
+
+
+
+
+
+
+
+= This is our old plan =
+
+
+ska man ha ett abstrakt pa engelska ocksa?
 
 
 Småsaker:
-    Abstrakt [dan har jobbat på det] <-- Utokning av stg
-    Ta bort "du" -in progress... men var någonstans är alla?-
-    Kapitel istallet for sections
-    Paragraphs
+    [x(tycker olle)] Abstrakt [dan har jobbat på det] <-- Utokning av stg
+    Kapitel istallet for sections (ser lite konstigt ut)
+    Paragraphs  (blir snyggt)
     [x] Sätt figure nr på figurer
-    trestegsraketen för varje figur
-    core/olika maskiner : skriva främst och först om STG, sen om GRIN
-    
+    [x] core/olika maskiner : skriva främst och först om STG, sen om GRIN
 
 
 Mellan saker:
     [x] Inledning [================/] kolla gärna igenom! :)
         [x] Fixa figuren så att den är bredare
-    [x] Dela upp core   socker -> [^vdiav^] [v^loc^v] [<-lambda->] -> core
+    [x] Dela upp core socker -> [^vdiav^] [v^loc^v] [<-lambda->] -> core
     <d,o> Resultat
-        * Regexp, varför dåligt?
-        * Bild på shapes
-        * De nya graferna
-    s Slutsats  [=========?         ]
+        [x] (utkast) Regexp, varför dåligt?
+        [x] Bild på shapes
+        * De nya graferna (power klar, shapes på gång)
+    s Slutsats  [=========?         ] <- nagon last garna
     [x] Skriv om relaterade arbeten, \cite ska inte vara ett objekt i meningarna
+    [x] Förord
 
 Stora saker:
     D Optimise [=============/     ]
-    ändra alla kodexempel så att nya koddelar markeras
-
-Sma saker:
-    s Abstrakt
-    Ta bort "du"
-    Kapitel istallet for sections
-    Paragraphs 
-
-
-Mellan saker:
-    o Inledning
-    o Dela upp core   socker -> [^vdiav^] [v^loc^v] [<-lambda->] -> core
-    <d,o> Resultat
-    s Slutsats  
-
-Stora saker:
-    D Optimise
-    ändra alla kodexempel så att nya koddelar markeras
-
-Poster
-VEM SKA SKAPA? :O VAD SKA SKAPAS? O:
-    Tycker att vi ska ha graf, mindmap, benchmark, kodsnutt
-    bilder från shapes? :`)    buzzwords ovanpå bilden som "2X SPEED", "EXTREMELY FAST", "MENERGY" osv
+    ändra alla kodexempel så att nya koddelar markeras (var?)
 
 
 Förslag till optimisen:
@@ -61,3 +65,34 @@ Förslag till optimisen:
     inte. AKA Psi & Irr.
     
     
+\NOTE{
+Koens kommentarer:
+
+Vad är viktigast - semantiken eller tolken (eller optimeringsmöjligheten?)
+Har vi gjort en utökning av STG?
+
+\paragraph{Kanske:}
+`Vi har gjort en utökning av STG för att optimera partiellt applicerade funktioner under korningstid. Vi konkretiserat detta med att utveckla en tolk.'
+
+
+Förvirrat att prata om semantiken
+
+Mycket "vi"
+
+För mycket bakgrund att prata om GHC och STG... Anta att STG är känt?
+
+}
+
+\NOTE{
+Ytterligare kommentarer från Koen som står på framsidan som antagligen rör
+hela rapporten:
+
+Blanda inte
+\begin{itemize}
+    \item nuvarande läget / slutprodukt
+    \item anleddningar varför det finns med i proojektet eller ej
+    \item temporala (först gjorde vi...)
+    \item val mellan alternativa lösningar
+\end{itemize}
+
+}

@@ -1,38 +1,6 @@
 \documentclass[Rapport]{subfiles}
 \begin{abstract}
 
-\NOTE{
-Koens kommentarer:
-
-Vad är viktigast - semantiken eller tolken (eller optimeringsmöjligheten?)
-Har vi gjort en utökning av STG?
-
-\paragraph{Kanske:}
-`Vi har gjort en utökning av STG för att optimera partiellt applicerade funktioner under korningstid. Vi konkretiserat detta med att utveckla en tolk.'
-
-
-Förvirrat att prata om semantiken
-
-Mycket "vi"
-
-För mycket bakgrund att prata om GHC och STG... Anta att STG är känt?
-
-}
-
-\NOTE{
-Ytterligare kommentarer från Koen som står på framsidan som antagligen rör
-hela rapporten:
-
-Blanda inte
-\begin{itemize}
-    \item nuvarande läget / slutprodukt
-    \item anleddningar varför det finns med i proojektet eller ej
-    \item temporala (först gjorde vi...)
-    \item val mellan alternativa lösningar
-\end{itemize}
-
-}
-
 %Vi har utvecklat en lat semantik för optimering av partiellt applicerade funktioner 
 %under körningstid i ett funktionellt språk. För att möjliggöra detta har vi även 
 %implementerat en tolk med STG som corespråk.
@@ -55,14 +23,14 @@ funktioner under körningstid i ett lat funktionellt språk. Tolken använder
 STG, som också används i Haskellimplementationer, som corespråk.
 
 Språket har modifierats för användaren ska kunna annotera var koden
-ska optimeras under körningstid. Detta visas ge fler möjligheter till
+ska optimeras under körningstid. Detta visar sig ge fler möjligheter till
 optimeringar än de som kan göras statiskt.
 
 Vi introducerar tolken, de byggstenar den består av och STG grundligt och ger 
-sedan ett formellt schema beskrivande semantiken över hur optimeringen kan göras under 
-körningstid. Sedan visas de praktiska resultat som fås: optimeringen ger stora 
-tidsvinster i de fall då en funktion som partiellt applicerats med värden, 
-som inte är kända statiskt, optimeras och sedan körs ett relativt stort antal gånger.
+sedan ett formellt schema som beskriver semantiken för hur optimeringen kan göras under 
+körningstid. Sedan visas de praktiska resultat som fås: optimeringen ger i vissa fall stora 
+tidsvinster då en funktion som partiellt applicerats med värden, 
+som inte är kända statiskt, optimeras och körs ett relativt stort antal gånger.
 
 \NOTE{
 Detta är snart den slutgitliga rapporten! ($\gamma$)

@@ -10,7 +10,7 @@
 
 \overviewOptimise
 
-Nu när sockerspråket (sektion 2) och corespråket (sektion 3) är förklarade
+Nu när sockerspråket (sektion 2) och STG (sektion 3) är förklarade
 kan undersökningen av optimeringen, som är själva kärnan i arbetet, påbörjas.
 I introduktionen i detta avsnitt kan du läsa om vad optimering och 
 optimering under körningstid innebär. 
@@ -82,7 +82,7 @@ i vårt språk, och vi ska nu förklara dessa i kronologisk ordning.
 Vi kommer uttrycka vår optimering på ett liknande sätt som övriga STG. Vi optimerar
 koden genom att evaluera den på ett speciellt sätt. En skillnad mellan optimering och
 evaluering är att optimeringen sker med okända uttryck (t.ex. fria variabler). 
-Det gör att vi inte alltid kan få ett värde \footnote{ Det vill säga en primitiv eller en variabel som inte
+Det gör att vi inte alltid kan få ett värde\footnote{ Det vill säga en primitiv eller en variabel som inte
 är en thunk.}  av en optmering av uttryck, i dessa
 fall måste vi bygga upp ett uttryck som kommer räkna ut det okända värdet. Förhopningsvis
 är det nya uttrycket för att räkna ut värdet bättre än det gamla.
@@ -131,7 +131,7 @@ för vår optimering, vilka dessa är och vad de betyder kommer beskrivs senare.
 
 \paragraph{ Byta ut uttryck mot semantiskt ekvialenta uttryck.}
 
-Vårt core-språk följer vissa lagar, dessa kan man använda för att skria om uttryck
+STG-språket följer vissa lagar, dessa kan man använda för att skria om uttryck
 till ekvialenta uttryck. Vi har i vissa fall använt dessa lagar för att skriva om
 uttrycken till andra uttryck som är enklare att optimera.
 
@@ -162,7 +162,6 @@ värde. Så vi bygger upp ett uttryck igen med information från stacken.
 \paragraph{}
 I figur \ref{fig:Optimise:states} ses att evaluering alltid börjar i den vanliga maskinen
  (visas som STG) och går till $\Omega$. Detta sker när vid optimering av en funktion
- 
 och slutar med att $\Phi$ bygger upp funktionen och går tillbaka till den vanliga maskinen.
 
 %\begin{figure}[H]

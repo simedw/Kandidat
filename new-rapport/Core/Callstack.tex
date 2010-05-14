@@ -19,7 +19,7 @@ på. Ett sätt att göra det på är att använda något som kallas för anropss
 Varje funktion får vid anrop en egen aktiveringspost, som innehåller dess argument.
 I funktionen blir varje argument något som kallas för lokala variabler, vilka kan representeras
 som ett index in i funktionens aktiveringspost. Även variabler som binds i
-\miniCode{let}-uttryck läggs i aktiveringsposten istället för på heapen. 
+\kw{let}-uttryck läggs i aktiveringsposten istället för på heapen. 
   
 Eftersom anrop ibland kan nästlas som vi kommer att se senare i avsnittet
 måste vi ha en stack av aktiveringsposter, som man kan pusha och poppa poster ifrån.
@@ -38,7 +38,7 @@ istället har information om sin position i aktiveringsposten.
 För att detta ska fungera behöver varje fri variabel veta var den kommer att
 ligga i aktiveringsposten. Det betyder att den behöver ett heltalsindex som anger
 vilket offset den har. Det behövs en transformation som gör detta före koden 
-körs. Lokaliseringstransformationen går till på följande vis på \miniCode{map}: 
+körs. Lokaliseringstransformationen går till på följande vis på \ic{map}: 
 
 % Genom exempel ska vi förklara hur lokaliseringstransformationen går till.
 
@@ -53,8 +53,8 @@ map f xs = case xs of
 \end{codeEx}
 
 Eftersom argumenten skall ligga i aktiveringsposten så ger vi dem indicier som anger deras 
-offset. Vi visar detta med \miniCode{<x,n>} där \miniCode{x} är vad variabeln kallades 
-förut och \miniCode{n} är dess offset.
+offset. Vi visar detta med \ic{<x,n>} där \ic{x} är vad variabeln kallades 
+förut och \ic{n} är dess offset.
 
 \begin{codeExDiff}
 map |<f,0>| |<xs,1>| = case |<xs,1>| of
@@ -67,7 +67,7 @@ map |<f,0>| |<xs,1>| = case |<xs,1>| of
 \end{codeExDiff}
 
 
-Eftersom variabler som binds med både \miniCode{case} och \miniCode{let} 
+Eftersom variabler som binds med både \ic{case} och \ic{let} 
 ska använda aktiveringsposten så ska även dessa ges indicier.
 
 \begin{codeExDiff}
@@ -82,14 +82,14 @@ map <f,0> <xs,1> = case <xs,1> of
 
 Här får vi ett problem med att \obj{THUNK}-objekten kommer att evalueras någon 
 annanstans, och därmed i en annan aktiveringspost. Det betyder att indicierna som 
-används utanför \obj{THUNK}-objekten i \miniCode{map} inte gäller i thunkarna. Vi kommer därför att evaluera
+används utanför \obj{THUNK}-objekten i \ic{map} inte gäller i thunkarna. Vi kommer därför att evaluera
 thunkar i en egen aktiveringspost. Det kan dock vara så att thunken ändå använder sig
 av de lokala variabler som finns i den yttre funktionen. I exemplet har vi till exempel att 
-\miniCode{<a,4> = THUNK (<f,0> <y,2>)} där f och y är kommer utifrån. Därför 
-måste \obj{THUNK}-en ha information om vilka lokala variabler i \miniCode{map} 
+\ic{<a,4> = THUNK (<f,0> <y,2>)} där f och y är kommer utifrån. Därför 
+måste \obj{THUNK}-en ha information om vilka lokala variabler i \ic{map} 
 som den använder, så att de kan läggas på dess aktiveringspost. 
 
-Noterbart är även att när \miniCode{let} allokerar kommer den att byta ut alla lokala variabler
+Noterbart är även att när \kw{let} allokerar kommer den att byta ut alla lokala variabler
 mot vad de refererar till i aktiveringsposten. Vi får följande: 
 
 %(Cons pekar på ett heapobjekt och ligger alltså inte i aktiveringsposten):
@@ -104,17 +104,17 @@ map <f,0> <xs,1> = case <xs,1> of
     ; Nil -> <xs,1>};
 \end{codeExDiff}
 
-Konstruktorn \miniCode{Cons} får inget index eftersom det inte är en variabel
+Konstruktorn \ic{Cons} får inget index eftersom det inte är en variabel
 utan ett namn för att kunna särskilja den från andra konstruktorer. 
 
-I \miniCode{<a,4> = THUNK [<f,0>, <y,2>]  (<f,0> <y,1>)} ser vi att 
-\miniCode{f} och \miniCode{y} har fått nya index jämfört med vad de
+I \ic{<a,4> = THUNK [<f,0>, <y,2>]  (<f,0> <y,1>)} ser vi att 
+\ic{f} och \ic{y} har fått nya index jämfört med vad de
 hade utanför thunken, vilket beror på att de som sagt kommer att evalueras
 med en egen aktiveringspost.
 
 Det största värdet på variabelindex plus ett blir funktionens
 aktiveringspoststorlek, vilken man alltså kan veta statiskt
-(vid kompileringstid i en kompilator). Storleken för \miniCode{map}-funktionen blir alltså 7.
+(vid kompileringstid i en kompilator). Storleken för \ic{map}-funktionen blir alltså 7.
 
 Alla funktioner har nu information om storleken på sin aktiveringspost, så att 
 den kan allokeras när funktionen ska köras.
@@ -124,11 +124,11 @@ storlek, vilket ger en konstant uppslagstid.
 som räknas ut på ungefär samma sätt som
 för funktioner, där de utomstående lokala variablerna (de så kallade fria 
 variablerna) kan ses som funktionsargument.
-Thunken \miniCode{THUNK [<f,0>, <y,2>]  (<f,0> <y,1>)} behöver storlek 2.
+Thunken \ic{THUNK [<f,0>, <y,2>]  (<f,0> <y,1>)} behöver storlek 2.
 
-Ett fall som är lurigt att implementera är \miniCode{letrecs}.
-Följande funktion \miniCode{f} ger tillbaka en bool som säger om 
-argumentet \miniCode{n} är jämnt eller inte. Det är förvisso ett
+Ett fall som är lurigt att implementera är \kw{letrec}.
+Följande funktion \ic{f} ger tillbaka en bool som säger om 
+argumentet \ic{n} är jämnt eller inte. Det är förvisso ett
 ineffektivt sätt att beräkna detta på, men illustrativt för denna diskussion.
 
 Så här ser funktionen ut skriven i vårt sockerspråk:
@@ -152,7 +152,7 @@ even' odd x = THUNK (if (x == 0) True  (odd  (x - 1)));
 odd' even x = THUNK (if (x == 0) False (even (x - 1)));
 \end{codeEx}
 
-Här måste \miniCode{even} ha \miniCode{odd}s index och \miniCode{odd} ha \miniCode{even}s index. Vi får följande:
+Här måste \ic{even} ha \ic{odd}s index och \ic{odd} ha \ic{even}s index. Vi får följande:
 
 \begin{codeEx}
 f <n,0> = letrec 
@@ -161,9 +161,9 @@ f <n,0> = letrec
     } in <even,1> <n,0>;
 \end{codeEx}
 
-Den observanta läsaren ser att i första thunken läggs \miniCode{even} till utan att den används. 
+Den observanta läsaren ser att i första thunken läggs \ic{even} till utan att den används. 
 Detta är ett implementationsval som tillåter STG att alltid lägga till allt som 
-binds i en \miniCode{letrec} i början i aktiveringsposterna när thunkarna ska evalueras. 
+binds i en \ic{letrec} i början i aktiveringsposterna när thunkarna ska evalueras. 
 Att mer precist hålla reda på vilka thunkar som behöver vad är svårare att implementera.
 
 
@@ -174,7 +174,7 @@ Att mer precist hålla reda på vilka thunkar som behöver vad är svårare att 
 
 
 
-Nu ska vi visa hur anropsstacken kan se ut vid ett anrop till \miniCode{map}.
+Nu ska vi visa hur anropsstacken kan se ut vid ett anrop till \ic{map}.
 Funkitonen \ic{enumFrom} skapar en oändlig lista \ic{[x, x+1, x+2, ...]}.
  
 \begin{codeEx}
@@ -191,7 +191,7 @@ main = let <list,0> = THUNK [] (enumFrom 1)
 
 
 
-Notera att \miniCode{list}-thunken inte har några fria variabler.
+Notera att \ic{list}-thunken inte har några fria variabler.
 I evalueringen allokeras först denna thunk och sedan ska anropet till map
 utföras. 
 Argumenten pushas först på continuation-stacken så att den ser ut såhär:
@@ -200,7 +200,7 @@ Arg cube
 Arg list
 \end{codeEx}
 
-Maskinen ser att \miniCode{map} tar två argument, och funktionsapplikationen 
+Maskinen ser att \ic{map} tar två argument, och funktionsapplikationen 
 kan då köras utan att ett \obj{PAP}-objekt behöver skapas.
 
 Vid funktionsapplikation tas den nuvarande aktiveringsposten bort och ersätts 
@@ -213,33 +213,33 @@ detta ett svansanrop. De fall som inte är svansanrop
 funktionen för att sen välja rätt gren. Vi kommer senare att se att i detta
 fall duplicerar vi den översta aktiveringsposten. 
 
-Att let-binda resultatet av ett
+Att \kw{let}-binda resultatet av ett
 funktionsanrop är inte heller ett svansanrop, för att det är faktiskt inte ett
 anrop alls! Som bekant senareläggs det anropet i en thunk. Detta kan sen vara
 del av ett svansanrop, om denna thunk returneras från någon funktion, eller inte,
 om denna thunks innehåll forceras av en casegranskare.
 
-Tillbaka till anropet till map. 
-Vi lägger argumenten i en ny aktiveringspost, ersätter den main skapat,
+Tillbaka till anropet till \ic{map}. 
+Vi lägger argumenten i en ny aktiveringspost, ersätter den \ic{main} skapat,
 och går in i funktionen. 
 Aktiveringsposten blir:
 \begin{codeEx}
 [cube, list]
 \end{codeEx}
-I definitionen av \miniCode{map} såg vi förut att \miniCode{f} har index 0 och
-\miniCode{xs} index 1, och de har nu fått värden.
+I definitionen av \ic{map} såg vi förut att \ic{f} har index 0 och
+\ic{xs} index 1, och de har nu fått värden.
 
-Det ska utföras en case på \miniCode{<xs,1>} och på position 1 i
-aktiveringsposten ligger list. Aktiveringsposten dupliceras eftersom
+Det ska utföras en \kw{case}-granskning på \ic{<xs,1>} och på position 1 i
+aktiveringsposten ligger \ic{list}. Aktiveringsposten dupliceras eftersom
 det är i en casegranskare. Detta är för att när maskinen senare kommer
 att återvända från att ha evaluerat granskaren kommer den ta bort den 
-översta posten. Maskinen börjar evaluera list, och anropstacken blir:
+översta posten. Maskinen börjar evaluera \ic{list}, och anropstacken blir:
 \begin{codeEx}
 [cube, list]
 [cube, list]
 \end{codeEx}
 
-List pekar på den ovan definierade thunken. Maskinen kommer att gå in i den
+\ic{list} pekar på den ovan definierade thunken. Maskinen kommer att gå in i den
 koden. Detta räknas som ett svansanrop och den översta aktiveringsposten byts
 ut mot thunkens, som är tom.
 
@@ -249,29 +249,29 @@ Anropstacken blir:
 [cube, list]
 \end{codeEx}
 
-På koden ligger nu \miniCode{enumFrom 1} från thunken. 
+På koden ligger nu \ic{enumFrom 1} från thunken. 
 Det kommer efter några steg att evalueras till en atom 
-%, låt oss kalla den \miniCode{l}, 
+%, låt oss kalla den \ic{l}, 
 som pekar på 
-konstruktorn \miniCode{Cons 1 list'}, där list' är
-en thunk som kommer att evaluera \miniCode{enumFrom 2}. 
-% Denna atom\miniCode{l} 
+konstruktorn \ic{Cons 1 list'}, där list' är
+en thunk som kommer att evaluera \ic{enumFrom 2}. 
+% Denna atom\ic{l} 
 Atomen
 returneras. Vid returnering antas som bekant svansanrop och 
 den översta aktiveringsposten poppas.
 
 
-Nu vet map vad \miniCode{<xs,1>} är för konstruktor, nämligen
-\miniCode{Cons 1 list'}. Den grenen väljs och då pushas \miniCode{1} och 
-\miniCode{list'} på aktiveringsposten. 
+Nu är det känt i \ic{map}-funktionen vad \ic{<xs,1>} är för konstruktor, nämligen
+\ic{Cons 1 list'}. Den grenen väljs och då pushas \ic{1} och 
+\ic{list'} på aktiveringsposten. 
 
 Anropstacken blir:
 \begin{codeEx}
 [cube, list, 1, list']
 \end{codeEx}
 
-När variabler bundna till \kw{let}-thunkar allokeras, som \miniCode{<a,4>}
-i \miniCode{map}, skapas ett heapobjekt, men inte med samma aktiveringspost.
+När variabler bundna till \kw{let}-thunkar allokeras, som \ic{<a,4>}
+i \ic{map}, skapas ett heapobjekt, men inte med samma aktiveringspost.
 Istället görs ett uppslag av varje variabel i thunkens variabellista, och
 sen allokeras thunken med en anropsstack efter dessa uppslag. Hur går 
 \kw{let}-bindningen till i \ic{map}? Så här ser koden ut:
@@ -286,12 +286,12 @@ map <f,0> <xs,1> = case <xs,1> of
     ; Nil -> <xs,1>};
 \end{codeEx}
 
-Så \miniCode{<a,4>}-thunken \miniCode{map} vill ha 0 och 2 från
-aktiveringsposten. Det är \miniCode{cube} och \miniCode{1}, precis anropen till
-\miniCode{cube 1}. 
+Så \ic{<a,4>}-thunken \ic{map} vill ha 0 och 2 från
+aktiveringsposten. Det är \ic{cube} och \ic{1}, precis anropen till
+\ic{cube 1}. 
 Thunken som allokeras kommer alltså se ut så här
-\miniCode{THUNK [cube,1] (<f,0> <y,1>)}.
-Om den senare kommer att evalueras skapas aktiveringsposten \miniCode{[cube,1]}.
+\ic{THUNK [cube,1] (<f,0> <y,1>)}.
+Om den senare kommer att evalueras skapas aktiveringsposten \ic{[cube,1]}.
 
 
 Sammanfattningsvis så ersätts den översta aktiveringsposten vid 

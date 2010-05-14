@@ -3,12 +3,11 @@
 \subsection{Avsockring till STG}
 \label{sec:Diabetes}
 
-\overviewSugar
-
 STG är ett ganska primitivt språk där man t.ex. bara kan anropa funktioner
 och skapa konstruktorer med argument som är atomer. Alla objekt måste även
 explicit annoteras med information om huruvida de är thunkar eller konstruktorer. För att underlätta
-att skriva mycket kod skapade vi ett sockerspråk, och ett
+att skriva mycket kod skapades som bekant sockerspråket (sektion \ref{sec:sugar})
+, och ett
 pass som går igenom koden och avsockrar den till STG. Här är ett exempel:
 
 \begin{codeEx}
@@ -18,7 +17,7 @@ isPrimer n t = case t * t >= n of
     };
 \end{codeEx}
 
-Den här koden kommer från testsviten och är del i ett program som testar
+Den här koden är ett program som testar
 primalitet. Här används sockerspråket flitigt för att göra koden läsbar
 och hanterlig. I exemplet är \miniCode{isPrimer} ett funktionsobjekt som i 
 STG skulle skrivas mer i stil med en lambdafunktion:
@@ -34,7 +33,7 @@ till en temporär variabel:
 
 \begin{codeEx}
 let temp = THUNK (t * t)
-in  (>=) temp n
+in  temp >= n
 \end{codeEx}
 
 Liknande för \ic{if}-funktionen: \ic{if}s argument \miniCode{(n \% t == 0)} och 
@@ -57,7 +56,7 @@ Detta gäller även heltal och andra primitiver. $0$ avsockras till
             
     
 För att göra det lättare att operera på listor och göra booleska
-jämförelser finns infixoperatorerna \ic{\&\&} och \ic{||} som alias för and respektive or
+jämförelser finns infixoperatorerna \ic{\&\&} och \ic{||} som alias för \ic{and} respektive \ic{or},
 samt \ic{++} och \ic{:} för \ic{append} och \ic{Cons}. Under avsockringen byts dessa
 infixvarianter ut mot motsvarande vanliga funktioner. 
 
@@ -80,9 +79,9 @@ En annan metod är att göra \ic{\$} ett alias för en funktion \ic{apply} som
 helt enkelt utför ett funktionsanrop:
 
 \begin{codeEx}
-main = apply (qsort 
+main = apply qsort 
      ( apply reverse 
-     ( apply (take 3) (iterate (\x.x + 1) 0)));
+     ( apply (take 3) (iterate (\x.x + 1) 0));
 
 apply f x = f x;
 \end{codeEx}

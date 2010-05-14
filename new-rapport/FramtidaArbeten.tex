@@ -10,7 +10,9 @@ Med anropsstack som vi bytte till istället för substitutionsfunktionen tror vi
 i en kompilator skulle vara realiserbar.
 
 
-Vårt corespråk liknar det som både YHC och GHC arbetar med i sina mellansteg.
+Vi använder STG, som är ett av de interna språken som GHC arbetar med i sina
+mellantseg. Kompilatorn YHC\footnote{http://www.haskell.org/haskellwiki/Yhc} 
+har också ett liknande mellanspråk.
 Det hade varit intressant att utöka vårt språk så att det skulle kunna 
 användas som backend till någon större kompilator, eller något runtime-system.
 Vi har hela tiden haft detta i åtanke och det är delvis därför vi ej har någon 
@@ -27,12 +29,10 @@ korrektheten hos optimisefunktionen, för att se att en optimerad funktion
 gör samma sak som dess icke-optimerade motsvarighet. Vi har endast använt oss av en testsvit
 och exempelprogram för att testa optimise. 
 
-\begin{itemize}
-\item Ett steg för att förvissa sig om korrektheten skulle vara att göra QuickCheck-egenskaper och generatorer för att se att en optimerad funktion gör samma sak som en ooptimerad. 
-\item Ett annat sätt att säkerställa att den
+Ett steg för att förvissa sig om korrektheten skulle vara att göra QuickCheck-egenskaper och generatorer för att se att en optimerad funktion gör samma sak som en ooptimerad. 
+Ett annat sätt att säkerställa att den
 gör vad som förväntas skulle vara att formalisera reglerna och bevisa
 att de är korrekta, exempelvis med hjälp av en bevisassistent såsom Agda.
-\end{itemize}
 
 \subsection{Utveckling av optimeringen}
 
@@ -45,7 +45,7 @@ Dessa är genomförbara utvecklingar, och skall inte ses som omöjliga önskning
 Anledningen till att de inte finns med och är implementerade är tidsbrist,
 någon avgränsning fick ske.
 
-\subsubsection{Delning}
+\paragraph{Delning}
 Den powerfunktion som vi har fokuserat på i det här arbetet har linjär
 komplexitet med det finns som bekant också en logaritmisk, nämligen
 
@@ -70,8 +70,8 @@ inte.
 av att de kan refereras till i andra thunkar och konstruktörer, och på grund
 av anropsstacken. Detta problem är 
 
-\subsubsection{Rekursiva funktioner}
-
+\paragraph{Rekursiva funktioner}
+\label{sec:future-regexp}
 Ibland är inte utrullning det bästa, som i fallet för reguljära uttryck.
 Betrakta funktionen \ic{match :: RegExp -> String -> Bool}, som givet
 ett reguljärt uttryck och en sträng ger tillbaka en boolean om strängen
@@ -84,11 +84,11 @@ som i sin tur kan anropa varandra. Som det är nu kan inte funktionen som
 optimeras anropa sig själv, eller andra funktioner som den har skapat.
 
     I det här regexp-fallet vill en skapa specialiserade match-
-funktioner för olika reguljäruttryck, som (ab)*, ab, a och b, och de i sin tur
+funktioner för olika reguljäruttryck, 
+som \ic{(a.b)*}, \ic{a.b}, \ic{a} och \ic{b}, och de i sin tur
 kan kalla på varandra.
 
-\subsubsection{Tvingad strikthet}
-
+\paragraph{Tvingad strikthet}
 I vissa fall så vill man tvinga fram strikthet, som i fallet 
 \ic{optimise (sum . zipWith (*) getIntList)} som skulle kunna bli en utrullad,
 optimerad skalärprodukt. Just nu sker inte detta för att anropet till nästa

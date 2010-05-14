@@ -29,12 +29,23 @@ som kommer substituera in argumenten i funktionskroppen. Om ingen av dessa regle
 matchades så kan vi inte optimera mer, regel \eqref{CBV:FunIrr} visar detta genom
 att använda $\Phi$ tillståndet.
 
+\begin{comment}
 \begin{align}
 \label{CBV:Fun1} \OMEGA SH{f\,\many{k}}  \rulesep &\, \mc{f\,\many{k}}SH\\
  & \many{k} \text{ alla kända} \nonumber \\
 \label{CBV:Fun2} \OMEGA SH{f\,\many{x}\, k\,\many{y}}  \rulesep &\, \mc{f\,\many{x}\, k\,\many{y}}{\oInline S}H\\
  & \many{x},\many{y} \text{ okänd, } k \text{ är känd} \nonumber \\
 \label{CBV:FunIrr} \OMEGA SH{f\,\many{x}} \rulesep &\, \IRR SH{f\,\many{x}}
+\end{align}
+\end{comment}
+
+\begin{align}
+\label{CBV:Fun1} \OMEGA SH{f\,\many{k}}  \rulesep &\, \mc{f\,\many{k}}SH\\
+ & \many{k} \text{ alla kända} \nonumber \\
+\label{CBV:Fun2} \OMEGA SH{f\,\many{x}}  \rulesep &\, \mc{f\,\many{x}}{\oInline S}H\\
+ & \text{ någon av } \many{x} \text{ är känd} \nonumber \\
+\label{CBV:FunIrr} \OMEGA SH{f\,\many{x}} \rulesep &\, \IRR SH{f\,\many{x}} \\
+ & \text{ ingen av } \many{x} \text{ kända} \nonumber
 \end{align}
 
 Då det inte lägges ut någon continuation för just applikationen finns det ingen regel
@@ -143,37 +154,42 @@ antingen då den stöter på en $\OPT t$ för första gången, eller när den
 inte längre kan evaluera ett uttryck och har en Optimise continuation
 på stacken.
 
+Den här reglen sätter upp maskinen i läge för att optimera atomen $a$. Men om $a$
+är en thunk behöver den först evalueras till ett värde. Därför läggs
+OPT-continuationen ut för att skrida till verket då maskinen har evaluerat
+$a$ till ett värde.
+
 \begin{align}
 \mc aS{\heap a{\OPT t}} & \rulesep\\
 \mc t{\cOPT{a\,}S}{\heap a{\BH}} \nonumber
 \end{align}
-Den här regler sätter upp maskinen i läge för att optimera atomen $a$. Men om $a$
-är en thunk behöver den först evalueras till ett värde. Därför läggs
-OPT-continuationen ut för att skrida till verket då maskinen har evaluerat
-$a$ till ett värde.
+
+När ett värde i form av ett \obj{PAP}-objekt nås börjar funktionen optimeras. 
+De kända argumenten substitueras in.
 
 \begin{align}
 \mc x{\cOPT aS}{\heapp x{\PAP f{a_{1}\ldots a_{n}}}f{\FUN{x_{1}\ldots x_{m}}e}} & \rulesep\\
 \OMEGA{\cOFUN{x_{n+1}\ldots x_{m}}aS}H{e[a_{1}/x_{1}\ldots a_{n}/x_{n}]} \nonumber
 \end{align}
 
-Nu har vi ett \obj{PAP}-värde och vi kan börja optimera funktionen. De kända 
-argumenten substitueras in.
+ I regel \eqref{CBV:Fun3} kommer att vara för tillstånd
+ $\Phi$ och vi skall återigen bygga upp (en förhopningsvis optimerad) funktion.
 
 \begin{align}
 \label{CBV:Fun3} \IRR{\cOFUN{\many{x}}{\alpha}S}He  \rulesep &\, \mc{\alpha}S{\heap{\alpha}{\FUN{\many{x}}e}}
 \end{align}
- I regel \eqref{CBV:Fun3} kommer att vara för tillstånd
- $\Phi$ och vi skall återigen bygga upp (en förhopningsvis optimerad) funktion.
+
+Ibland används maskinen för att evaluera t.ex. konstantuttryck under optimeringen.
+Dessa reduceras alltid till ett värde och då anropas $\Psi$ som tar hand 
+om detta värde. $O\star$ står här för alla continuations som har med optimering
+att göra, dessa börjar alla med $O$. Detta är alltså hur maskinen kommer 
+tillbaka till optimeringstillstånden efter ha evalurat en funktion med 
+kända argument.
 
 \begin{align}
 \mc v{O\star\,:\, S}{\nheap v{\THUNK e}} & \rulesep\\
 \PSI{O\star\,:\, S}Hv \nonumber
 \end{align}
-Ibland används maskinen för att evaluera t.ex. konstantuttryck under optimeringen.
-Dessa reduceras alltid till ett värde och då anropas $\Psi$ som tar hand 
-om detta värde. $O\star$ står här för alla continuations som har med optimering
-att göra, dessa börjar alla med $O$.
 
 %\NOTE {
 %\begin{align*}
@@ -239,7 +255,9 @@ att illustrera när detta sker, betrakta följande kodexempel av \ic{take},
 som givet en lista returnerar de första \ic{n} elementen i en lista:
 
 \begin{codeEx}
-take n list = if (n == 0) Nil (head list : take (n-1) (tail list))
+take n list = if (n == 0) 
+                 Nil 
+                 (head list : take (n-1) (tail list))
 \end{codeEx}
 Här vill man först evaluera \ic{n == 0} innan något av argumenten till \ic{if}, 
 som är definierad med en \kw{case}-sats på det första argumentet, men även om

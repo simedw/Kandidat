@@ -3,7 +3,7 @@
 
 % \subsection{Utökningar}
 
-\subsection{Normalform}
+\paragraph{Normalform}
 \label{sec:whnf}
 \label{sec:nf}
 
@@ -15,7 +15,7 @@ forceras alla konstruktorns argument att också evalueras till normalform.
 Alltså till ett värde, dvs konstruktor eller funktion. Reglerna för dessa
 finns i appendix \ref{sec:printcont}
 
-\subsection{Boxing}
+\paragraph{Boxing}
 \label{sec:boxing}
 
 För att få en uniform representation av användardefinierade datatyper, skapade
@@ -32,7 +32,9 @@ forcerar och utför primitiv addition och sedan boxar igen:
 x + y = case x of 
     { I# x' -> case y of
         { I# y' -> case x' +# y' of
-            { r -> let r' = CON (I# r) in  r'}}};
+            { r -> let r' = CON (I# r) 
+                   in  r'
+    }   }   };
 \end{codeEx}
 
 Funktionen \ic{+} är den operator för addition som användaren av vårt språk 
@@ -41,7 +43,7 @@ användaren. Notera att \ic{x' +\# y'}
 forceras med hjälp av en \kw{case}-sats för att det resulterande talet ska vara fullt
 evaluerat före det boxas igen.
 
-\subsection{IO}
+\paragraph{IO}
 Tolken har en primitiv form av IO: den har konstant indata vid körning och
 skriver ut det som \ic{main}-funktionen returnerar. Funktionerna 
 \ic{getInt}, 

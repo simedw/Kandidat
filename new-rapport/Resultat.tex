@@ -170,17 +170,32 @@ pic = map (map (shapes [Tuple box red])) $ screen x y;
 
 \end{codeEx}
 
-Om man nu vill optimera ovanstående finns det ett par olika tillvägagångssätt. Det som varit mest effektivt när vi testat är att optimera varje objekt för sig. Det är även så vi gör i våra testresultat, fast för en mycket mer komplex scen, tex: 
+Om man nu vill optimera ovanstående finns det ett par olika tillvägagångssätt. Det som varit mest effektivt när vi testat är att optimera varje objekt för sig. Det är även så vi gör i våra testresultat, fast för en mer avancerad scen, tex: 
 \begin{codeEx}
 map (map (shapes 
              [ Tuple (optimise box) red
              , Tuple (optimise sky) blue 
              ])
-         ) $ screen x y;
+         )) (screen x y);
 \end{codeEx}
+
 
 \subsubsection{Körningstider}
 
+Nu ska vi se hur körningstiden påverkas i ett lite större exempel som består av
+en lista med olika figurer som i exemplet ovan. Figur \ref{fig:Resultat:shapes:bild} visar hur
+resultatbilden ser ut, bestående av cirklar och kvadrater som är transformerade på olika sätt:
+
+\begin{figure}[H]
+\centering
+    \includegraphics[width=0.3\textwidth]{img/shapes.png}
+    \caption{Testprogrammets resultat}
+    \label{fig:Resultat:shapes:bild}
+\end{figure}
+
+Detta program körs sedan på olika stora upplösningar, med och utan optimise. 
+Körningstiderna visas i figur \ref{fig:Resultat:shapes:graf}, som även visar
+hur \kw{casebranches} påverkar resultatet:
 
 \begin{figure}[H]
 \includegraphics{shapes.eps}
@@ -188,7 +203,7 @@ map (map (shapes
 \label{fig:Resultat:shapes:graf}
 \end{figure}
 
-I grafen ser vi att optimeringen utan \kw{casebranches} (CB) påslaget är en
+I grafen ser vi att optimeringen utan \kw{casebranches} påslaget är en
 magnitud snabbare per bildstorlek (antal pixlar) redan vid ett lågt antal pixlar.
 Vid den lägsta storleken kan vi se hur mycket tid som går åt till optimeringen,
 men denna tid är konstant och blir snart en obetydande del av körningstiden. För
@@ -209,18 +224,18 @@ main = map (optimise (exp getInt)) getIntList;
 
 exp to x = case to == 0 of
     { True  -> 1
-    ; False -> x * (exp (to - 1) x)
+    ; False -> x * exp (to - 1) x
     };
 \end{codeEx}
 
-Låter vi \ic{getInt} $\mapsto 4$ kommer följande kod generas.
+Låter vi \ic{getInt} $\mapsto 4$ kommer följande kod generas vid optimering.
 
 \begin{codeEx}
   i.m = FUN <2> (x -> case <0,x> of
-    { I# i.c -> case prim("*")# <1,i.c> 1 of
-       { {i.e} -> case prim("*")# <1,i.c> <2,i.e> of
-          { {i.e} -> case prim("*")# <1,i.c> <3,i.e> of
-             { {i.e} -> case prim("*")# <1,i.c> <4,i.e> of
+    { I# i.c -> case <1,i.c> *# 1 of
+       { {i.e} -> case <1,i.c> *# <2,i.e> of
+          { {i.e} -> case <1,i.c> *# <3,i.e> of
+             { {i.e} -> case <1,i.c> *# <4,i.e> of
                 { {i.e} -> let
                    { i.bd = CON (I# <5,i.e>)
                    } in <6,i.f>
@@ -231,10 +246,12 @@ Låter vi \ic{getInt} $\mapsto 4$ kommer följande kod generas.
     })
 \end{codeEx}
 
-Notera hur vi endast utför mönstermatchning en gång på \ic{x}, och hur det bara finns 
-primitiva funktionsanrop kvar. Optimise klarar sig så pass bra att \kw{casebranches} inte 
-gör någon som helst skillnad.
+Notera hur mönstermatchning endast utförs en gång på \ic{x}, och hur det bara
+finns primitiva funktionsanrop kvar. Till sist endast en boxning. 
 
+Med eller utan \kw{casebranches}-inställningen gör här ingen skillnad. 
+Anledningen till detta är att det bara finns en gren till varje \kw{case}-sats
+och då så optimeras grenen alltid ändå, då inget bryt mot STGs semantik kan ske.
 
 \subsubsection{Körningstider}
 
@@ -249,7 +266,39 @@ Med och utan optimise.}
 I början presterar den optimerade funktionen precis som förväntat, men runt \ic{exp 50}
 börjar optimise ta betydligt längre tid på sig. Detta beror på att optimise inte kör med linjär tidsåtgång i detta fallet. 
 
-% Kanske borde förklaras bättre. Varför har den inte det? :(
+\NOTE{ Varför inte linjär? }
+
+\subsection{Reguljäruttryck}
+
+Reguljäruttryck är ett sätt att beskriva struktur av strängar, eller vilka
+listor som helst. Dessa byggs upp av bokstäver
+(\ic{a},\ic{b},\ic{c} osv), 
+kan konkateneras (med \ic{.}) 
+, alterneras (med \ic{|})
+ och upprepas (med \ic{*}). 
+Som exempel matchar reguljäruttrycket \ic{a.b.c} endast strängen \ic{``abc''},
+men \ic{(a|b)*} matchar vilken sträng som helst som består av noll eller fler
+\ic{a} eller \ic{b}. Jämför den sista med \ic{(a*)|(b*)} som istället accepterar
+en sträng av godtyckligt många \ic{a} eller godtyckligt många \ic{b}, men inte 
+en blandning av dem.
+
+Optimeringsfunktionaliteten har testas på ett program som parsar ett reguljäruttryck
+och sen en sträng och avgör huruvida den matchar uttrycket. Att optimera 
+matchingsfunktionen, \ic{match :: RegExp -> String -> Bool}, med det givna
+reguljäruttrycket har undersökts. Resultatet är att det tar ungefär samma
+tid med och utan optimeringen. 
+
+Skälet till detta är att då funktionen \ic{match} optimeras infogas
+vissa funktionsanrop. I koden för match kommer nya anrop till \ic{match}.
+Förvisso kan dessa infogas, men de infogningar kommer ske så länge som det
+finns sträng kvar. Men under optimeringen är den okänd och kan således betraktas
+som potentiellt oändlig! Det som skulle varit ett intressant beteende var
+om anropet till \ic{match} kunde bytas ut till ett anrop till funktion
+som optimeras. Detta diskuteras mer i sektion
+\ref{sec:future-regexp}.
+
+% Kanske borde förklaras bättre. Varför är den inte linjär? :(
+
 \begin{comment}
     \subsection{Expertis}
     Optimise är bra på:

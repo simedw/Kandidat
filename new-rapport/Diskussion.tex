@@ -9,7 +9,7 @@ med en semantik som följer STG-maskinen som används i Haskellkompilatorn GHC.
 Till denna har vi lagt till möjligheten att optimera partiellt applicerade funktioner under körningstid
 då vi känner till värdena som applicerades och kan utnyttja dessa till optimering.
 
-\subsection{Varför optimering under körningstid?}
+\paragraph{Varför optimering under körningstid?}
 
 En relevant fråga att ställa sig är varför man i huvudtaget vill göra optimeringar under körningstid. Faktum är att många av de optimeringar vi gör kan köras statiskt, som här:
 
@@ -26,16 +26,16 @@ Vid statiskt optimering vet vi inte vilken av grenarna som kommer att väljas. D
 \ic{B}-grenen. Sedan under körningstid behöver man kolla på \ic{x} en gång för att sedan avgöra vilken av de optimerade grenarna man ska använda.
 Som vi nämnt tidigare har inte kompilatorer samma tidsrestriktion vid optimeringar som vi har under körningstid, vilket kan göra detta till en rimlig lösning. Det finns ändå ett par nackdelar:
 \begin{itemize}
-    \item Det kan ta väldigt långt tid. Tänk dig \ic{power} funktionen men en specialversion för varje heltal som finns. (Naturligtvis hade man använt någon mekanism för att annotera vad som ska specialiseras och inte)
-    \item Det kan vara svårt att förutspå vad som kommer att används ofta och därför är värt att specialisera. Vår optimise körs bara om den någon gång anropas.
-    \item Små program kan blir mycket stora när en version av varje input måste lagras.
+    \item Det kan ta väldigt långt tid. Tänk dig \ic{power}-funktionen men en specialversion för varje heltal som finns. (Naturligtvis hade man använt någon mekanism för att annotera vad som ska specialiseras och inte)
+    \item Det kan vara svårt att förutse vad som kommer att används ofta och därför är värt att specialisera. Vår optimise körs bara om den någon gång anropas.
+    \item Små program kan blir mycket stora när en version av varje indata måste lagras.
 \end{itemize}
 
 
 Det finns också kritik mot att partiell evaluering som optimering endast är användbart för konstruerade problem, till exempel uträkning av fakultet eller skalärprodukt. Vi har försökt visa på mer verkliga fall där det kan vara mycket användbart genom att optimera en raytracer och fått goda resultat. 
 
 
-\subsection{Placering av optimise}
+\paragraph{Placering av optimise}
 
 Vi valde att programmeraren själv skulle  specificera var i koden vi skulle optimera. Det har har visat sig att detta inte alltid är trivialt och som programmerare måste man ta hänsyn till flera olika saker för att få bra prestanda. Att sätta optimise på helt fel ställe kan till och med göra programmet flera gånger långsammare.
 
@@ -46,14 +46,14 @@ Vi kunde istället ha gjort som man gör i de flesta just in time-kompilatorer. 
 
 
 
-\subsection{Implementerbarhet i kompilator}
+\paragraph{Implementerbarhet i kompilator}
 Vi valde att göra en tolk eftersom det ofta är enklare än att implementera en kompilator.
 En tolk innebär att man känner till syntaxträdet hos koden, vilket vanligtvis kompilerad
 kod inte gör, vilket gör att om det skulle implementeras i en kompilator skulle
 denna information behöva kompileras ner för att finnas tillgänglig när programmet körs.
 
 
-\subsection{Lathet}
+\paragraph{Lathet}
 Vid optimeringen vill man att koden ska bli så optimerad som möjligt, men man får
 vara försiktig så att man inte är för aggressiv, 
 eftersom det kan leda till icke-terminering. Det sker exempelvis i det här fallet:
@@ -83,7 +83,7 @@ Det finns andra sätt förhindra icke-terminering, i \cite{mitchell2007supercomp
 används en vidareutveckling av \cite{home-emb}. Där används ett kriterium för att se om infogad kod kommer att anropa på sig själv utan att minska på sina argument. Uppfylls detta avbryts infogningen. Detta ämnar sig något bättre för optimeringar som arbetar med omskrivningsregler och troligtvis inte lika bra för vår mer evalueringsinriktade metod.
 
 
-
+\begin{comment}
 \subsection{Optimise-with}
 En annan möjlig lösning på problemet ovan är att låta programmeraren själv avgöra hur
 många gånger en funktion får infogas, som här:
@@ -96,8 +96,9 @@ I exemplet ovan betyder \ic{inline take 5} att \ic{take} bara får infogas $5$ g
 En funktionalitet som skulle kunna gynna optimise, eller användandet av den,
 är att den skulle kunna detektera när den potentiellt skulle falla in i en
 oändlig infogningsloop. Det har inte gjorts till det här arbetet.
+\end{comment}
 
-\subsection{Delning}
+\paragraph{Delning}
 Ett annat problem förknippat med lathet är att optimise måste se till att variabler bara 
 evalueras en gång. Detta ställer till besvär hur man skall optimera \kw{let}-satser.
 Ett exempel på delning är detta:
@@ -124,7 +125,7 @@ test_x y = let
     } in a + a;
 \end{codeEx}
 
-\subsection{Anropsstack}
+\paragraph{Anropsstack}
 
 I projektets tidigare fas användes substituering för att göra exempelvis funktionsapplikation.
 Det betyder att syntaxträdet traverseras och argumentvariablerna byts i funktionen

@@ -36,18 +36,19 @@ evalueringsmodell förklarades i förra avsnittet. Denna evalueringsmodell går
 dock inte att använda förrän man har översatt
 sockerspråket till den representation av koden som STG förväntar sig, STG-språket.
 Denna översättning som vi kallar avsockring presenteras i avsnitt \ref{sec:Diabetes}.
-Vi får även se hur lambdafunktioner lyfts upp till toppnivå i avsnitt \ref{sec:LamLift}
-och därefter hur boxning av primitiva datatyper fungerar, och vad tolken har
-för modell för IO.
+Vi får även se hur lambdafunktioner lyfts upp till toppnivå i avsnitt \ref{sec:LamLift}.
 
 I avsnitt \ref{sec:CallStack}, beskrivs \emph{anropsstacken}, som förklarar hur tolken
 sparar undan lokala variabler i en funktion. Anropsstacken är en 
 stor prestandahöjare jämfört med substitution, och därför är det här också ett
 viktigt avsnitt i den här sektionen.
 
-\subfile{Core/Avsockring}
+Men först hur boxning av primitiva datatyper fungerar, och vad tolken har
+för modell för IO.
 
 \subfile{Core/Extensions}
+
+\subfile{Core/Avsockring}
 
 \subfile{Core/Callstack}
 

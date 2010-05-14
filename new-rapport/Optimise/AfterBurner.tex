@@ -27,29 +27,31 @@ vi går in i vet vi att alla nästlade \kw{case} på samma uttryck måste välja
 gren som den första.
 
 \begin{codeEx}
-test x = x * x
+test x = x * x;
 \end{codeEx}
 
 Blir efter vanlig optimering
 
 \begin{codeEx}
 test x = case x of
-            I# a -> case x of
-                I# b -> case a #* b of
-                    r' -> let r = I# r'
+            { I# a -> case x of
+                { I# b -> case a #* b of
+                    { r' -> let r = CON (I# r')
                             in r
+            }   }   };
 \end{codeEx}
 
 Om vi sedan kör optimeringen av gemensamma \kw{case}-granskare erhålls:
 \begin{codeEx}
 test x = case x of
-            I# a -> case a #* a of
-                r' -> let r = I# r'
-                    in r
+            { I# a -> case a #* a of
+                { r' -> let r = CON (I# r')
+                        in r
+            }   };
 \end{codeEx}
 
 Generellt:
-		\begin{codeEx}
+\begin{codeEx}
 case x of
     C a b -> e1
     D a b -> e2

@@ -70,7 +70,7 @@ att skrivas i Haskell.
 
 Så här ser BNF-grammatiken ut för sockerspråket:
 
-
+\begin{figure}[H]
 \begin{equation*}
 \begin{aligned}
 Variabler \quad & v,f \\
@@ -106,7 +106,8 @@ Alternativ \quad & brs &::=&\; K \; \overline{v} \; \mathtt{\rightarrow} \; e \m
             & \text{Matchning med en variabel}
 \end{aligned}
 \end{equation*}
-
+\caption{Sockerspråkets syntax}
+\end{figure}
 
 Ett program är en lista av definitioner. Att det är en lista visas med ett
 streck över namnet, som i $\overline{def}$.
@@ -197,13 +198,19 @@ in  h t1 t2
 Här går det inte, till skillnad från i Haskell, att byta plats på \kw{t1} och \kw{t2}.
 
 Sammanfattningsvis är sockerspråket nästan en delmängd av Haskell. Ett program
-skrivet i sockerspråket kan köras i Haskell med förändringarna
+skrivet i sockerspråket kan köras i Haskell med följande förändringar:
 \begin{itemize}
     \item \kw{data}-deklarationer läggs till
-    \item \ic{(:)} byts ut till \ic{Cons}
-    \item nyckelordet letrec behövs för rekursiva let-bindningar
+    \item nyckelordet \kw{letrec} ändras till \kw{let}
     \item lambdauttryck byts från formen \ic{(\textbackslash x . x)} till \ic{(\textbackslash x -> x)}
-    \item \ic{if}-satser behöver användas istället för \ic{if}-funktionen 
+          %AGDA-STYLE MIXFIX
+    \item \kw{if\_then\_else\_}-satser behöver användas 
+          istället för den treställiga \ic{if}-funktionen 
 \end{itemize}
+Det finns också vissa skillnader i de olika standardbiblioteken, \emph{Prelude}.
+Den främsta skillnaden är att alla funktioner som opererar på listor använder 
+konstruktörerna \ic{Cons} och \ic{Nil} i sockerspråket
+där Haskell använder \ic{(:)} och \ic{[]}.
+
 
 \end{document}

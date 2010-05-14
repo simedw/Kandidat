@@ -17,6 +17,9 @@
 \usepackage{array}
 \usepackage{listings}
 
+% for strikethrough in the preface
+% \usepackage{ulem}
+
 % Used for code examples without | as a special character
 \lstnewenvironment{codeEx}
 {\lstset{ basicstyle= \ttfamily }}
@@ -175,7 +178,6 @@ Notering!
 \newcommand{\overviewStg}
 {
     \begin{figure}[H]
-    \label{figure:overviewStg}
     \centering
         \begin{tikzpicture}[->,shorten >=1pt,auto,node distance=4.2cm,
                             semithick]
@@ -191,14 +193,14 @@ Notering!
               
               ;
         \end{tikzpicture} 
-        \caption{Översikt}
+        \caption{Översikt med fokus på STG-språket}
+        \label{figure:overviewStg}
     \end{figure}
 }
 
 \newcommand{\overviewStgInt}
 {
     \begin{figure}[H]
-    \label{figure:overviewStgInt}
     \centering
         \begin{tikzpicture}[->,shorten >=1pt,auto,node distance=4.2cm,
                             semithick]
@@ -214,14 +216,14 @@ Notering!
               
               ;
         \end{tikzpicture} 
-        \caption{Översikt}
+        \caption{Översikt med fokus på tolken}
+        \label{figure:overviewStgInt}
     \end{figure}
 }
 
 \newcommand{\overviewOptimise}
 {
     \begin{figure}[H]
-    \label{figure:overviewOptimise}
     \centering
         \begin{tikzpicture}[->,shorten >=1pt,auto,node distance=4.2cm,
                             semithick]
@@ -237,14 +239,14 @@ Notering!
               
               ;
         \end{tikzpicture} 
-        \caption{Översikt}
+        \caption{Översikt med fokus på optimeringen}
+        \label{figure:overviewOptimise}
     \end{figure}
 }
 
 \newcommand{\overviewSugar}
 {
     \begin{figure}[H]
-    \label{figure:overviewSugar}
     \centering
         \begin{tikzpicture}[->,shorten >=1pt,auto,node distance=4.2cm,
                             semithick]
@@ -260,7 +262,8 @@ Notering!
               
               ;
         \end{tikzpicture} 
-    \caption{Översikt}
+    \caption{Översikt med fokus på sockerspråket}
+    \label{figure:overviewSugar}
     \end{figure}
 }
 
@@ -268,7 +271,6 @@ Notering!
 \newcommand{\stgOptimise}
 {
     \begin{figure}[H]
-    \label{fig:Optimise:states}
     \centering
         \begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=2.8cm,
                             semithick]
@@ -291,6 +293,8 @@ Notering!
             
         \end{tikzpicture}
         \caption{Hur tillstånden kan gå mellan varandra}
+        \label{fig:Optimise:states}
     \end{figure}
 }
+
 

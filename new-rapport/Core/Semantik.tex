@@ -12,7 +12,7 @@
 
 Så här ser BNF-grammatiken ut för STG:
 
-
+\begin{figure}[H]
 \begin{equation*}
 \begin{aligned}
 \text{Variabler} \quad & x,f \\
@@ -36,6 +36,8 @@ Så här ser BNF-grammatiken ut för STG:
 \defBNF{Program}{prog}{\overline{f=obj}}{}
 \end{aligned}
 \end{equation*}
+\caption{STGs syntax}
+\end{figure}
 
 STG-språket är en primitivare form av sockerspråk, där flera saker är mer explicita. 
 Detta gör det enklare
@@ -68,9 +70,8 @@ med den här utökningen att refereras till som bara STG och när ursprungsversi
 
 En abstrakt maskin kan beskrivas av regler som bestämmer varje steg i en stegvis evaluering.
 Varje regel beskriver, om man är i ett visst tillstånd, vilket tillstånd man skall gå vidare till.
-Ett tillstånd är en konfiguration av ett uttryck och en heap som separeras av ett ($\csep$) vi kommer senare behöva utöka konfigurationerna. Heapen kommer vi att symbolisera med bokstaven $H$.
-Så vi har en samling regler och man väljer en som matchar mot det tillstånd man har, och om 
-ingen regel matchas så är man klar.
+Ett tillstånd är en konfiguration av ett uttryck och en heap som separeras av ett ($\csep$) vi kommer senare behöva utöka konfigurationerna. Heapen kommer vi att symbolisera med bokstaven $H$ vilket gör att en
+regel ser ut så här:
 
 \tikzstyle{every picture}+=[remember picture]
 \everymath{\displaystyle}
@@ -99,6 +100,9 @@ ingen regel matchas så är man klar.
 %        \path[->] (esep) edge [out=90, in=-90] (m1);
 \end{tikzpicture}
 
+Så vi har en samling regler och man väljer en som matchar mot det tillstånd man har, och om 
+ingen regel matchas så är man klar.
+
 \paragraph{Substitution}
 
 Låt oss säga att vi har en funktion $f$ som använder sina två 
@@ -108,9 +112,9 @@ kropp består av separat är $x$ och $y$
 att känna till vad de är. Känner man till $x$ och $y$:s värden, låt oss säga
 $x \mapsto True$ och $y \mapsto 9$, så kan man \emph{substituera} in dem i 
 uttrycket. Då byts varje $x$ ut mot $True$ och varje $y$ mot $9$. Om uttrycket 
-är $e$ skrivs en sådan substituering som $e[True/x, 9/y]$
-\footnote{En bra minnesregel för att komma ihåg vilken ordning man skall 
-          skriva dem i är att x[e/x] = e, vilket liknar vanlig division.}. 
+är $e$ skrivs en sådan substituering som $e[True/x, 9/y]$\footnote{
+  En bra minnesregel för att komma ihåg vilken ordning man skall 
+  skriva dem i är att x[e/x] = e, vilket liknar vanlig division.}. 
 
     Ett sätt att konkret realisera en substitution är att traversera trädet
 för uttrycket och jämföra varje variabel i trädet med variabeln som ska 
@@ -123,6 +127,8 @@ evalueringen kommer till en fri variabel.
 
 För att visa hur reglerna
 för STG  fungerar, ska vi visa hur följande program skulle evalueras med dem.
+Reglerna som presenteras här är de vanliga STG-reglerna\cite{marlow2006making},
+med vissa förenklingar.
 
 \begin{codeEx}
 cube x = x * x * x;
@@ -139,7 +145,7 @@ en lista som består av de fem första primtalen namnet \miniCode{list}.
 \kw{Let} kan användas för att associera andra sorters värden än listor,
 t.ex. datastrukturer, numeriska värden eller funktioner.
 
-Vi behöver någonstans att reservera minnesutrymme för listan, och därför
+\paragraph{Let-uttryck} Vi behöver någonstans att reservera minnesutrymme för listan, och därför
 inför vi en så kallad heap. I ett traditionellt, imperativt språk är
 en heap en representation av minnet som används för dynamisk allokering. När
 maskinen stöter på ett \kw{let}-uttryck allokeras det på heapen, vilket
@@ -175,7 +181,7 @@ beror på att funktioner definierade på toppnivå läggs på heapen före körn
 Alltså ligger även även \miniCode{map} och andra funktioner definierade
 i standardbiblioteket där.
 
-Som uttryck i maskinens tillstånd ligger nu ett anrop till
+\paragraph{Funktionsanrop} Som uttryck i maskinens tillstånd ligger nu ett anrop till
 \miniCode{map}-funktionen, vilket vi därför ska försöka oss på.
 Här låter vi oss inspireras av imperativa språk som ofta lägger argumenten
 på en stack före funktionsanrop. Vi kommer därför uppdatera tillstånden så att de
@@ -249,7 +255,7 @@ temp4 = Cons 11 nil
 nil = Nil
 \end{codeEx}
 
-De temporära variablerna behövs för att konstruktorer skall kunna
+\paragraph{Case-uttryck} De temporära variablerna behövs för att konstruktorer skall kunna
 allokeras med konstant storlek på heapen. I vårt fall pekar
 \miniCode{list}-variabeln på en \miniCode{Cons}-konstruktor, som har en motsvarande gren
 i \miniCode{map}-funktionens definition. Vi vill nu att maskinens uttryck
@@ -338,7 +344,7 @@ let { a = THUNK (cube 2)
     } in c
 \end{codeEx}
 
-Maskinen kommer att stega igenom \miniCode{let}-uttrycket och allokera objekten.
+\paragraph{Thunkar} Maskinen kommer att stega igenom \miniCode{let}-uttrycket och allokera objekten.
 Därefter returneras en heapvariabel som pekar på en konstruktor
 som är en \ic{Cons}, skapad enligt ovan. När man ger tillbaka något som är
 en konstruktor sägs den vara i weak head normal form (WHNF). Konstruktorns
@@ -383,7 +389,7 @@ Det som saknas för thunkar är nu regeln som uppdaterar dem när de
 
 Om $v$ är ett värde så uppdateras $x$ med vad $v$ har för värde.
 
-Nu är det bara en sak kvar att visa för att vår beskrivning av STG ska bli komplett.
+\paragraph{Partiellt applicerade funktioner} Nu är det bara en sak kvar att visa för att vår beskrivning av STG ska bli komplett.
 Vad gör vi med funktioner som inte fått alla sina argument?
 
 \begin{codeEx}
