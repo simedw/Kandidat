@@ -24,7 +24,7 @@
 %\setcounter{equation }{0}
 För att lösa problemet med call-by-value-semantiken så har optimeringsfunktionens beteende ändrats så
 att den följer en latare semantik. Dess regler, som här ska presenteras,
-är en fortsättning på och förändning av reglerna från CBV-semantiken.
+är en fortsättning på och förändring av reglerna från CBV-semantiken.
 Deras mål är att följa den lata semantiken i STG, men fortfarande genomföra bra
 optimeringar.
 Det är en svår balansgång mellan att optimera för mycket och för lite, men genom
@@ -127,7 +127,7 @@ medan de med okända läggs på abyssen \eqref{CBN:Let2}.
 Detta undantag görs för att få bättre delning, då thunkar på heapen alltid beräknas
 av den vanliga maskinen och därför automatiskt får delning. Dessa
 \cont{OLet}-continuations skiljer sig från CBV-semantiken. Frågetecknet står för
-att variablen finns allokerad. Den här continuationen ersätter de andra två
+att variabeln finns allokerad. Den här continuationen ersätter de andra två
 som berörde \kw{let}.
 
 \begin{align}
@@ -137,7 +137,7 @@ som berörde \kw{let}.
    & x'\mbox{ ny variabel} \nonumber 
 \end{align}
 
-$\Psi$-tillståndet kommer i regel \eqref{CBN:Let3} att lägga till denna \kw{let}-binding
+$\Psi$-tillståndet kommer i regel \eqref{CBN:Let3} att lägga till denna \kw{let}-bindning
 på sin lista över dessa.
  I $\Phi$ fås dock ett uttryck som argument och den måste därför 
 åter bygga upp \kw{let}-satsen, vilket sker via de två reglerna \eqref{CBN:Let4} och 
@@ -155,7 +155,7 @@ på sin lista över dessa.
 \end{align}
 
 
-I avsnitt \ref{sec:DeadCode} om dödkodselminimering ändras just \eqref{CBN:Let4} 
+I avsnitt \ref{sec:DeadCode} om dödkodseliminering ändras just \eqref{CBN:Let4} 
 och \eqref{CBN:Let5} så att de endast bygger upp \kw{let}-uttrycket när så behövs.
 
 
@@ -222,7 +222,7 @@ funktionsapplikationen byggs upp igen (i antingen $\Psi$ eller $\Phi$).
 
 \item
 Varje \cont{OLet}-continuation behöver en plats i aktiveringsposten, så därför
-läggs ett argument ut på aktiveringspsten när en \cont{OLet} läggs ut.
+läggs ett argument ut på aktiveringsposten när en \cont{OLet} läggs ut.
 När en \cont{OLet} plockas bort tas på motsvarande sätt argumentet på aktiveringsposten bort.
 
 \item
