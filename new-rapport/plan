@@ -1,3 +1,41 @@
+= Spell-checking menace =
+[x] Abstract
+[x] Förord
+[x] Inledning
+[x] Socker
+[x] STG
+    [x] Maskiner
+    [x] sem
+        [x] Regler <++ ligger under sem?
+[x] Tolken
+    [x] avsockring
+    [x] lamlift
+    [x] callstack
+        [x] transform
+        [x] evaluering 
+[x] Optimise
+    [x] intro
+    [x] tillstånd
+    [x] CBV
+    [x] with
+    [x] CBN
+    [x] Vidare
+[o] Resultat
+    [ ] Raytracer
+    [O_o L L e] power
+    [ ] regexp
+    [ ] heap
+[x] Diskussion
+[x] Slutsats
+[x] Appendix 
+    [x] Metodik
+    [x] print
+    [x] bidrag
+    [x] tidsplan
+
+... verkar inte som jag far senaste ...
+
+
 = This our super new plan =
 
  [✓] fixa framsida efter mall

@@ -3,7 +3,7 @@
 \section{Avsockring till STG}
 \label{sec:Diabetes}
 
-STG är ett ganska primitivt språk där man t.ex. bara kan anropa funktioner
+STG är ett ganska primitivt språk där man till exempel bara kan anropa funktioner
 och skapa konstruktorer med argument som är atomer. Alla objekt måste även
 explicit annoteras med information om huruvida de är thunkar eller konstruktorer. För att underlätta
 att skriva mycket kod skapades som bekant sockerspråket (kapitel \ref{sec:Socker})
@@ -47,7 +47,7 @@ precis som i Haskell. Så \miniCode{True} i koden ovan behöver allokeras med
 en \kw{let}. Den första grenen blir i så fall
   \miniCode{True -> let temp = CON (True) in temp}.
 Alla nullära konstruktorer som \miniCode{True}, \miniCode{False} och \miniCode{Nil} 
-allokeras på toppnivå i tolken och instantieras endast en gång. 
+allokeras på toppnivå i tolken och instansieras endast en gång. 
 Men i alla andra fall behöver de \kw{let}-bindas.
 
 Detta gäller även heltal och andra primitiver. $0$ avsockras till
@@ -56,7 +56,7 @@ Detta gäller även heltal och andra primitiver. $0$ avsockras till
 skull bara som \ic{temp}.
             
     
-För att göra det lättare att göra booleskajämförelser och operera på listor
+För att göra det lättare att göra booleska jämförelser och operera på listor
  finns infixoperatorerna \ic{\&\&} och \ic{||} som alias för \ic{and} respektive \ic{or},
 samt \ic{++} och \ic{:} för \ic{append} och \ic{Cons}. Under avsockringen byts dessa
 infixvarianter ut mot motsvarande vanliga funktioner. 
