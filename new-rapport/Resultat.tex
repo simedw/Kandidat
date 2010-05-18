@@ -221,12 +221,12 @@ den normerade grafen, figur \ref{fig:Resultat:shapes:normgraf}.
 \begin{figure}[H]
 \includegraphics{shapesnorm.eps}
 \caption{Normerad tid över körningstiden för raytracern, med och utan
-casebranch-optimering, normerat mot utan optimeringen}
+\kw{casebranch}-optimering, normerat mot utan optimeringen}
 \label{fig:Resultat:shapes:normgraf}
 \end{figure}
 
 \begin{comment}
-Här är vi inte så konsekventa med casebranches och casebraches-optimeringen
+Här är vi inte så konsekventa med \kw{casebranches} och casebraches-optimeringen
 och det står typ tre gånger i varje mening
 \end{comment}
 
@@ -362,7 +362,7 @@ som optimeras. Detta diskuteras mer i sektion
 
 
 \section{Heapstorlek}
-Syftet med detta projekt är förvisso att få program att bli snabbare, men det finns även andra faktorer som är intressanta, som exempelvis hur mycket minne ett program tar med och utan \kw{optimise}. Ett sätt att mäta minnet är att räkna antalet objekt som har allokerats på heapen. Detta är ett lite klumpigt mått då exempelvis objektet \ic{I\# 1} kommer att ha lika stor inverkan som en funktion, men det ger ändå en fingervisning om minnesanvändningen.
+Syftet med detta projekt är förvisso att få program att bli snabbare, men det finns även andra faktorer som är intressanta, som exempelvis hur mycket minne ett program tar med och utan optimise. Ett sätt att mäta minnet är att räkna antalet objekt som har allokerats på heapen. Detta är ett lite klumpigt mått då exempelvis objektet \ic{I\# 1} kommer att ha lika stor inverkan som en funktion, men det ger ändå en fingervisning om minnesanvändningen.
 Återgår vi till två av de tidigare exemplen, powerfunktionen och raytracern, och plottar deras heapanvändning fås följande figur:
 
 \begin{figure}[H]
