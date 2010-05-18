@@ -14,7 +14,7 @@ i en kompilator skulle vara realiserbar.
 
 
 Vi använde STG, som är ett av de interna språken som GHC arbetar med i sina
-mellantseg. Kompilatorn YHC\footnote{http://www.haskell.org/haskellwiki/Yhc} 
+mellansteg Kompilatorn YHC\footnote{http://www.haskell.org/haskellwiki/Yhc} 
 har också ett liknande mellanspråk.
 Det hade varit intressant att utöka vårt språk så att det skulle kunna 
 användas som backend till någon större kompilator, eller något runtime-system.
@@ -60,9 +60,9 @@ komplexitet, men det finns som bekant också en logaritmisk, nämligen följande
 power n x = case n == 0 of
     { True  -> 1
     ; False -> case even n of
-        { True  -> let a = exp (n / 2) x 
+        { True  -> let a = power (n / 2) x 
                    in  a * a
-        ; False -> x * exp (n - 1) x
+        ; False -> x * power (n - 1) x
         }
     };
 \end{codeEx}
