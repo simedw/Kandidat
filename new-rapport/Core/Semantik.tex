@@ -98,8 +98,8 @@ regel ser ut så här:
 %        \path[->] (esep) edge [out=90, in=-90] (m1);
 \end{tikzpicture}
 
-Ett antal regler kommer presenteras och maskinen väljer den som överrensstämmer
-med det tillstånd den bifinner sig i. Denna process upprepas
+Ett antal regler kommer presenteras och maskinen väljer den som överensstämmer
+med det tillstånd den befinner sig i. Denna process upprepas
 tills ingen regel går att applicera. Då är evalueringen klar.
 
 \paragraph{Substitution}
@@ -118,7 +118,7 @@ uttrycket. Då byts varje $x$ ut mot $True$ och varje $y$ mot $9$. Om uttrycket
 för uttrycket och jämföra varje variabel i trädet med variabeln som ska 
 substitueras och ersätta dem om de är samma. Detta är den effekten man vill 
 eftersträva rent abstrakt, men det finns också andra sätt att implementera 
-substitution, genom att t.ex. göra ett uppslag i en tabell varje gång 
+substitution, genom att till exempel göra ett uppslag i en tabell varje gång 
 evalueringen kommer till en fri variabel. 
 
 \subsection{Reglerna}
@@ -142,7 +142,7 @@ vilket betyder att man ger ett
 namn till ett värde. Namnet kan användas i uttrycket som följer efter \kw{in}.
 I det här fallet får en lista som består av de fem första primtalen namnet \miniCode{list}.
 \kw{let} kan användas för att associera andra sorters värden än listor,
-t.ex. datastrukturer, numeriska värden eller funktioner.
+till exempel datastrukturer, numeriska värden eller funktioner.
 
  Vi behöver någonstans att reservera minnesutrymme för listan, och därför
 använder vi en så kallad heap. I ett traditionellt, imperativt språk är
@@ -180,7 +180,7 @@ Maskinens tillstånd är nu:
 \end{align*}
 
 
-Som synes liger även  \miniCode{cube} på heapen, vilket
+Som synes ligger även  \miniCode{cube} på heapen, vilket
 beror på att funktioner definierade på toppnivå läggs på heapen före körning.
 Alltså ligger även \miniCode{map} och andra funktioner definierade
 i standardbiblioteket där.
@@ -278,7 +278,7 @@ Detta åstadkoms med följande formella regel:
 
 Det som står i granskaren, uttrycket mellan \miniCode{case} och \miniCode{of}, är i vårt
 fall en variabel. Det finns också fall då granskaren är andra uttryck, som
-t.ex. funktionsapplikation. I så fall vet vi inte vilken gren vi ska
+till exempel funktionsapplikation. I så fall vet vi inte vilken gren vi ska
 ta innan vi har evaluerat granskaren, vilket vi därför vill göra.
 Efter att den har evaluerat färdigt måste maskinen ha något sätt att
 veta vilken \miniCode{case}-sats den ska gå tillbaka till. Detta kan liknas
@@ -296,7 +296,7 @@ blir följande:
 \]
 
 
-Det här uttrycket kommer att evalueras till ett värde, som t.ex. en konstruktor.
+Det här uttrycket kommer att evalueras till ett värde, som till exempel en konstruktor.
 Efter evalueringen kommer en case-continuation att ligga överst på stacken och vi skulle nu kunna välja
 rätt gren. Vi vill återanvända grenväljar-regeln som vi definierade
 ovan, så därför inför vi följande regel som ställer in maskinens tillstånd för det:
