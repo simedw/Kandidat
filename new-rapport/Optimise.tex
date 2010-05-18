@@ -4,13 +4,14 @@
 
 \chapter{Optimise}
 \label{sec:Optimise}
+
 % svårt att låta bli att alla dessa avsnitt börjar med 
 % 'i det här avsnittet [ ska vi undersöka / beskrivs / förklaras ... ]'
 % plepp, pleat
 
 \overviewOptimise
 
-Nu när sockerspråket (sektion \ref{sec:Socker}) och STG (sektion \ref{sec:STG}) är förklarade
+Nu när sockerspråket (kapitel \ref{sec:Socker}) och STG (kapitel \ref{sec:STG}) är förklarade
 kan undersökningen av optimeringen, som är själva kärnan i arbetet, påbörjas.
 I detta avsnitts introduktion förklaras vad optimering är och 
 vad det innebär att göra det under körningstid. 
@@ -22,9 +23,9 @@ efterföljande avsnitt presenteras en semantik, som kallas för CBN- eller call-
 
 Lösningen tjänar också på andra optimeringar, som t.ex.
 dödkodseliminering (sektion \ref{sec:DeadCode}), 
-välkänd caselag (sektion \ref{sec:CaseLaw}) och 
-afterburner (sektion \ref{sec:Afterburner}).
-Hur optimeringen fungerar tillsammans med anropsstacken visas i det sista avsnittet, \ref{sec:CBN:Callstack}.
+välkänd caselag (avsnitt \ref{sec:CaseLaw}) och 
+afterburner (avsnitt \ref{sec:Afterburner}).
+Hur optimeringen fungerar tillsammans med anropsstacken visas i avsnittet, \ref{sec:CBN:Callstack}.
 
 \subfile{Optimise/Intro}
 
@@ -84,7 +85,7 @@ evaluering är att optimeringen sker med okända uttryck (t.ex. fria variabler),
 vilket gör att det inte alltid går att få ett värde\footnote{ Det vill säga en primitiv eller en variabel som inte
 är en thunk.}  när ett uttryck optimeras. I dessa
 fall måste ett nytt uttryck byggas upp som kommer att räkna ut det okända värdet. 
-Förhoppningen är att är det nya, optimerade uttrycket mer effektivt än det gamla.
+Förhoppningen är att det nya, optimerade uttrycket, är mer effektivt än det gamla.
 
 Vi ser optimeringen som ett speciellt tillstånd som STG-maskinen befinna sig i. 
 Detta tillstånd används för att maskinen ska veta att den evaluerar inuti en funktion
@@ -96,7 +97,7 @@ Det som optimeringen kan göra faller under dessa kategorier:
 
 \paragraph{ Beräkning av kända uttryck }
 Dessa fall är ganska enkla att optimera, eftersom det går att använda den vanliga
-maskinen för STG. Om det t.ex. står \ic{7 * 191} i koden så kan den evalueras
+maskinen för STG. Om det t.ex. står \ic{7 * 191} i koden så kan det evalueras
 som vanligt och resultatet \ic{1337} kan sedan användas i koden.
 
 \paragraph{ Infogning av funktionsdefinitioner }
@@ -115,12 +116,12 @@ sum xs = case xs of
     };
 \end{codeEx}
 
-Om man optimerar \ic{sum} inuti grenarna så finns det risk att man infogar \ic{sum}
+Om man optimerar \ic{sum} inuti grenarna så finns det risk att \ic{sum} infogas
 igen i \ic{Cons}-fallet.
 
 \paragraph{ Val av rätt gren i \kw{case}-uttryck }
 
-I \kw{case}-uttryck kan är ibland granskarens värde känt. Detta kan användas
+I \kw{case}-uttryck är ibland granskarens värde känt. Detta kan användas
 för att välja rätt gren. När optimeringen kommer till en \kw{case}-sats optimeras först granskaren,
 men eftersom det inte är avgörbart på förhand om en optimering lyckas eller inte
 behöver det finnas ett sätt att visa det. 
@@ -152,12 +153,12 @@ befinner sig i.
 inspekteras uttrycket och evalueras till ett värde om det är möjligt.
 
 \paragraph{Psi $\Psi$} Detta är maskinens tillstånd när den har optimerat något till ett värde. I detta tillstånd
-försöker maskinen bygga upp uttrycket igen utifrån stacken, med vetskapen om att vi har
+försöker maskinen bygga upp uttrycket igen utifrån stacken, med vetskapen om att den har
 något som är ett värde.
 
 \paragraph{Irr $\Phi$} Detta tillstånd kommer maskinen till om den har misslyckats att optimera till ett värde. Irr är alltså kortform för Irreducible.
 I detta tillstånd fanns det inte tillräckligt med information att få ett
-värde, så vi bygger upp ett uttryck igen med information från stacken.
+värde, så uttrycket byggs upp igen med information från stacken.
 
 \paragraph{}
 I figur \ref{fig:Optimise:states} ses att evaluering alltid börjar i den vanliga maskinen
@@ -173,6 +174,12 @@ När optimeringen är klar bygger $\Phi$ upp funktionen igen och går tillbaka t
 Figuren visar också att optimeringstillstånden använder sig av varandra, vilket
 händer beroende på uttrycket som maskinen har när den kommer till tillståndet.
 
+I resterande kapitel kommer två olika semantiker som båda bygger på dessa tillstånd
+att presenteras. Den första är CBV-semantiken som har
+problem med att den inte var tillräckligt lat vilket gjorde att många program inte 
+kunde optimeras, då optimeringen gick in i oändliga loopar. Senare i sektion \ref{sec:Optimise:CBN} 
+kommer CBN-semantiken att presenteras som är vår lösning på det problemet.
+
 
 
 
@@ -183,8 +190,10 @@ händer beroende på uttrycket som maskinen har när den kommer till tillstånde
 \subfile{Optimise/With}
 
 \subfile{Optimise/CBN}
-\subfile{Optimise/DeadCode}
-\subfile{Optimise/ValkandCaseLag}
-\subfile{Optimise/AfterBurner}
+
+\subfile{Optimise/Vidare}
+%\subfile{Optimise/DeadCode}
+%\subfile{Optimise/ValkandCaseLag}
+%\subfile{Optimise/AfterBurner}
 
 \end{document}

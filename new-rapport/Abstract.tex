@@ -19,15 +19,16 @@
 % Vi har gjort en utokning av STG for optimering av partiellt applicerade funktioner under korningstid i ett lat funktionellt sprak. Vi konkretiserat detta med att utveckla en tolk.
 
 Vi har utvecklat en tolk med möjligheten att optimera partiellt applicerade
-funktioner under körningstid i ett lat funktionellt språk. Tolken använder
-STG, som också används i Haskellimplementationer, som corespråk.
+funktioner under körningstid i ett lat funktionellt språk. 
 
-Språket har modifierats för användaren ska kunna annotera var koden
+Som corespråk använder tolken STG, som också används i Haskellimplementationer.
+
+Språket har modifierats för att användaren ska kunna annotera var koden
 ska optimeras under körningstid. Detta visar sig ge fler möjligheter till
 optimeringar än de som kan göras statiskt.
 
 Vi introducerar tolken, de byggstenar den består av och STG grundligt och ger 
-sedan ett formellt schema som beskriver semantiken för hur optimeringen kan göras under 
+sedan ett formellt schema som beskriver semantiken för hur optimeringen görs under 
 körningstid. Sedan visas de praktiska resultat som fås: optimeringen ger i vissa fall stora 
 tidsvinster då en funktion som partiellt applicerats med värden, 
 som inte är kända statiskt, optimeras och körs ett relativt stort antal gånger.

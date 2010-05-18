@@ -1,0 +1,15 @@
+\documentclass[../Optimise]{subfiles}
+\begin{document}
+
+\section{Vidare optimeringar}
+En del optimeringar presenteras här separat. De finns implementerade
+i tolken som följer CBN-semantiken. Den första, dödkodseliminering, utförs under optimeringen, men skulle också kunna göras efteråt, även om det inte hade varit lika
+effektivt. Att använda välkänd case-lag, nästa avsnitt, görs också under
+optimeringen. Avsnittet därpå beskriver optimeringar som görs i optimeringens
+slutskede. 
+
+\subfile{Optimise/DeadCode}
+\subfile{Optimise/ValkandCaseLag}
+\subfile{Optimise/AfterBurner}
+
+\end{document}

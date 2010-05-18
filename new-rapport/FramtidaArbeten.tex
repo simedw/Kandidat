@@ -3,7 +3,7 @@
 
 \chapter{Slutsats och framtida arbete}
 
-Vi har i denna rapport presenterat en utökning av STG-språket med ett nytt objekt, \obj{OPT}, för att annotera kod som ska optimeras under körningstid. Vi presenterar även ett tillhörande evalueringschema som bevarar STG:s lata semantik. 
+Vi har i denna rapport presenterat en utökning av STG-språket med ett nytt objekt, \obj{OPT}, för att annotera kod som ska optimeras under körningstid. Vi har även ett här presenterat tillhörande evalueringschema som bevarar STG:s lata semantik. 
 
 En avgränsning för vårt projekt var att jobba inom ramen för en tolk. 
 Detta av flera anledningar, men främst för att det är lättare att göra prototyper för 
@@ -13,19 +13,21 @@ Med anropsstack som vi bytte till istället för substitutionsfunktionen tror vi
 i en kompilator skulle vara realiserbar.
 
 
-Vi använder STG, som är ett av de interna språken som GHC arbetar med i sina
+Vi använde STG, som är ett av de interna språken som GHC arbetar med i sina
 mellantseg. Kompilatorn YHC\footnote{http://www.haskell.org/haskellwiki/Yhc} 
 har också ett liknande mellanspråk.
 Det hade varit intressant att utöka vårt språk så att det skulle kunna 
 användas som backend till någon större kompilator, eller något runtime-system.
 Vi har hela tiden haft detta i åtanke och det är delvis därför vi ej har någon 
-typcheckare, eftersom det redan förväntas vara gjort.
+typcheckare, eftersom det redan förväntas vara gjort vid skedet då vårt arbete kommer in.
 En typcheckare och stöd för bland annat algebraiska datatyper och typklasser i en 
-frontend hade varit trevligt då det är lätt att skriva fel när man skriver
+frontend hade dock varit trevligt då det är lätt att skriva fel när man skriver
 program till vårt språk. 
 
 
-Vi har inte formellt bevisat att vår utökning bevarar semantiken. Dock klarar vår referensimplementation en mängd olika testfall vilket ger oss stort förtroende för dess korrekthet. Vår referensimplementation är för närvarande en tolk. 
+Vi har inte formellt bevisat att vår utökning optimerar korrekt. Dock klarar vår 
+referensimplementation, tolken, en mängd olika testfall vilket ger oss stort förtroende för 
+dess korrekthet.
 Ett steg för att förvissa sig om korrektheten skulle vara att göra 
 QuickCheck\footnote{http://www.cs.chalmers.se/\textasciitilde rjmh/QuickCheck/}-egenskaper 
 och generatorer för att se att en optimerad funktion gör samma sak som en ooptimerad. 
@@ -52,7 +54,7 @@ framtvingade avgränsningar.
 
 \paragraph{Delning}
 Den powerfunktion som vi har fokuserat på i det här arbetet har linjär
-komplexitet med det finns som bekant också en logaritmisk, nämligen
+komplexitet, men det finns som bekant också en logaritmisk, nämligen följande:
 
 \begin{codeEx}
 power n x = case n == 0 of
@@ -62,10 +64,10 @@ power n x = case n == 0 of
                    in  a * a
         ; False -> x * exp (n - 1) x
         }
-    }
+    };
 \end{codeEx}
 
-Optimeringssemantiken, som den är nu, kommer att infoga \ic{a} två gånger,
+Optimeringssemantiken, som den ser ut nu, kommer att infoga \ic{a} två gånger,
 liknande call-by-name, men inte call-by-need. Anledningen är att beräkningen
 \ic{a} lagras i en thunk på abyssen, och när senare multiplikationen ska
 infogas infogas även \ic{a}, och detta två gånger. Det resultatet sparas
@@ -77,7 +79,7 @@ av anropsstacken. Detta problem är inte löst.
 
 \paragraph{Rekursiva funktioner}
 \label{sec:future-regexp}
-Ibland är inte utrullning det bästa, som i fallet för reguljära uttryck.
+Ibland är inte utrullning det bästa, som i fallet med reguljära uttryck.
 Betrakta funktionen \ic{match :: RegExp -> String -> Bool}, som givet
 ett reguljärt uttryck och en sträng ger tillbaka en boolean som talar om huruvida strängen
 satisfierar uttrycket. Om man skulle rulla ut funktionen på den okända strängen
@@ -91,7 +93,7 @@ optimeras anropa sig själv, eller andra funktioner som den har skapat.
     I det här fallet vill man skapa specialiserade match-
 funktioner för olika reguljäruttryck, 
 som \ic{(a.b)*}, \ic{a.b}, \ic{a} och \ic{b}, och att de i sin tur
-kan kalla på varandra.
+kan anropa varandra.
 
 \paragraph{Tvingad strikthet}
 I vissa fall vill man tvinga fram strikthet, som i fallet 
@@ -100,21 +102,23 @@ optimerad skalärprodukt. Just nu sker inte detta eftersom anropet till nästa
 \ic{zipWith} är lat då det skapar ett \ic{Cons}-objekt, där elementet är de första
 elementen i listorna adderat, och resten av listan är ihopzippningen av resten
 av listorna. \ic{Cons} ska inte evaluera sina argument, och därför stannar
-optimeringen. Om rekursiva funktioner skulle vara implementerade som i nämnt ovan
+optimeringen. Om rekursiva funktioner skulle vara implementerade som nämnt ovan
 skulle den kunna göra ett anrop till sig själv igen.
 
-    I fallet med skalärprodukt vill man hellre att hela getIntList-listan 
-utrullas. Då behöver man någon slags strikthetsnotation. Antingen i koden 
-för \ic{zipWith}, eller som argument till \kw{optimise}. Tex att \ic{Cons} ska vara strikt i 
+    I fallet med skalärprodukt vill man hellre att hela \ic{getIntList}-listan 
+utrullas. Då behöver man någon sorts strikthetsnotation, antingen i koden 
+för \ic{zipWith}, eller som argument till \kw{optimise}, t.ex. att \ic{Cons} ska vara strikt i 
 sitt andra argument.
 
-\paragraph{Välkänd caselag}
-Som visas i resultatet, och diskuteras i sektion
-\ref{sec:diskussion_om_exponentialitet} så ger den nuvarande implementationen
+\paragraph{Välkänd case-lag}
+Som visas i resultatet, och diskuteras i kapitel
+\ref{sec:diskussion_om_exponentialitet} ger den nuvarande implementationen
 av välkänd caselag tillsammans med \kw{casebranch}-optimeringen 
 en komplexitet på optimeringen som inte är linjär. Reglerna för när denna
 omskyffling ska ske kan justeras till linjär komplexitet. Exempelvis skulle man
 kunna flagga att en gren inte behöver optimeras igen efter omskyfflingen. 
 Något sådant sätt att markera grenar finns inte just nu.
+
+
 
 \end{document}

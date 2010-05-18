@@ -6,27 +6,27 @@
 
 % Inledande text?
 
-I den föregående sektionen om optimise beskrivs hur optimeringen sker.
-I det här avsnittet beskrivs hur kod ser ut efter optimering och 
-olika tidsjämförelser sker med och utan optimise. 
-Vi testar CBN-semantiken med anropsstack.
+Det föregånde kapitlet beskrev hur optimeringen sker via optimise.
+I det här avsnittet beskrivs hur kod ser ut efter optimering, och 
+olika körningar med och utan optimise jämförs. 
+Vi testar endast CBN-semantiken med anropsstack då det är projektets 
+slutgiltiga och mest förfinade optimeringsvariant.
 
 Det finns massor av platser i kod där optimise kan placeras, men alla dessa är tyvärr 
 inte bra val. Det finns flera fallgropar att undvika för få ut så stor 
 prestandavinst som möjligt. Vi ska illusterara detta igenom att undersöka ett 
-något större exempel, en raytracer.
+några större exempel, bland annat en raytracer.
 
 \paragraph{Hur testerna har gjorts}
 För att utföra dessa test, har vi använt Haskellbiblioteket Criterion\footnote{http://hackage.haskell.org/package/criterion}.
 Varje testprogram som skall testas kommer Criterion att köra 100 gånger. Skräpsamlaren
 aktiveras mellan körningarna för att undvika störningar.
+En annan detalj är att Criterion 
+rapporterar inom vilket konfidensintervall det går att lita
+på den uppmätta tiden genom att
+mäta störningar (andra program som körs
+i bakgrunden et.c.).
 
-En annan detalj är att Criterion försöker mäta störningar (andra program som körs
-i bakgrunden et.c.) och rapporterar inom vilket konfidensintervall det går att lita
-på den uppmätta tiden.
-
-För de test som vi kört har vi låtit indatan växa exponentiellt med basen två. Med
-andra ord har den fördubblats i varje steg.
 
 \section{Raytracer}
 
@@ -37,9 +37,9 @@ våra egna ögon fungerar. Fast vi skickar inte ut strålar.}.
 Utifrån detta kan den sedan bygga upp en bild. Vi har implementerat
 en mycket enkel sådan, där rummet består av en djupsorterad lista av tvådimensionella objekt.
 Varje objekt beskrivs av en funktion, $Punkt \mapsto Bool$, där den booleska
-variabeln svarar på frågan `Ligger den här punkten inom objektet?'.
+variabeln svarar på frågan ``Ligger den här punkten inom objektet?''.
 
-För att underlätta ges de tänkta typerna för funktionerna som en kommentar ovan definitionen.
+För att underlätta ges de tänkta typerna för funktionerna som kommentarer ovanför definitionerna.
 En cirkel med radie \ic{1.0} och en kvadrat med sidorna \ic{2.0} defineras:
 
 \begin{codeEx}
@@ -47,7 +47,7 @@ En cirkel med radie \ic{1.0} och en kvadrat med sidorna \ic{2.0} defineras:
 -- circle, square :: Shape
 
 circle p = case p of
-    { Pos x y -> x * x + y * y <. 1.0
+    { Pos x y -> x *. x + y *. y <. 1.0
     };
 
 square p = case p of
@@ -79,14 +79,16 @@ Låt oss börja med att betrakta en enkel figur, en fyrkant med sina sidor
 nerskalade till 1.0.
 
 \begin{codeEx}
-box  = scale (Pos 0.5 0.5) square
-box' = optimise box
+box  = scale (Pos 0.5 0.5) square;
+box' = optimise box;
 \end{codeEx}
 
-\ic{box} är nu en funktion från \kw{Pos} till \kw{Bool}. Det är vid sådana halvt applicerade funktioner
-som optimise skiner. Optimise kommer bland annat att infoga funktionsanrop och kasta bort onödiga \obj{THUNK}-objekt. 
-Såhär ser den optimerade boxfunktionen ut i STG-kod. Den är lite svår att tyda 
-eftersom alla aktiveringspostindex står med:
+\ic{box} är en partiellt applicerad funktion från \kw{Pos} till \kw{Bool} och
+är intressant att optimera: bland annat kommer funktionsanrop att infogas
+och onödiga \obj{THUNK}-objekt elimineras.
+Såhär ser den optimerade boxfunktionen ut i STG-kod. För att förenkla läsningen har vi tagit bort aktiveringspostindex från variablerna i följande kod:
+%Den är lite svår att tyda 
+%eftersom alla aktiveringspostindex står med:
 
 \begin{codeEx}
   box' = FUN (p -> case p of
@@ -126,7 +128,7 @@ eftersom alla aktiveringspostindex står med:
 
 Denna version av koden är billig att få fram ur tidssynpunkt och ger ganska
 mycket snabbare kod som vi ska se i nästa underavsnitt. Om vi använder 
-\kw{casebranches} på samma exempel får vi ännu finare kod som bara består av en
+\kw{casebranches} på samma exempel fås ännu finare kod som bara består av en
 rad med \kw{case}-satser, men optimeringen tar mycket längre tid:
 
 \begin{codeEx}
@@ -161,17 +163,18 @@ box' = FUN (p -> case p of
 \end{codeEx}
 
 
-Så länge man håller sig till en enda färg kan alla tänkbara figurer modelleras
-med objekt i vår implementation. Men när man börjar intressera sig för olika färger krävs det
+Så länge endast en färg, förutom bakgrundsfärgen, används kan alla tänkbara figurer modelleras
+med objekt i denna implementation. Om det finns intresse för olika färger krävs det
 flera objekt. Vi har valt att se varje objekt som ett par
 av en färg och en funktion som säger om en punkt ligger innanför objektets ramar. 
-Vi placerar sedan alla sådana par i en lista där första elementet är det
+Alla sådana par placeras i en lista där första elementet är det
 objekt som ska målas upp närmast betraktaren. 
 
-Vi har sedan en en funktion som givet en lista av par av färger och funktioner
-ger oss vilken färg en viss punkt har. Vi kallar denna funktion för
-\ic{shapes}. Till sist har vi en lista av listor av positioner som ger alla
-punkter som \ic{shapes} ska köras på och alltså upplösningen för bilden.
+Funktionen \ic{shapes} tar en sådan lista av par av färger och funktioner och 
+ger tillbaka en ny funktion från punkt till färg. Den funktionen kan
+appliceras på alla punkter för att skapa en bild. I exemplet nedan används \ic{screen}
+för att generera alla punkter givet storleken i x- och y-led. I \ic{pic} skapas 
+bilden genom att använda \ic{map} med funktionen som fås av \ic{shapes}.
 
 \begin{codeEx}
 
@@ -222,27 +225,32 @@ casebranchoptmering, normerat mot utan optimeringen}
 \label{fig:Resultat:shapes:normgraf}
 \end{figure}
 
+\begin{comment}
+Här är vi inte så konsekventa med casebranches och casebraches-optimeringen
+och det står typ tre gånger i varje mening
+\end{comment}
+
 I den normerade grafen, figuren ovan, ses
-på x-axeln bildens storlek i pixlar som ökar logaritmiskt och 
+på x-axeln bildens storlek i pixlar i logaritmisk skala
 på y-axeln ses antalet gånger snabbare de två olika optimeringsmetoderna är relativt
 utan optimering. 
 För mycket små bilder tar det mer tid att optimera än att bara köra
-funktionen för dessa enstaka pixlar. Utan casebranches stabiliseras
+funktionen för dessa enstaka pixlar. Utan \kw{casebranches} stabiliseras
 snabbheten för bilder med många pixlar, 256 och uppåt, till att vara lite över dubbelt
 så snabb.
-Med casebranchoptimeringen tar det initialt mycket lång tid, men funktionen blir
+Med \kw{casebranch}-optimeringen tar det initialt mycket lång tid, men funktionen blir
 så mycket snabbare att det för stora bilder går det avsevärt mycket snabbare, med 
 en faktor större än tre.
 
 Den optimerade funktionen utan \kw{casebranches} är två magnituder snabbare
 än med \kw{casebranches} för mycket små bilder. Detta är för att optimise
-lägger ner mer tid på casebranchoptimeringen.
+lägger ner mer tid på \kw{casebranch}-optimeringen.
 För stora bilder vinner man ändå på att använda \kw{casebranches}, eftersom optimeringstiden
 också här ändå bara är konstant. Vid körning av den optimerade funktionen
 behöver inga uppslag i heapen eller icke-primitiva funktionsanrop utföras. 
 Troligen kommer den också att plana
 ut och bli en konstant gånger snabbare än utan optimering. Då det tar
-lång tid\footnote{24h eller mer} att köra för stora bilder
+lång tid\footnote{ 24h eller mer} att köra för stora bilder
 har inga sådana test gjorts.
 
 
@@ -287,21 +295,24 @@ power_4 = FUN (x -> case x of
 \end{codeEx}
 
 Notera hur mönstermatchning endast utförs en gång på \ic{x}, och hur det bara
-finns primitiva funktionsanrop kvar. Till sist endast en boxning. 
+finns primitiva funktionsanrop kvar samt endast en boxning. 
 
 \kw{casebranches}-inställningen gör här ingen skillnad. 
 Anledningen till detta är att det bara finns en gren till varje \kw{case}-sats
-och då optimeras grenen ändå alltid, eftersom inget bryt mot STGs semantik kan ske.
+och då optimeras grenen ändå alltid, 
+eftersom inget brott mot semantiken hos STG kan ske.
 
 \paragraph{Körningstider}
 
-Figur \ref{fig:Resultat:shapes:graf} visar den normerade grafen för körningstid
-med optimise för programmet ovan, för olika värden på \ic{getInt}, exponenten.
+Figur \ref{fig:Resultat:power:graf} visar den normerade grafen för körningstid
+med optimise för programmet ovan, för olika värden på \ic{getInt}, exponenten. 
+\ic{getIntList} är en lista innehållande talen mellan $1 \ldots 200$, storleken på
+denna lista är således konstant för alla test.
 
 \begin{figure}[H]
 \includegraphics{powernorm.eps}
 \caption{Normerad graf över körningstid för power med känd exponent.}
-\label{fig:Resultat:shapes:graf}
+\label{fig:Resultat:power:graf}
 \end{figure}
 
 För låga exponenter tar inte optimeringen särskilt mycket tid och
@@ -333,7 +344,7 @@ men \ic{(a|b)*} matchar vilken sträng som helst som består av noll eller fler
 en sträng av godtyckligt många \ic{a} eller godtyckligt många \ic{b}, men inte 
 en blandning av dem.
 
-Optimeringsfunktionaliteten har testas på ett program som parsar ett reguljäruttryck
+Optimeringsfunktionaliteten har testats på ett program som parsar ett reguljäruttryck
 och sen en sträng och avgör huruvida den matchar uttrycket. Att optimera 
 matchingsfunktionen, \ic{match :: RegExp -> String -> Bool}, med det givna
 reguljäruttrycket har undersökts. Resultatet är att det tar ungefär samma
@@ -347,6 +358,51 @@ som potentiellt oändlig! Det som skulle ha varit ett intressant beteende var
 om anropet till \ic{match} kunde bytas ut till ett anrop till funktionen
 som optimeras. Detta diskuteras mer i sektion
 \ref{sec:future-regexp}.
+
+
+
+\section{Heapstorlek}
+Syftet med detta projekt är förvisso att få program att bli snabbare, men det finns även andra faktorer som är intressanta, som exempelvis hur mycket minne ett program tar med och utan \kw{optimise}. Ett sätt att mäta minnet är att räkna antalet objekt som har allokerats på heapen. Detta är ett lite klumpigt mått då exempelvis objektet \ic{I\# 1} kommer att ha lika stor inverkan som en funktion, men det ger ändå en fingervisning om minnesanvändningen.
+Återgår vi till två av de tidigare exemplen, powerfunktionen och raytracern, och plottar deras heapanvänding fås följande figur:
+
+\begin{figure}[H]
+\includegraphics{heap.eps}
+\caption{Normerad graf över Heapens storlek}
+\label{fig:Resultat:heap:graf}
+\end{figure}
+
+I grafen, som är normerad med de icke-optimerade körningarna, ses
+på x-axeln indatans storlek (bildytans sida för raytracern och exponenten i power) som ökar logaritmiskt, och 
+på y-axeln antalet gånger fler heapobjekt som allokeras med optimering jämfört med utan optimering.
+Figuren visar tydligt att antalet heapobjekt som allokeras minskar vid användandet av en optimerad funktion. Detta beror till stor del på att boxade tal inte längre boxas och avboxas för varje primitiv operation, vilka istället är infogade så att avboxningen bara behöver utföras en gång före flera primitiva operationer körs.
+
+Ett vettigt runtimesystem hade naturligtvis skräpsamlat onödiga heapobjekt. För att få ett mått med det inräknat mäts det högsta antalet heapobjekt under körningar med skräpsamling påslagen.
+Skräpsamlaren körs mellan varje regel, vilket tar lång tid och gör det praktiskt omöjligt att utföra några större mätningar, men vi har ändå försökt på powerexemplet:
+
+\begin{figure}[H]
+\includegraphics{maxheap.eps}
+\caption{Normerad graf över maximala heapstorleken med skräpsamling}
+\label{fig:Resultat:maxheap:graf}
+\end{figure}
+
+Vi ser att optimerade program för större indata har ett högre maximalt antal objekt i heapen än sina icke-optimerade motsvarigheter. Detta beror på att objekten som allokeras på abyssen hålls aktiva eftersom 
+de refereras till av \cont{Olet}-continuations. Detta görs även då de inte kommer att användas, när dödkodseliminering
+ändå kommer att ta bort dem. Då denna inverkan inte blir så stor vid små värden på indatan
+betyder det att optimeringen till och med gör så att det blir ett mindre antal objekt allokerade än utan i de fallen.
+
+
+En bra skräpsamlare körs bara ibland och hade därmed inte tagit onödigt lång tid som i testet ovan, men detta skulle ha gjort resultaten från dessa tester osäkrare. \footnote{Dessutom är uppslagnings- och insättningstiden i tolkens heap logaritmisk, vilket kan 
+förbättras till konstant tid genom att använda pekare.}
+
+
+
+
+
+
+
+
+
+
 
 % Kanske borde förklaras bättre. Varför är den inte linjär? :(
 

@@ -4,9 +4,9 @@
 
 \section{Introduktion till optimise}
 
-Vi börjar med att återigen betrakta powerfunktionsexemplet från introduktionen. Det som är
+Vi börjar med att återigen betrakta powerfunktionsexemplet från inledningen. Det som är
 intressant är att se vilka optimeringar som krävs för att den skall transformeras till den
-mer optimala kod som visades. Här kommer funktionen:
+specialiserade kod som visades. Här kommer funktionen som den ser ut i STG-språket:
 
 \begin{codeEx}
 power n x = let t1 = n == 0
@@ -24,30 +24,30 @@ Om funktionen appliceras på $3$ och $5$, alltså \ic{power 3 5}, kommer den att
 Precis som innan gäller det att om exponenten är känd men inte basen kan en 
 specialiserad version av \ic{power} skapas. Detta visas först på ett informellt sätt, 
 och senare kommer mer formella regler att ges. Anta att programmeraren
-har skrivit följande för att visa att hon vill ha en specialiserad version av \ic{power} för $3$.
+har skrivit följande för att visa att hon vill ha en specialiserad version av \ic{power} för $3$:
 
 \begin{codeEx}
 optimise (power 3)
 \end{codeEx}
 
-Först byts alla \ic{n} ut mot $3$ i funktionskroppen. Ingenting görs med 
+Först substitueras alla \ic{n} mot $3$ i funktionskroppen. Ingenting görs med 
 \ic{x} eftersom den är okänd. Den optimerade funktionen får också ett nytt namn
 så att originalet finns kvar om det skulle behövas i någon annan del av koden.
 
-\begin{codeEx}
-power_3 x = let t1 = 3 == 0
+\begin{codeExDiff}
+power_3 x = let t1 = |3| == 0
     in case t1 of
         { True -> 1
         ; False -> let 
-            { t2 = 3 - 1 
+            { t2 = |3| - 1 
             ; t3 = power t2 x
             ; t4 = x * t3
             } in t4
         };
-\end{codeEx}
+\end{codeExDiff}
 
-Nu traverseras trädet. Först kommer \ic{let t1 = ... in exp} som 
-sparas undan så att \ic{exp}, som är ett \ic{case}-uttryck, kan behandlas. 
+Trädet traverseras och först kommer \ic{let t1 = ... in expr} som 
+sparas undan så att \ic{expr}, som är ett \ic{case}-uttryck, kan behandlas. 
 \ic{Case}-uttrycket kan få ut värdet från \ic{t1} eftersom \ic{t1} inte innehåller några 
 fria variabler (i det här fallet är bara \ic{x} en fri variabel). Då \ic{3 == 0} är falskt fås nu: 
 
@@ -81,11 +81,11 @@ power_3 x = x * x * x * 1;
 
 Denna funktion är mycket mindre och snabbare.
 Men i STG-språket boxas egentligen heltal, vilket
-också betyder att multiplikationsoperatorn, \ic{*}, är en funktion som först
+betyder att även multiplikationsoperatorn är en funktion som först
 evaluerar sina argument och sedan multiplicerar dem med den primitiva 
 multiplikationsoperatorn \ic{*\#} (se sektion \ref{sec:boxing} om boxing).
-Om nu alla multiplikationer i \ic{power 3} infogas som de ser ut i STG 
-fås egentligen följande mastiga kod:
+Om nu alla multiplikationer i \ic{power 3} infogas som de ser ut boxade i STG 
+erhållas följande mastiga kod:
 
 \begin{codeEx}
 power_3 x = case 
@@ -108,8 +108,8 @@ power_3 x = case
             { r' -> let r = I# r' in r}};                                     
 \end{codeEx}
 
-Här kan vi använda en identitet för \kw{case}-satser som beskrivs i 
-sektion \ref{sec:CaseLaw}, som gör att koden ser ut så här:
+Här kan vi använda en identitet för \kw{case}-satser (som beskrivs i 
+avsnitt \ref{sec:CaseLaw}), som gör att koden ser ut så här:
 
 \begin{codeEx}
 power_3 x = case x of
@@ -123,11 +123,11 @@ power_3 x = case x of
                                 { r' -> let r = I# r' in r}}}}};
 \end{codeEx}
 
-Detta avslöjar att här görs \ic{case} flera gånger på \ic{x} och 
+Detta avslöjar att \ic{case} görs flera gånger på \ic{x} och 
 konstruktorn \ic{I\#} används för att boxa värden
 när de ändå bara ska \ic{case}:as fram.
 Detta kan optimeras bort, vilket beskrivs i avsnittet om afterburner
-(sektion \ref{sec:Afterburner}) och vi får följande funktion:
+(avsnitt \ref{sec:Afterburner}) och vi får följande funktion:
 
 \begin{codeEx}
 power_3 x = case x of
@@ -138,8 +138,8 @@ power_3 x = case x of
                     { r' -> let r = I# r' in r}}}}};
 \end{codeEx}
 
-Detta är så långt som optimeringen kommer. \ic{x' *\# 1} skulle naturligtvis
-kunna optimeras till \ic{x'}, men i det här projektet ligger inte fokus på sådana 
+Detta är så långt som optimeringen kommer. Sen kan \ic{x' *\# 1}
+optimeras till \ic{x'}, men i det här projektet ligger inte fokus på sådana 
 aritmetiska identiteter eller andra liknande
 specialfall. I resten av det här avsnittet förklaras i detalj alla
 optimeringssteg och varför de fungerar som de gör.

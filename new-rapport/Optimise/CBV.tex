@@ -57,17 +57,19 @@ som ligger på stacken.
 
 \paragraph{Let-uttryck}
 
-Om ett \kw{let}-uttryck binder ett thunk-objekt evalueras först thunk-uttrycket. 
+Om ett \kw{let}-uttryck binder ett \obj{THUNK}-objekt evalueras först thunkens uttryck. 
 Detta görs för att kunna optimera mer av den kod som beror på värdet av thunk-uttrycket. Om
 maskinen är i tillståndet $\Psi$ \eqref{CBV:LetTPsi} har den lyckats evaluera thunken till ett värde och kan
 substituera in det värdet i kroppen av \kw{let}-uttrycket. Om maskinen däremot är i $\Phi$-tillståndet
 \eqref{CBV:LetTIrr} betyder det att den inte kunde optimera fram något värde,
 så värdet för thunken stoppas tillbaka och maskinen fortsätter att
 optimera kroppen. Notera att positionen för $\bullet$ i continuation:en på stacken
-i den regeln ändras för att tala om var optimeringen görs.
+i den regeln ändras för att tala om var optimeringen görs: det finns också två olika
+\kw{let}-continuations, en som optimerar ett uttryck i en thunk och ett som optimerar
+uttrycket efter \kw{let}-bindningen.
 
 \begin{align}
-\label{CBV:LetTOmg} \OMEGA SH{\eLet x{\THUNK e}{e'}}  \rulesep &\, \OMEGA{\oLet x{e'}S}He\\
+\label{CBV:LetTOmg} \OMEGA SH{\eLet x{\mobj{THUNK} e}{e'}}  \rulesep &\, \OMEGA{\oLet x{e'}S}He\\
 \label{CBV:LetTPsi} \PSI{\oLet xeS}Hv  \rulesep &\, \OMEGA SH{e[v/x]} \\
 \label{CBV:LetTIrr} \IRR{\oLet xeS}H{e'}  \rulesep &\, \OMEGA{\oLetObj x{\THUNK{e'}}S}He
 \end{align}
@@ -100,7 +102,7 @@ kommer inte att se detta. Det här är en brist som löses senare i detta arbete
 \label{CBV:OLet1} \OMEGA SH{\eLet x{\CON{C}{\many{a}}}{e}}  \rulesep &\, \OMEGA S{\heap{v}{\CON{C}{\many{a}}}}{e[v/x]}\\
  & \many{a} \text{ alla kända, } v \text{ ny variabel} \nonumber \\
 \label{CBV:OLet2}\OMEGA SH{\eLet x{OBJ}{e}}  \rulesep &\, \OMEGA{\oLetObj x{OBJ}S}He\\
-\label{CBV:OLet3}\PSI{\oLetObj x{OBJ}S}Hv  \rulesep &\, \IRR SH{\eLet x{OBJ}v}\\
+\label{CBV:OLet3}\PSI{\oLetObj x{OBJ}S}Hv  \rulesep &\, \IRR{\oLetObj x{OBJ}S}Hv\\
 \label{CBV:OLet4}\IRR{\oLetObj x{OBJ}S}He  \rulesep &\, \IRR SH{\eLet x{OBJ}e}
 \end{align}
 
@@ -113,8 +115,15 @@ så i tillståndet $\Omega$, regel \eqref{CBV:CaseOmg}, börjar granskaren optim
 
 I tillståndet $\Psi$ i regel \eqref{CBV:CasePsi} är granskaren ett värde och maskinen väljer helt
 enkelt den gren som matchar värdet och instansierar den.
-Detta är troligtvis ett av de viktigaste stegen i optimeringen då det skalar bort alla onödiga 
-grenar, minskar koden och ofta kan fortsätta optimera en bit in det nya uttrycket.
+Detta är troligtvis ett av de viktigaste stegen i optimeringen. 
+Det skalar bort alla onödiga grenar så kodmängden minskas
+samt medför att optimeringen kan fortsätta i grenens uttryck.
+
+\begin{align}
+\label{CBV:CaseOmg} \OMEGA SH{\eCase e{brs}} \rulesep &\, \OMEGA{\oCase{brs}S}He\\
+\label{CBV:CasePsi} \PSI{\oCase{brs}S}Hv \rulesep &\, \OMEGA SH{\text{instansiera korrekt gren av brs med v}} \\
+\label{CBV:CaseIrr} \IRR{\oCase{brs}S}He \rulesep &\, \IRR SH{\eCase e brs}
+\end{align}
 
 Istället för att skapa en $\eCase e brs$ i \eqref{CBV:CaseIrr} finns det även
 funktionalitet för att
@@ -132,13 +141,6 @@ case x of
 Om \ic{x} är okänt under optimeringen och den optimerar i grenarna kommer 
 \ic{repeat 1} att infogas obegränsat antal gånger. Detta är felaktigt då denna loop bara skulle uppstå
 om \ic{x} någon gång var \kw{False}.
-
-\begin{align}
-\label{CBV:CaseOmg} \OMEGA SH{\eCase e{brs}} \rulesep &\, \OMEGA{\oCase{brs}S}He\\
-\label{CBV:CasePsi} \PSI{\oCase{brs}S}Hv \rulesep &\, \OMEGA SH{\text{instansiera korrekt gren av brs med v}} \\
-\label{CBV:CaseIrr} \IRR{\oCase{brs}S}He \rulesep &\, \IRR SH{\eCase e brs}
-\end{align}
-
 
 \paragraph{Atomer}
 Om det finns en variabel som kod, och den pekar på en thunk i heapen, så optimeras
@@ -163,8 +165,7 @@ OPT-continuationen ut för att skrida till verket då maskinen har evaluerat
 $a$ till ett värde.
 
 \begin{align}
-\mc aS{\heap a{\OPT t}} & \rulesep\\
-\mc t{\cOPT{a\,}S}{\heap a{\BH}} \nonumber
+\mc aS{\heap a{\OPT t}} & \rulesep \mc t{\cOPT{a\,}S}{\heap a{\BH}}
 \end{align}
 
 När ett värde i form av ett \obj{PAP}-objekt nås börjar funktionen optimeras. 
@@ -185,64 +186,13 @@ De kända argumenten substitueras in:
 Ibland används STG-maskinen för att evaluera t.ex. konstantuttryck under optimeringen.
 Dessa reduceras alltid till värden och därefter anropas $\Psi$ som tar hand 
 om detta värde. $O\star$ står här för alla continuations som har med optimering
-att göra, som alla börjar på $O$. Detta är alltså hur maskinen kommer 
+att göra, som alla börjar på $O$. Regel \eqref{CBV:STGtoPsi} är hur maskinen kommer 
 tillbaka till optimeringstillstånden efter ha evaluerat en funktion med 
-kända argument.
+kända argument:
 
 \begin{align}
-\mc v{O\star\,:\, S}{\nheap v{\THUNK e}} & \rulesep\\
-\PSI{O\star\,:\, S}Hv \nonumber
+\label{CBV:STGtoPsi} \mc v{O\star\,:\, S}{\nheap v{\THUNK e}} & \rulesep \PSI{O\star\,:\, S}Hv
 \end{align}
-
-%\NOTE {
-%\begin{align*}
-%\OMEGA sH{\eCase e{brs}} & \rulesep & \OMEGA{\oCase{brs}s}He\\
-%\OMEGA sH{f\,\bar{k}} & \rulesep & \mc{f\,\bar{k}}sH\\
-%\OMEGA sH{f\,\bar{x}\, k\,\bar{y}} & \rulesep & \mc{f\,\bar{x}\, k\,\bar{y}}{\oInline s}H\\
-%\OMEGA sH{\eLet x{\THUNK e}{e'}} & \rulesep & \OMEGA{\oLet x{e'}s}He\\
-%\OMEGA s{\nheap x{\,}}{\bullet} & \rulesep & \IRR sH{\bullet}
-%\end{align*}
-%
-%\begin{align*}
-%\PSI{\oLet xes}Hv & \rulesep & \OMEGA sH{e[v/x]}
-%\end{align*}
-%
-%\begin{align*}
-%\PSI{\oLetObj x{OBJ}s}Hv & \rulesep & \IRR sH{\eLet x{OBJ}v}\\
-%\PSI{\oCase{brs}s}Hv & \rulesep & \OMEGA sH{\text{instantiate correct brs with v}}\end{align*}
-%
-%\begin{align*}
-%\IRR{\oLet xes}H{e'} & \rulesep & \OMEGA{\oLetObj x{\THUNK{e'}}s}He\\
-%\IRR{\oCase{brs}s}He & \rulesep & \IRR sH{\eCase e brs}
-%\end{align*}
-%
-%\begin{align*}
-%\IRR{\oLetObj x{OBJ}s}He & \rulesep & \IRR sH{\eLet x{OBJ}e}\\
-%\IRR{\cOFUN{\bar{x}}{\alpha}s}He & \rulesep & \mc{\alpha}s{\heap{\alpha}{\FUN{\bar{x}}e}}
-%\end{align*}
-%
-%När vi interagerar med STG maskinen måste vi har tydliga regler
-%för när maskien ska sluta evaluera och börja optimera. Detta sker
-%antingen då den stöter på en $\OPT t$ för första gången, eller när den
-%inte längre kan evaluera ett uttryck$ och har en Optimise continuation
-%på stacken.
-
-%\begin{align*}
-%\mc as{\heap a{\OPT t}} & \rulesep\\
-%\mc t{\cOPT{a\,}s}{\heap a{\BH}}\\
-%\mc x{\cOPT as}{\heapp x{\PAP f{a_{1}\cdots a_{n}}}f{\FUN{x_{1}\cdots x_{m}}e}} & \rulesep\\
-%\OMEGA{\cOFUN{x_{n+1}\cdots x_{m}}as}H{e[a_{1}/x_{1}\cdots a_{n}/x_{n}]}\\
-%\mc v{O.\star\,:\, s}{\nheap v{\THUNK e}} & \rulesep\\
-%\PSI{O.\star\,:\, s}Hv
-%\end{align*}
-%
-%}
-
-%\begin{multline}
-%%\mc as{\heap a{\OPT t}} \rulesep \mc t{\cOPT{a\,}s}{\heap a{\BH}} \\
-%\mc x{\cOPT as}{\heapp x{\PAP f{a_{1}\cdots a_{n}}}f{\FUN{x_{1}\cdots x_{m}}e}} \\ \rulesep  \OMEGA{\cOFUN{x_{n+1}\cdots x_{m}}as}H{e[a_{1}/x_{1}\cdots a_{n}/x_{n}]}\\
-%%\mc v{O.\star\,:\, s}{\nheap v{\THUNK e}} & \rulesep & \PSI{O.\star\,:\, s}Hv
-%\end{multline}
 
 \subsubsection{Problem med CBV-semantiken}
 \label{CBV:Problem}
@@ -252,9 +202,9 @@ Det enda i STG:s semantik som kan framkalla en forcerad evaluering av ett
 \obj{THUNK}-objekt är om den ligger i en \kw{case}-granskare. 
 Det är endast om funktionen som optimeras hade forcerat en thunk under vanlig 
 körning som optimise också borde vara tillåten att göra det. Ibland finns 
-det ändå anledning att forcera även vid andra tillfällen, men det tillvägagångssätt,
-som presenterats här, visar sig vara för naivt och gör det för mycket. För
-att illustrera när detta sker, betrakta följande kodexempel av \ic{take},
+det ändå anledning att forcera även vid andra tillfällen, men det tillvägagångssätt
+som presenterats här visar sig vara för naivt och gör det för mycket. För
+att illustrera när detta sker, betrakta följande kodexempel med funktionen \ic{take},
 som returnerar de första \ic{n} elementen i en lista \ic{list}:
 
 \begin{codeEx}
@@ -263,10 +213,11 @@ take n list = if (n == 0)
                  (head list : take (n-1) (tail list))
 \end{codeEx}
 
-Här skulle det vara bäst att först evaluera \ic{n == 0} innan något av de andra argumenten till \ic{if} 
-(som är definierad med en \kw{case}-sats på det första argumentet) evalueras, men även om
-\ic{if} infogas så kommer inte \kw{case}-satsen att ligga först i funktionen. 
-Så här ser \ic{take}-koden ut osockrad, vilket bättre illustrerar varför:
+Enligt den lata semantiken ska \ic{n == 0} evalueras först, då 
+\ic{if} som är definierad med en \kw{case}-sats på det första argumentet.
+Baserat på det ska ett av de andra argumenten till \ic{if}  evalueras. 
+Om \ic{if} infogas så kommer dock inte \kw{case}-satsen att ligga först i funktionen. 
+Så här ser \ic{take}-koden ut osockrad, vilket illustrerar varför:
 
 \begin{codeEx}
 take n list = let 
@@ -305,7 +256,7 @@ hur de egna funktionerna är skrivna, men också hur alla funktioner som använd
 Detta strider mot abstraktionsprincipen, och skulle vara ett omständigt sätt
  att skriva kod på. 
 % lite informellare igen... :( /Dan
-En lat optimering skulle vara bättre, vilket leder in kommande avsnitt om
+En lat optimering skulle vara bättre, vilket leder in till kommande avsnitt om
 call-by-name-semantik, \ref{sec:Optimise:CBN}.
 
 

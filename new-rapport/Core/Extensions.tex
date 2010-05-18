@@ -3,18 +3,6 @@
 
 % \subsection{Utökningar}
 
-\paragraph{Normalform}
-\label{sec:whnf}
-\label{sec:nf}
-
-När tolken kör programmet evalueras main till normalform.
-Att evaluera ett uttryck tills konstruktorn är känd, men dess argument kan 
-fortfarande vara thunkar, kallas vek normalform 
-(engelska weak head normal form, förkortas whnf). Normalform, däremot, så
-forceras alla konstruktorns argument att också evalueras till normalform.
-Alltså till ett värde, dvs konstruktor eller funktion. Reglerna för dessa
-finns i appendix \ref{sec:printcont}
-
 \paragraph{Boxing}
 \label{sec:boxing}
 
@@ -43,15 +31,28 @@ användaren. Notera att \ic{x' +\# y'}
 forceras med hjälp av en \kw{case}-sats för att det resulterande talet ska vara fullt
 evaluerat före det boxas igen.
 
-Då språket inte har ett typsystem skapades en speciell funktion för primitiver
-på \kw{Double}. Precis som i OCaml\footnote{http://ocaml.inria.fr} har dessa
-givits namn med \ic{.} som suffix, exempelvis \ic{+.}, \ic{*.}, \ic{<.}.
+Då vårt språk inte har ett typsystem skapades separata funktioner för primitiva operationer
+på \kw{Double}. Inpirerat av OCaml\footnote{http://ocaml.inria.fr} har dessa
+givits namn med \ic{.} som suffix, exempelvis \ic{(+.)}, \ic{(*.)}, \ic{(<.)} och så vidare.
 Liknande namngivningsschema finns för \kw{Char}, men med \ic{:} som suffix,
-exempelvis görs likhet på \kw{Char} görs med \ic{==:}.
+där exempelvis likhet görs med \ic{(==:)} på \kw{Char}.
+
+\paragraph{Normalform}
+\label{sec:whnf}
+\label{sec:nf}
+
+När tolken kör programmet evalueras \ic{main}-funktionen till normalform.
+Att evaluera ett uttryck tills konstruktorn är känd, där dess argument 
+fortfarande kan vara thunkar, kallas som nämnt i det föregående kapitlet \emph{vek normalform}. 
+För \emph{Normalform} däremot, betyder att även
+konstruktorns alla argument forceras så att de också är värden, dvs konstruktorer eller funktioner.
+Reglerna för att evaluera till normalform
+finns i appendix \ref{sec:printcont}.
+
 
 \paragraph{IO}
 Tolken har en primitiv form av IO: den har konstant indata vid körning och
-skriver ut det som \ic{main}-funktionen returnerar. Funktionerna 
+skriver ut det som \ic{main}-funktionen returnerar på normalform. Funktionerna 
 \ic{getInt}, 
 \ic{getIntList},
 \ic{getDouble},

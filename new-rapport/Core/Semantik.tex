@@ -17,60 +17,58 @@ Så här ser BNF-grammatiken ut för STG:
 \begin{aligned}
 \text{Variabler} \quad & x,f \\
 \text{Konstruktor} \quad & C \\
+\defBNF{Program}{prog}{\overline{f=obj}}{} \\
 \defBNF{Litteraler}{lit}{i \; | \;  d \;|\; c}{Primitiv datatyp} \\
-\defBNF{Atomer}{a, v}{lit \; | \; x}{Atomer för funktionsanrop etc} \\
+\defBNF{Atomer}{a, v}{lit \; | \; x}{Atomer för funktionsanrop et.c.} \\
 \defBNF{Uttryck}{e}{a}{Atom} \\
     \defaltBNF{f \; \overline{a}}{Funktionsanrop} \\
     \defaltBNF{\oplus \; \overline{a}}{Primitiv operation} \\
-    \defaltBNF{\mathtt{let \{} \overline{x = obj} \mathtt{ \} in } \; e}{Lokal allokering} \\
-    \defaltBNF{\mathtt{letrec \{} \overline{x = obj} \mathtt{ \} in } \; e}{Lokal rekursiv allokering} \\
-    \defaltBNF{\mathtt{case} \; e \;  \mathtt{ of \{ } \overline{alt} \mathtt{\}}}{Evaluering av uttryck} \\
+    \defaltBNF{\mathtt{let \, \{} \, \overline{x = obj} \, \mathtt{ \} \, in } \; e}{Lokal allokering} \\
+    \defaltBNF{\mathtt{letrec \, \{} \, \overline{x = obj} \, \mathtt{ \} \, in } \; e}{Lokal rekursiv allokering} \\
+    \defaltBNF{\mathtt{case} \; e \;  \mathtt{ of \, \{ } \, \overline{alt} \, \mathtt{\}}}{Evaluering av uttryck} \\
 \defBNF{Alternativ}{alt}{C \; \overline{x} \rightarrow e}{Matcha mot konstruktor} \\
     \defaltBNF{x \rightarrow e}{Matcha med en variabel} \\
 \defBNF{Heap-objekt}{obj}{FUN(\overline{x} \rightarrow e)}{Funktionsobjekt} \\
     \defaltBNF{PAP(f \; \overline{a})}{Partielltapplicerad funktion} \\
-    \defaltBNF{CON(C \; \overline{a})}{Konstruktorer} \\
+    \defaltBNF{CON(C \; \overline{a})}{Konstruktor} \\
     \defaltBNF{THUNK \; e}{Senarelagt uttryck} \\
     \defaltBNF{BLACKHOLE}{Används för evaluering} \\
-    \defaltBNF{OPT(a)}{Optimeringsobjekt} \\
-\defBNF{Program}{prog}{\overline{f=obj}}{}
+    \defaltBNF{OPT(a)}{Optimeringsobjekt}
 \end{aligned}
 \end{equation*}
 \caption{STGs syntax}
 \end{figure}
 
-STG-språket är en primitivare form av sockerspråk, där flera saker är mer explicita. 
+STG-språket är primitivare än sockerspråket, där flera saker är mer explicita. 
 Detta gör det enklare
 att förstå vad språkkonstruktionerna egentligen gör på en lägre nivå och hur de skall tolkas. 
-Kort kan man säga följande om STG:
-
-\begin{itemize}
-\item Atomer är uttryck som antingen är primitiv data eller variabler. De används ofta
-    där man i sockerspråket kunde skriva vilket uttryck som helst. Till exempel funktionsapplikationer
-    som i STG är mer restriktiva i hur dess argument ser ut.
-\item Definitioner binder numera variabler till objekt istället för uttryck. Anledningen 
-    till detta är att man lättare skall kunna skilja på dem. Till exempel ser man nu skillnad
-    mellan funktionsobjekt och konstruktorer.
-\end{itemize}
+I STG tar 
+    funktioner och konstruktörer endast atomer som argument istället för
+    uttryck.
+ Definitioner binder istället variabler till objekt istället för uttryck. Anledningen 
+    till detta är att man lättare ska kunna skilja på dem. 
 
 
-
-För att kunna diskutera semantiken för STG behövs först
-förståelse för hur abstrakta maskiner fungerar. Eftersom läsaren inte förväntas
-ha stött på begrepp som används när man beskriver abstrakta maskiner
-och deras semantik, kommer vi att bygga upp förståelsen via ett exempel
-och introducera nya koncept när de behövs. 
-
-Optimeringen har fått ett eget objekt, \obj{OPT}, se sektionerna 
+Optimeringen har fått ett eget objekt, \obj{OPT}, se avsnitt 
 \ref{sec:Optimise:CBV} och \ref{sec:Optimise:CBN}. I fortsättningen kommer STG
 med den här utökningen att refereras till som bara STG och när ursprungsversionen
 åsyftas kommer detta att markeras explicit.
 
+För att kunna diskutera semantiken för STG behövs först
+förståelse för hur abstrakta maskiner fungerar. Eftersom läsaren inte förväntas
+ha stött på begrepp som används när man beskriver abstrakta maskiner
+och deras semantik, kommer förståelsen att byggas upp via ett löpande exempel
+och introducera nya koncept när de behövs. 
+
+
 \paragraph{Abstrakt maskin}
 
-En abstrakt maskin kan beskrivas av regler som bestämmer varje steg i en stegvis evaluering.
-Varje regel beskriver, om man är i ett visst tillstånd, vilket tillstånd man skall gå vidare till.
-Ett tillstånd är en konfiguration av ett uttryck och en heap som separeras av ett ($\csep$) vi kommer senare behöva utöka konfigurationerna. Heapen kommer vi att symbolisera med bokstaven $H$ vilket gör att en
+En abstrakt maskin kan beskrivas av regler som bestämmer vad som ska göras i varje steg i 
+evalueringen.
+Varje regel uttrycker vilket nästa tillstånd blir när den är i ett givet tillstånd.
+Ett tillstånd är en konfiguration av ett uttryck och en heap som separeras av ett ($\csep$), 
+men vi kommer senare att behöva utöka konfigurationen. 
+Heapen kommer vi att symbolisera med bokstaven $H$ vilket gör att en
 regel ser ut så här:
 
 \tikzstyle{every picture}+=[remember picture]
@@ -100,19 +98,21 @@ regel ser ut så här:
 %        \path[->] (esep) edge [out=90, in=-90] (m1);
 \end{tikzpicture}
 
-Så vi har en samling regler och väljer en som matchar mot det tillstånd maskinen befinner sig i, och om ingen regel matchar så är evalueringen klar.
+Ett antal regler kommer presenteras och maskinen väljer den som överrensstämmer
+med det tillstånd den bifinner sig i. Denna process upprepas
+tills ingen regel går att applicera. Då är evalueringen klar.
 
 \paragraph{Substitution}
 
 Låt oss säga att vi har en funktion $f$ som använder sina två 
-argument, $x$ och $y$. Om vi betraktar uttrycket som funktionenskroppen består av separat är $x$ och $y$ 
+argument, $x$ och $y$. Om vi betraktar uttrycket som funktionskroppen består av separat är $x$ och $y$ 
 \emph{fria variabler}. Det skulle inte gå att evaluera funktionskroppen utan
 att känna till vad de är. Känner man till $x$ och $y$:s värden, låt oss säga
 $x \mapsto True$ och $y \mapsto 9$, så kan man \emph{substituera} in dem i 
 uttrycket. Då byts varje $x$ ut mot $True$ och varje $y$ mot $9$. Om uttrycket 
-är $e$ skrivs en sådan substituering som $e[True/x, 9/y]$\footnote{
+är $e$ skrivs en sådan substituering som $e[True/x, 9/y]$. 
   En bra minnesregel för att komma ihåg vilken ordning man skall 
-  skriva dem i är att x[e/x] = e, vilket liknar vanlig division.}. 
+  skriva dem i är att x[e/x] = e, vilket liknar vanlig division.
 
     Ett sätt att konkret realisera en substitution är att traversera trädet
 för uttrycket och jämföra varje variabel i trädet med variabeln som ska 
@@ -123,28 +123,31 @@ evalueringen kommer till en fri variabel.
 
 \subsection{Reglerna}
 
-För att visa hur reglerna
-för STG  fungerar, visar vi hur följande program skulle evalueras.
-Reglerna som presenteras här är de vanliga STG-reglerna\cite{marlow2006making},
+Reglerna som presenteras här är de vanliga STG-reglerna \cite{marlow2006making},
 med vissa förenklingar.
+För att visa hur reglerna
+för STG  fungerar, visar vi hur följande program evalueras:
 
 \begin{codeEx}
 cube x = x * x * x;
 
 main = let list = [2,3,5,7,11]
-        in map cube list;
+       in  map cube list;
 \end{codeEx}
 
-Kodens ingångsfunktionen är \miniCode{main}, som börjar med ett \kw{let}-uttryck.
-Precis som i Sockerspråket är de verktyg för att binda variabler, vilket betyder att man ger ett
+\paragraph{Let-uttryck}
+Kodens ingångsfunktion är \miniCode{main}, som börjar med ett \kw{let}-uttryck.
+Precis som i sockerspråket är de verktyg för att binda variabler, 
+vilket betyder att man ger ett
 namn till ett värde. Namnet kan användas i uttrycket som följer efter \kw{in}.
 I det här fallet får en lista som består av de fem första primtalen namnet \miniCode{list}.
-\kw{Let} kan användas för att associera andra sorters värden än listor,
+\kw{let} kan användas för att associera andra sorters värden än listor,
 t.ex. datastrukturer, numeriska värden eller funktioner.
 
-\paragraph{Let-uttryck} Vi behöver någonstans att reservera minnesutrymme för listan, och därför
-inför vi en så kallad heap. I ett traditionellt, imperativt språk är
-en heap en representation av minnet som används för dynamisk allokering. När
+ Vi behöver någonstans att reservera minnesutrymme för listan, och därför
+använder vi en så kallad heap. I ett traditionellt, imperativt språk är
+en heap en representation av minnet som används för dynamisk allokering,
+och så även här. När
 maskinen stöter på ett \kw{let}-uttryck allokeras det på heapen, vilket
 beskrivs mer formellt av följande regel:
 
@@ -160,7 +163,9 @@ H{[} {]} betyder inte att heapen bara innehåller det som är inuti
 hakparenteserna utan är en notation för att visa att heapen
 uppdateras med en variabelbindning.
 
-Anledningen till att en ny variabel \ic{v} skapas är för att förhindra namnkrockar på heapen. Namnkrockar kan annars ske när koden körs flera gånger (den kan vara rekursiv eller anropas av andra funktioner fler gånger). 
+Anledningen till att en ny variabel \ic{v} skapas är för att förhindra 
+namnkrockar på heapen. Namnkrockar kan annars ske när koden körs flera gånger 
+(den kan vara rekursiv eller anropas av andra funktioner fler gånger). 
 
 %Anledningen till att vi skapar en ny variabel \ic{v} är för att om
 %denna kod körs flera gånger (den kan vara rekursiv eller anropas av andra funktioner
@@ -175,7 +180,7 @@ Maskinens tillstånd är nu:
 \end{align*}
 
 
-Den observanta läsaren märker att även \miniCode{cube} ligger på heapen, vilket
+Som synes liger även  \miniCode{cube} på heapen, vilket
 beror på att funktioner definierade på toppnivå läggs på heapen före körning.
 Alltså ligger även \miniCode{map} och andra funktioner definierade
 i standardbiblioteket där.
@@ -183,8 +188,8 @@ i standardbiblioteket där.
 \paragraph{Funktionsanrop} Som uttryck i maskinens tillstånd ligger nu ett anrop till
 \miniCode{map}-funktionen. %, vilket vi därför ska försöka oss på.
 För att evaluera detta låter vi oss inspireras av imperativa språk som ofta lägger argumenten
-på en stack före funktionsanrop. Vi kommer därför uppdatera tillstånden så att de
-nu också innefattar en stack. Stacken betecknas $S$ och reglerna har nu följande syntax.
+på en stack före funktionsanrop. Vi kommer därför att uppdatera konfigurationen av tillstånden så att de
+nu också innefattar en stack. Stacken betecknas $S$ och reglerna får nu följande syntax:
 
 \begin{equation*} 
 \conf{}{e \csep S \csep H} \; \rulesep \; \conf{}{e \csep S \csep H}
@@ -218,10 +223,11 @@ map f xs = case xs of
     }
 \end{codeEx}
 
-Anledningen till att argumenten till \miniCode{Cons} inte är direkta funktionsapplikationer
+Anledningen till att argumenten till \miniCode{Cons} inte använder direkta funktionsapplikationer 
+(som nämnt tidigare i kapitlet)
 är att maskinen blir mer lätthanterlig om funktionsapplikationer alltid
 blir \miniCode{let}-bundna variabler, eller atomer som de (tillsammans med primitiv data)
-också kallas. Vi ser att \miniCode{map} tar två argument och äter således upp två
+också kallas. Vi ser att \miniCode{map} tar två argument och konsumerar således två
 argument från stacken.
 
 Formellt:
@@ -234,15 +240,19 @@ Formellt:
 Här behöver vi ersätta alla funktionens argument $x_{1}\ldots x_{n}$ mot
 de atomer $a_{1}\ldots a_{n}$ som finns på stacken. Substitutionen som sker är 
 således $e[a{}_{1}/x_{1}\ldots a_{n}/x_{n}]$, som i vårt fall betyder att
-\ic{f} substitueras med \ic{cube} och \ic{xs} med \ic{list}. Därefter kommer maskinens tillstånd att vara följande:
+\ic{f} substitueras med \ic{cube} och \ic{xs} med \ic{list} i \ic{map}-funktionen.
+
+
+\paragraph{Case-uttryck} 
+ Efter funktionsapplikationen kommer maskinens tillstånd att vara följande:
 
 \[
 \conf{}{\mathtt{case\; list\; of\,\lbrace\ldots\rbrace} \csep \epsilon \csep H}
 \]
 
 
-I heapen pekar \ic{list} på listan \ic{[2,3,5,7,11]}, men detta är egentligen syntaktiskt socker
-för:
+I heapen pekar \ic{list} på listan \ic{[2,3,5,7,11]}, men detta är egentligen 
+syntaktiskt socker ekvivalent med att det här skulle stå i koden:
 
 \begin{codeEx}
 list = Cons 2 temp1
@@ -253,7 +263,7 @@ temp4 = Cons 11 nil
 nil = Nil
 \end{codeEx}
 
-\paragraph{Case-uttryck} De temporära variablerna behövs för att konstruktorer skall kunna
+De temporära variablerna behövs för att konstruktorer skall kunna
 allokeras med konstant storlek på heapen. I vårt fall pekar
 \miniCode{list}-variabeln på en \miniCode{Cons}-konstruktor, som har en motsvarande gren
 i \miniCode{map}-funktionens definition. Vi vill nu att maskinens uttryck
@@ -261,7 +271,7 @@ blir den grenen med \miniCode{x} substituerat mot \miniCode{2} och \miniCode{xs}
 Detta åstadkoms med följande formella regel:
 
 \begin{multline*}
-\conf{}{\mathtt{case}\; v\; \mathtt{of}\;\{\ldots;C\; x_{1}\,\ldots\, x_{n}\;\rulesep e;\ldots\} \csep S \csep H[v\mapsto C\; a_{1}\ldots a_{n}]}\\
+\conf{}{\mathtt{case}\; v\; \mathtt{of}\;\{\ldots;C\; x_{1}\,\ldots\, x_{n}\;\rulesep e;\ldots\} \csep S \csep H[v\mapsto C\; a_{1}\ldots a_{n}]}
 \rulesep \conf{}{e[a_{1}/x_{1}\,\ldots\, a_{n}/x_{n}] \csep S \csep H}
 \end{multline*}
 
@@ -269,7 +279,7 @@ Detta åstadkoms med följande formella regel:
 Det som står i granskaren, uttrycket mellan \miniCode{case} och \miniCode{of}, är i vårt
 fall en variabel. Det finns också fall då granskaren är andra uttryck, som
 t.ex. funktionsapplikation. I så fall vet vi inte vilken gren vi ska
-ta innan vi har evaluerat granskaren, vilket vi då vill göra.
+ta innan vi har evaluerat granskaren, vilket vi därför vill göra.
 Efter att den har evaluerat färdigt måste maskinen ha något sätt att
 veta vilken \miniCode{case}-sats den ska gå tillbaka till. Detta kan liknas
 vid en returadress, som ofta läggs på stacken i imperativa språk för att
@@ -292,7 +302,7 @@ rätt gren. Vi vill återanvända grenväljar-regeln som vi definierade
 ovan, så därför inför vi följande regel som ställer in maskinens tillstånd för det:
 
 \[
-\conf{}{v \csep \mathtt{case}\;\bullet\; \mathtt{of}\;\{\ldots\} \casep S \csep H}\rulesep \conf{}{\mathtt{case}\; v\; \mathtt{of}\;\{\ldots\} \casep S \csep H}
+\conf{}{v \csep \mathtt{case}\;\bullet\; \mathtt{of}\;\{\ldots\} \casep S \csep H}\rulesep \conf{}{\mathtt{case}\; v\; \mathtt{of}\;\{\ldots\} \csep S \csep H}
 \]
 
 
@@ -305,19 +315,24 @@ let { a = cube 2
 \end{codeEx}
 
 Nu skall a bindas till ett uttryck, \miniCode{cube 2}. I ett traditionellt imperativt språk skulle
-\miniCode{cube 2} först evalueras och dess värde bindas till \ic{a}. Men eftersom STG
-är lat så väntar maskinen med att beräkna det tills värdet behövs.
-En sådan senarelagd beräkning kallas för en \emph{thunk}. Det som händer nu är att
+\miniCode{cube 2} först evalueras och dess värde bindas till \ic{a}. 
+Men det eftersträvade beteendet hos STG är lathet
+så väntar maskinen med att beräkna det tills värdet behövs.
+En sådan senarelagd beräkning kallas för en \obj{THUNK}. Det som händer nu är att
 \ic{a} binds till thunken \miniCode{cube 2}. På heapen tillåts flera olika
 sorters objekt: konstruktorer, lambdafunktioner och nu även thunkar.
 Vi behöver kunna skilja dem åt, så vi inför ny notation för dessa objekt: \\[0.3cm]
-\begin{tabular}{ccc}
-Föregående syntax & Faktisk syntax & Beskrivning\tabularnewline
-\hline
-$C\;\range[a]$ & $\CON C{\range[a]}$ & Konstruktor\tabularnewline
-$\lambda\range[x].e$ & $\FUN{\range[x]}e$ & Lambdafunktion\tabularnewline
-- & $\THUNK e$ & Senarelagd beräkning\tabularnewline
-\end{tabular} \\[0.3cm]
+\begin{figure}[H]
+  \begin{center}
+    \begin{tabular}{ccc}
+    Föregående syntax & Faktisk syntax & Beskrivning\tabularnewline
+    \hline
+    $C\;\range[a]$ & $\CON C{\range[a]}$ & Konstruktor\tabularnewline
+    $\lambda\range[x].e$ & $\FUN{\range[x]}e$ & Lambdafunktion\tabularnewline
+    - & $\THUNK e$ & Senarelagd beräkning\tabularnewline
+    \end{tabular} 
+  \end{center} 
+\end{figure}% \\[0.3cm]
 
 Så här skrivs \miniCode{map}-funktionen i STG-språket utan något syntaktiskt socker:
 
@@ -345,32 +360,35 @@ let { a = THUNK (cube 2)
 \paragraph{Thunkar} Maskinen kommer att stega igenom \miniCode{let}-uttrycket och allokera objekten.
 Därefter returneras en heapvariabel som pekar på en konstruktor
 som är en \ic{Cons}, skapad enligt ovan. När man ger tillbaka något som är
-en konstruktor sägs den vara i weak head normal form (WHNF). Konstruktorns
+en konstruktor sägs den vara i \emph{vek normalform} (engelska weak head normal form, förkortas WHNF). Konstruktorns
 argument behöver inte vara helt evaluerade. Till exempel innehåller konstruktorn i vårt fall
 två pekare till oevaluerade thunkar. Eftersom STG är ett
-lat språk så är det upp till koden som kallade på \miniCode{map} att fortsätta
+lat språk så är det upp till koden som anropade \miniCode{map} att fortsätta
 evaluera dessa thunkar ifall de behövs eller inte. I vårt fall är
-det \miniCode{main} som har kallat på \miniCode{map} och eftersom vi skriver ut resultatet från \miniCode{main}
-kommer den att evaluera thunkarna. Vi tänker oss fallet då den börjar evaluera variabeln \miniCode{a}:
+det \miniCode{main} som har anropat \miniCode{map} och eftersom vi skriver ut resultatet från \miniCode{main}
+kommer den att evaluera thunkarna. 
 
 \begin{align*}
 \conf{}{x \csep S \csep & H[x\mapsto\THUNK e]} \rulesep \conf{}{e \csep Upd\, x\,\bullet \casep S \csep H[x\mapsto \BH]}
 \end{align*}
 
-För att evaluera en en thunk flyttar vi dess uttryck till maskinens kod
+För att evaluera en \obj{THUNK} flyttar vi dess uttryck till maskinens kod
 för evaluering. Den kommer också att lägga ut en \cont{Upd}-continuation, vilket
-återigen beror på att STG är lat. Lathet kräver att uttryck bara evalueras
-en gång, och därför kommer vi när \miniCode{e} har evaluerats till ett värde att spara
+återigen beror på att STG är lat. 
+En effektivisering av lathet är delning, och det åstadkoms genom att uttryck
+bara evalueras en gång.
+
+Därför kommer vi när \miniCode{e} har evaluerats till ett värde att spara
 det så att \miniCode{x} binds till det nya värdet och om \miniCode{x}'s värde skulle behövas
 igen kan man returnera det direkt. Under evalueringen av \miniCode{x} sätter
-vi även värdet \miniCode{x} till \obj{BLACKHOLE}. Detta sker av två anledningar.
+vi även värdet \miniCode{x} till \obj{BLACKHOLE}. Detta sker av två anledningar:
 \begin{enumerate}
 \item Tänk om \miniCode{x} beror på sig själv, eller flera variabler beror på varandra utan
 att producera värden. Ifall man evaluerade utan att sätta variabeln till \obj{BLACKHOLE}
 skulle maskinen falla in i en oändlig loop. Att använda \obj{BLACKHOLE} ger oss ett sätt att
 upptäcka det och maskinen kan då berätta för programmeraren att något har gått fel
 istället för att loopa oändligt.
-\item Skräpinsamlingen kommer att gå igenom alla heap- och stackobjekt
+\item Skräpsamlaren kommer att gå igenom alla heap- och stackobjekt
 samt koden, för att hitta vilka värden som fortfarande kan nås via den nuvarande
 koden och stacken. Thunken kan referera till objekt som inte längre
 behövs för evalueringen, men skräpinsamlaren kommer inte att se att dessa objekt skulle
@@ -388,7 +406,8 @@ Det som saknas för thunkar är nu regeln som uppdaterar dem när de
 Om $v$ är ett värde så uppdateras $x$ med vad $v$ har för värde.
 
 \paragraph{Partiellt applicerade funktioner} Nu är det bara en sak kvar att visa för att vår beskrivning av STG ska bli komplett.
-Vad gör vi med funktioner som inte fått alla sina argument?
+Vad gör vi med funktioner som inte fått alla sina argument? Vi betraktar funktionen \ic{max} som är definierad
+på följande sätt:
 
 \begin{codeEx}
 max x y = case x < y of
@@ -404,24 +423,24 @@ applikation. En \obj{PAP} innehåller de hittills applicerade argumenten och en 
 Regeln blir följande:
 
 \begin{align*}
-\conf{}{f \csep \mobj{Arg}\, a_{1} \casep \ldots \casep & \mobj{Arg}\, a_{m} \casep S \csep H[f\mapsto\FUN{\range[x]}e} \\
-& \rulesep  \conf{}{p\csep S\csep H[x\mapsto\PAP f{\rangem[a]}]}
+\conf{}{f \csep \mobj{Arg}\, a_{1} \casep \ldots \casep \mobj{Arg}\, a_{m} \casep S \csep H[f\mapsto\FUN{\range[x]}e} 
+ \rulesep  \conf{}{p\csep S\csep H[x\mapsto\PAP f{\rangem[a]}]}
 \end{align*}
 
 
-Antalet argument $m$ är mindre än antalet parametrar $n$.
+Antalet argument $m$ är här mindre än antalet parametrar $n$.
 Alltså kan det ses som en sparad funktionsapplikation som kommer att
 utföras när resterande argument appliceras. Till sist kommer nu
 regeln som verkligen gör applikationen av dessa partiellt applicerade
 objekt.
 
 \begin{align*}
-\conf{}{p \csep \mobj{Arg}\, a_{n+1} \casep S \csep H[p\mapsto\PAP f{\range[a]}} \\
+\conf{}{p \csep \mobj{Arg}\, a_{n+1} \casep S \csep H[p\mapsto\PAP f{\range[a]}}
 \rulesep \conf{}{f \csep Arg\, a_{1} \casep \ldots \casep \mobj{Arg}\, a_{n} \casep \mobj{Arg}\, a_{n+1} \casep S \csep H}
 \end{align*}
 
 
-Denna regel kommer återigen att försöka göra applikationen. Antigen lyckas
+Denna regel kommer återigen att försöka göra applikationen. Antingen lyckas
 den, eller så kommer den att skapa ett nytt PAP-objekt med ytterligare
 argument.
 \end{document}

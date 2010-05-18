@@ -9,28 +9,28 @@ och optimering under körningstid. Till skillnad från detta projekt
 är dessa områden ofta separerade i litteraturen.
 
 \paragraph{Statiska optimeringar} 
-En metod för att optimera program statiskt är så kallad superkompilering \cite{srensen1995algorithm}. Där kod statiskt skrivs om till snabbare kod med bland annat hjälp av partiell evaluering. Detta har används för optimera programmeringspråket Haskell och fått goda resultat \cite{mitchell2007supercompiler}.
+En metod för att optimera program statiskt är så kallad superkompilering \cite{srensen1995algorithm}, där kod statiskt skrivs om till snabbare kod med bland annat hjälp av partiell evaluering. Detta har använts för optimera programmeringspråket Haskell och har givit goda resultat \cite{mitchell2007supercompiler}.
 
 
 \paragraph{Optimeringar under körningstid}
-JIT (just in time) kompilering är en metod för att dynamiskt optimera
+JIT (just in time)-kompilering är en metod för att dynamiskt optimera
 de delar av ett program som används intensivt under körningstid. Val av
-dessa punkter sker med hjälp av statistik och heuristik gentemot vår
+dessa punkter sker med hjälp av statistik och heuristik jämfört med vår
 lösning där programmeraren själv har kontroll över angreppspunkterna. 
 
-Ett liknade system för att annotera vart i koden en optimering ska ske har tidigare gjort för det logiska programmeringsspråket Prolog \cite{bolz-automatic}.
-Precis som i vårt projekt var det till stor del paritell evaluering som stod för optimeringsdelen. Något som skiljer sig från vårt lösning var att de la ut krokar, från engelskans hooks, när kod inte längre kunde optimeras. När maskinen tillslut nåde en krok kunde ett nytt försök att optimera påbörjas. 
+Ett liknade system för att annotera var i koden en optimering ska ske har tidigare gjorts för det logiska programmeringsspråket Prolog \cite{bolz-automatic}.
+Precis som i vårt projekt är det här till stor del partiell evaluering som står för optimeringsdelen. Något som skiljer sig från vår lösning är att de lägger ut krokar, från engelskans hooks, när kod inte längre kan optimeras. När maskinen till slut når en krok kan ett nytt optimeringsförsök påbörjas. 
 
-Prolog är också mycket intressant då det abstrakta syntaxträdet är en primitiv i språket och går att modifiera under körtid, en funktionalitet som saknas i STG.
-Detta gör Prolog till ett tacksamt språk att testa och utveckla partiell evalueringstekniker för \cite{ecce}.
+Prolog är också mycket intressant då det abstrakta syntaxträdet är en primitiv i språket och går att modifiera under körningstid, en funktionalitet som saknas i STG.
+Detta gör Prolog till ett tacksamt språk att testa och utveckla tekniker för partiell evaluering i \cite{ecce}.
 
 
 
 \paragraph{STG}
-Den funktionella maskin vi har använt i det här arbetet är 
+Den funktionella maskin som vi har använt i det här arbetet är 
 STG \cite{stg}. STG har funnits med länge och många kända statiska optimeringar finns publicerade \cite{santos}.
 
-För en jämförelse av olika funktionella maskiner se sektion \ref{sec:Core:Mask}.
+För en jämförelse av olika funktionella maskiner, se avsnitt \ref{sec:Core:Mask}.
 
 
 \begin{comment}

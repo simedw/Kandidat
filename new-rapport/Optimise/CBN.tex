@@ -39,11 +39,11 @@ Lösningen går ut på att \kw{let}-uttryck allokerar sina objekt på heapen äv
 optimering, vilket inte görs i CBV-semantiken. Men för att kunna skilja på objekt som kan innehålla okända variabler
 och de vanliga heap-objekten som aldrig innehåller något okänt, har 
 en ny sorts heap, här kallad för `abyss', lagts till. Den består av objekt
-som kan innehålla fria variabler, varför de inte ska blandas ihop med objekten 
+som kan innehålla fria variabler. För att de objekten inte ska blandas ihop med objekten 
 på heapen som alla är helt kända.
 I reglerna kommer abyssen att denoteras 
-med stort $A$, och användas på liknande sätt som heapen $H$. Så en konfiguration
-i tillståndet $\Omega$, skrivs nu:
+med stort $A$, och användas på ett sätt som liknar heapen $H$. Så en konfiguration
+i tillståndet $\Omega$ skrivs nu:
 
 \[
 \CBNOMEGA SHAe
@@ -77,7 +77,8 @@ skriver regeln inte ut några detaljer om hur infogningen utförs, utan bara att
 Regel \eqref{CBN:FunI} visar att om parameterlistan för funktionen och argumentlistan för applikationen är
 lika långa kommer funktionen att infogas med parametrarna $\many{x}$ utbytta mot
 argumenten $\many{a}$. Detta görs bara om infogningsräknaren tillåter denna infogning.
-
+En viktig skillnad mot CBV-semantiken är att här infogas alla funktioner, även
+om inget av argumenten är kända. Detta kan begränsas av infogningsräknaren.
 
 \begin{align}
 \label{CBN:FunK}\CBNOMEGA S{\heap f{\FUN{\many{x}}{e}}}A{f \, \many{a}} \rulesep & \CBNMC {f \, \many{a}}SHA \\
@@ -121,10 +122,13 @@ Dessa körs också via maskinen, så även här måste dess argument kontrollera
 
 
 \paragraph{Let-uttryck}
-De \kw{let}-uttryck som bara har kända variabler kan allokeras på heapen\eqref{CBN:Let1} som vanligt
-medans de med okända läggs på abyssen\eqref{CBN:Let2}.
+De \kw{let}-uttryck som bara har kända variabler kan allokeras på heapen \eqref{CBN:Let1} som vanligt
+medan de med okända läggs på abyssen \eqref{CBN:Let2}.
 Detta undantag görs för att få bättre delning, då thunkar på heapen alltid beräknas
-av den vanliga maskinen och därför automatiskt får delning.
+av den vanliga maskinen och därför automatiskt får delning. Dessa
+\cont{OLet}-continuations skiljer sig från CBV-semantiken. Frågetecknet står för
+att variablen finns allokerad. Den här continuationen ersätter de andra två
+som berörde \kw{let}.
 
 \begin{align}
 \label{CBN:Let1} \CBNOMEGA SHA{\eLet x{obj}r} \rulesep & \CBNOMEGA {\cOLet{x'}S}{\heap{x'}{obj}}A{\subst r{x'}x}\\
@@ -135,10 +139,9 @@ av den vanliga maskinen och därför automatiskt får delning.
 
 $\Psi$-tillståndet kommer i regel \eqref{CBN:Let3} att lägga till denna \kw{let}-binding
 på sin lista över dessa.
-
  I $\Phi$ fås dock ett uttryck som argument och den måste därför 
-återbygga \kw{let}-satsen, vilket sker via de två reglerna \eqref{CBN:Let4} och 
-\eqref{CBN:Let5} beroende på om den ligger på heapen eller abyssen.
+åter bygga upp \kw{let}-satsen, vilket sker via de två reglerna \eqref{CBN:Let4} och 
+\eqref{CBN:Let5}, beroende på om den ligger på heapen eller abyssen.
 
 \begin{align}
 \label{CBN:Let3} \CBNPSI{\cOLet xS}H A{lbs}v \rulesep & \CBNPSI SHA{x\,:\, lbs}v \\
@@ -152,7 +155,7 @@ på sin lista över dessa.
 \end{align}
 
 
-I avsnitt \ref{sec:DeadCode} ändras just \eqref{CBN:Let4} 
+I avsnitt \ref{sec:DeadCode} om dödkodselminimering ändras just \eqref{CBN:Let4} 
 och \eqref{CBN:Let5} så att de endast bygger upp \kw{let}-uttrycket när så behövs.
 
 
@@ -162,7 +165,7 @@ och \eqref{CBN:Let5} så att de endast bygger upp \kw{let}-uttrycket när så be
 
 \paragraph{Case-satser}
 \kw{Case}-satser fungerar precis som tidigare, med den skillnaden att \kw{let}-bundna variabler 
-och abyssen nu också forslas runt. Se sektion \ref{cbv:case}
+och abyssen nu också forslas runt. Se sektion \ref{cbv:case}.
 %\begin{align}
 %\label{eq:case1}\CBNOMEGA sHA{\eCase e{brs}}  \rulesep &\, \CBNOMEGA{\oCase{brs}s}HAe\\
 %\label{eq:case2}\CBNIRR{\oCase{brs}s}HAe  \rulesep &\, \CBNIRR sHA{\eCase e{brs}}\\
@@ -173,20 +176,20 @@ och abyssen nu också forslas runt. Se sektion \ref{cbv:case}
 
 \paragraph{Atomer}
 Om en variabel pekar på en thunk i heapen kan den evalueras till ett
-värde med den vanliga maskinen\eqref{CBN:Atoms1}. Ifall thunken var på abyssen
+värde med den vanliga maskinen\eqref{CBN:Atoms1}. Ifall thunken är på abyssen
 finns det fria variabler i den och då får optimeringen gå vidare med $\Omega$ \eqref{CBN:Atoms2}.
 
-Alla andra atomer är värden, så då går optimeringen vidare till $\Psi$\eqref{CBN:Atoms3}.
+Alla andra atomer är värden, så då går optimeringen vidare till $\Psi$ \eqref{CBN:Atoms3}.
 
 \begin{align}
-\label{CBN:Atoms1}\CBNOMEGA S{\heap v{\THUNK e}}Av \rulesep \CBNMC vSHA\\
-\label{CBN:Atoms2}\CBNOMEGA SH{\abyss v{\THUNK e}}v  \rulesep \CBNOMEGA SHA{\text{infoga }e}\\
-\label{CBN:Atoms3}\CBNOMEGA SHAa \rulesep &\, \CBNPSI SHA{\epsilon}a
+\label{CBN:Atoms1}\CBNOMEGA S{\heap v{\THUNK e}}Av &\rulesep \CBNMC vSHA\\
+\label{CBN:Atoms2}\CBNOMEGA SH{\abyss v{\THUNK e}}v  &\rulesep \CBNOMEGA SHA{\text{infoga }e}\\
+\label{CBN:Atoms3}\CBNOMEGA SHAa &\rulesep \, \CBNPSI SHA{\epsilon}a
 %\label{CBN:Atoms4}\CBNOMEGA s{\heap v{\objCon{C\, a_{1}\cdots a_{n}}}}Av \rulesep &\, \CBNPSI sHA{\epsilon}v
 \end{align}
 
 
-\subsection{Call-by-name-semantik med anropsstack}
+\paragraph{Call-by-name-semantik med anropsstack}
 \label{sec:CBN:Callstack}
 
 %\NOTE{Virrvarv av vad vi betyder}
@@ -199,7 +202,7 @@ när den organiseras för STG-maskinen. Här nedan listas de ställen i optimeri
 \begin{itemize}
 \item
 Om $\Omega$ börjar optimera inuti en \kw{case}-granskare dupliceras översta aktiveringsposten 
-på som i maskinen när granskaren börjar evalueras. När den är klar
+på samma sätt som i STG-maskinen när granskaren börjar evalueras. När den är klar
 tas den översta posten bort, och antingen kan \kw{case}-uttrycket byggas upp igen
 eller rätt gren väljas. För att välja rätt gren ersätts alla argument som var
 bundna via grenen med värdena som de ska ha. Detta sker via en specialsubstitution 

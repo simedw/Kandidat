@@ -1,12 +1,12 @@
 \documentclass[../Optimise]{subfiles}
 \begin{document}
 
-\section{Välkänd case-lag}
+\paragraph{Välkänd case-lag}
 \label{sec:CaseLaw}
 
-Väldigt ofta uppstår en \kw{case}-sats inuti granskaren tillhörande en annan \kw{case}-sats, 
-vilket är svårt att optimera vidare.
-Vid dessa tillfällen utnyttjas en identitet hos \kw{case}-satser. \cite{santos}
+Väldigt ofta uppstår en \kw{case}-sats inuti granskaren tillhörande en annan 
+\kw{case}-sats, och då är det svårt att optimera vidare.
+Vid dessa tillfällen utnyttjas denna identitet hos \kw{case}-satser: \cite{santos}
 
 \begin{tabular}{ m{5cm} m{0.5cm} m{5cm} }
 \begin{codeEx}
@@ -33,7 +33,7 @@ Vid dessa tillfällen utnyttjas en identitet hos \kw{case}-satser. \cite{santos}
 
 Nu är det lättare att applicera flera andra optimeringar, 
 exempelvis gemensam \kw{case}-granskare. 
-I det här projektet är det här implementerat som att när $\Omega$-tillståndet hanterar ett 
+I det här projektet är det här implementerat så att när $\Omega$-tillståndet hanterar ett 
 uttryck som har en \kw{case} i en \kw{case} så skyfflas de om enligt ovan.
 
 Ifall en \kw{case}-sats ska byggas upp och uttrycket också är en \kw{case}-sats i

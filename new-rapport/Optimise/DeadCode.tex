@@ -1,7 +1,11 @@
 \documentclass[../Optimise]{subfiles}
 \begin{document}
 
-\section{Dödkodseliminering}
+
+
+%\section{Dödkodseliminering}
+\paragraph{Dödkodseliminering}
+
 \label{sec:DeadCode}
 
 När optimeringarna har körts och det är dags att bygga upp trädet igen kan
@@ -48,16 +52,16 @@ Denna process kan mer formellt skrivas som:
 \end{comment}
 
 Detta är en kontroll som utförs varje gång en \miniCode{let} byggs up 
-i \iIrr och \iPsi. Att ta fram vilka fria variabler som ett uttryck har är dock en 
+i \iIrr  och \iPsi. Att ta fram vilka fria variabler som ett uttryck har är dock en 
 kostsam operation så det kan finnas fall då det inte ger så mycket
-prestandaökning att det är värt det. Följande regel beskriver
+prestandaökning att det är värt det. Följande regler beskriver
 var i semantiken som dödkodseliminering kommer in:
 
 \begin{align*}
 \CBNPSI{\cOLet xS}{\heap vh}A{lbs}a & \rulesep \CBNPSI SHA{lbs}a\\
-& x \text{ ej i } a \nonumber \\
+& x \text{ ej fri variabel i objektet som pekas ut av } a \nonumber \\
 \CBNIRR{\cOLet xS}{\heap vh}Ae & \rulesep \CBNIRR SHAe\\
-& x \text{ ej i } e \nonumber
+& x \text{ ej fri variabel i uttrycket } e \nonumber
 \end{align*}
 
 \end{document}

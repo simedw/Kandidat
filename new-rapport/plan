@@ -1,9 +1,39 @@
+= This our super new plan =
+
+ [✓] fixa framsida efter mall
+ [✓] inkl vem som skrivit vad i rapporten? (skumt)
+ [✓] fixa simons konstiga text om heapen
+ [ ] fixa andra fel (om man inte hann klar igar)
+ [ ] automatiserad rattstavning
+ [-] afterburner  -- irrelephant, v nämner afterburner bara en gång och den
+        gör bara en sakm, slå ihop den med gemensam case-granskare?
+     (också giraffinaderi)
+     tanken var nog att vi skulle gjort fler saker i afterburner steget.
+     
+
+
+
+= This is our next plan =
+
+ [x] Köp godis till presentationen
+ [/] Lätt modifikation av presentationen från halvtidsredovisningen.
+
+
+= This is our newest plan =
+
+ [✓?] Fixa Koens kommentarer
+ [✓] Skriva ut och läsa igenom, hitta och korrigera små- och storfel osv
+ [✓] Poster!!!
+ [✓] Plan för imorgon
+
+
+
 = This is our new plan =
 
 globalt
 
     [ ] Manuell genomläsning
-        [?] trestegsraketen för varje figur
+        [!] trestegsraketen för varje figur
 
     Ta bort "du", kolla användning av "vi" -in progress... 
         men: var någonstans är alla?-
@@ -13,33 +43,74 @@ globalt
     
     [ ] Rättstavning
 
+== Koens kommentarer ==
+
+ [✓] Jag tycker att just det kapitlet ser MYCKET bättre ut nu.
+
+ [✓] Bra med förord.
+
+-- tog bort det, vet inte hur relevant det avsnittet var... bra.
+ [✓] In intro:t förstår jag inte riktigt sista subsektionen.
+     (bakgrund: partiell evaluering)
+
+ [✓] Bra med små förklaringarna innan kapitlarna börjar (layout OK med).
+
+ [✓] Bra med färgkodningen av ändringar i koden.
+
+-daniel-
+ [✓] På slutet av 5.2 kanske bra att berätta att ni kommer att presentera 2
+     semantiker och varför (i.st.f. att bara säga i början på 5.3). | Daniel
+
+-dan-
+ [x] 5.6, 5.7, 5.8 lite förvirrande. Varför finns de just där? 5.6. och 5.8
+     iofs. förståligt,  de händer ju efter allting. Men 5.7 händer väl
+     innan allting (eller kanske under?)?
+
+-simon-
+ [ ] Kapitel 6. Kanske bra med lite allmänna resultat också (ni har ju
+     gjort fler exempel). Annars ska detta inte heta resultat, men kanske
+     "Fallstudier" eller "Exempel" eller något.
+
+        Ska vi byta namn?
+        Ge mer generella resultat?
+            "I allmänhet kommer optimise att utföra följande mycket bra/dåligt" ?
+            "Program med x och y kommer att fungera bra/dåligt därför att ..."
+        Gör fler test?
+            Sno en testsvit och bara stoppa in lite optimise och testa?
+        [ ++ some comments ++ 
+        Have the hypotheses in fact been tested?
+        Do the solutions obtained relate to the questions posed?
+        Is the level and form of analysis appropriate for the data?
+        Could the presentation of the results been made clearly.
+++>     Are patterns and trends in the results accurately identified and summarized?
+        Does the software appear to work satisfacorily?
+        ]
+        
+        Ökar stacken, heap, abyssen?
+        
+            Heapen verkar oka en hel del....
+        
+        Blir programmen längre, kortare?
+        Tar det mer minne på något sätt?
+        Antalet regler, dyra regler, billiga regler?
+        
+        
+        
+        
+        
+        
+        
+        
+
+ [x] Fixa "vi" i kap 6 
+
+ [✓] Kapitel 9 klart det bästa kapitlet.
+
+ [Tack] Lycka till med det sista!
+
 diskussion
-    [ ] diskutera varför reglerna designades på 
-        det här sättet och inte på något annat sätt
-
-        de måste ju ändå designa dem på något sätt?
-        vilka val har vi gjort? vad har våra andra alternativ varit?
-        vi har valt att skapa en viss abstraktion med 
-
-        svårt att isolera olika delar
-
-        bra sak: traversera en enda gång och göra flera saker samtidigt
-
-        balansgång
-
-        i evalueringsform. vi optimerar inte saker ännu inte används
-        tracing jit säger Daniel
-        hur gör man det jit säger Simon
-        Daniel pratar om execution-paths
-        det finns troligtvis bättre modeller men vi har inte gjort dem
-        vi har inte heller kollat så djupt i litteraturen
-            och det var kul att komma på själva
-            och det var inte så bra gjort av oss
-            men vi får göra så för det är ett kandiatarbete
-
-        istället för att använda omega, psi, irr använda alfa, beta, gamma
-        Schönfinkelisation tycker Daniel är kul.
-
+    [x] diskutera motivationen bakom reglernas utformning
+    
 resultat
     [x] olinjaritet
     [x] grafer (på shapes)
@@ -54,8 +125,8 @@ Sockerspråket:
         frågan är omotiverad /Dan
 
 Slutsats
-    [x] är lite väl(digt) kort
-    NU MERGAT MED FRAMTIDA ARBETE
+    [/] är lite väl(digt) kort
+        NU MERGAT MED FRAMTIDA ARBETE /Dan
 
 
 = This is our old plan =

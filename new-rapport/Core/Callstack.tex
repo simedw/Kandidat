@@ -9,25 +9,23 @@
 % \subsubsection{Aktiveringsposter}
 
 Till en början använde vår tolk sig av naiv substitution, vilket innebär att man
-traverserar syntaxträdet och byter ut variabler mot deras värde, exempelvis vid
+traverserar syntaxträdet och byter ut variabler mot deras värde, vid exempelvis
 funktionsapplikation.
-
-Eftersom substitution är långsamt, vill vi hitta ett annat sätt att lösa problemet
+Eftersom substitution är långsamt, behövs ett annat sätt att lösa problemet
 på. Ett sätt att göra det på är att använda något som kallas för anropsstack, som
 är vad många kompilatorer använder. % referens på det? :)
 
 Varje funktion får vid anrop en egen aktiveringspost, som innehåller dess argument.
-I funktionen blir varje argument något som kallas för lokala variabler, vilka kan representeras
+I funktionen blir alla argument något som kallas för lokala variabler, vilka kan representeras
 som ett index in i funktionens aktiveringspost. Även variabler som binds i
 \kw{let}-uttryck läggs i aktiveringsposten istället för på heapen. 
-  
-Eftersom anrop ibland kan nästlas som vi kommer att se senare i avsnittet
-måste vi ha en stack av aktiveringsposter, som man kan pusha och poppa poster ifrån.
+Eftersom anrop nästlas som vi kommer att se senare i avsnittet
+behövs en stack av aktiveringsposter, som man kan pusha och poppa poster ifrån.
 Denna stack kallas för anropsstack.
 
-I vår tolk har vi ett pass där vi går från ett syntaxträd där alla variabler
+I tolken finns ett pass där vi går från ett syntaxträd där alla variabler
 antas substitueras (eller ligga på heapen) till ett träd där lokala variabler
-istället har information om sin position i aktiveringsposten.
+istället har information om sin position i aktiveringsposten, vilket nu ska presenteras.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
@@ -35,10 +33,12 @@ istället har information om sin position i aktiveringsposten.
 
 \subsection{Lokaliseringstransformation}
 
-För att detta ska fungera behöver varje fri variabel veta var den kommer att
-ligga i aktiveringsposten. Det betyder att den behöver ett heltalsindex som anger
+För att anropsstacken ska fungera behöver varje fri variabel 
+markeras med vilken position den kommer få
+i aktiveringsposten. Det betyder att den behöver ett heltalsindex som anger
 vilket offset den har. Det behövs en transformation som gör detta före koden 
-körs. Lokaliseringstransformationen går till på följande vis på \ic{map}: 
+körs. Nu ska lokaliseringstransformationen presenteras på funktionen \ic{map}, som
+definieras på följande sätt:
 
 % Genom exempel ska vi förklara hur lokaliseringstransformationen går till.
 
@@ -52,9 +52,9 @@ map f xs = case xs of
     ; Nil -> xs};
 \end{codeEx}
 
-Eftersom argumenten skall ligga i aktiveringsposten så ger vi dem indicier som anger deras 
-offset. Vi visar detta med \ic{<x,n>} där \ic{x} är vad variabeln kallades 
-förut och \ic{n} är dess offset.
+Eftersom argumenten skall ligga i aktiveringsposten ger vi dem indicier som anger deras 
+offset. Detta skrivs med \ic{<x,n>} där \ic{x} är vad variabeln kallades 
+förut och \ic{n} dess offset.
 
 \begin{codeExDiff}
 map |<f,0>| |<xs,1>| = case |<xs,1>| of
@@ -80,14 +80,14 @@ map <f,0> <xs,1> = case <xs,1> of
     ; Nil -> <xs,1>};
 \end{codeExDiff}
 
-Här får vi ett problem med att \obj{THUNK}-objekten kommer att evalueras någon 
+Extra information krävs för  \obj{THUNK}-objekten som kommer att evalueras någon 
 annanstans, och därmed i en annan aktiveringspost. Det betyder att indicierna som 
 används utanför \obj{THUNK}-objekten i \ic{map} inte gäller i thunkarna. Vi kommer därför att evaluera
 thunkar i en egen aktiveringspost. Det kan dock vara så att thunken ändå använder sig
 av de lokala variabler som finns i den yttre funktionen. I exemplet har vi till exempel att 
 \ic{<a,4> = THUNK (<f,0> <y,2>)} där f och y är kommer utifrån. Därför 
-måste \obj{THUNK}-en ha information om vilka lokala variabler i \ic{map} 
-som den använder, så att de kan läggas på dess aktiveringspost. 
+måste \obj{THUNK}-objekten ha information om vilka lokala variabler i \ic{map} 
+som de använder, så att de kan läggas på dess aktiveringspost. 
 
 Noterbart är även att när \kw{let} allokerar kommer den att byta ut alla lokala variabler
 mot vad de refererar till i aktiveringsposten. Vi får följande: 
@@ -97,8 +97,8 @@ mot vad de refererar till i aktiveringsposten. Vi får följande:
 \begin{codeExDiff}
 map <f,0> <xs,1> = case <xs,1> of
     { Cons <y,2> <ys,3> -> let
-        { <a,4> = THUNK |[<f,0>, <y,2>]|  (<f,0> <y,1>)
-        ; <b,5> = THUNK |[<f,0>, <ys,3>]| (map <f,0> <ys,1>)
+        { <a,4> = THUNK |[<f,0>, <y,2>]|  (|<f,0> <y,1>|)
+        ; <b,5> = THUNK |[<f,0>, <ys,3>]| (map |<f,0> <ys,1>|)
         ; <c,6> = CON (Cons <a,4> <b,5>)
         } in <c,6>
     ; Nil -> <xs,1>};
@@ -112,13 +112,15 @@ I \ic{<a,4> = THUNK [<f,0>, <y,2>]  (<f,0> <y,1>)} ser vi att
 hade utanför thunken, vilket beror på att de som sagt kommer att evalueras
 med en egen aktiveringspost.
 
+\begin{comment}
 Det största värdet på variabelindex plus ett blir funktionens
 aktiveringspoststorlek, vilken man alltså kan veta statiskt
 (vid kompileringstid i en kompilator). Storleken för \ic{map}-funktionen blir alltså 7.
+\end{comment}
 
 Alla funktioner har nu information om storleken på sin aktiveringspost, så att 
 den kan allokeras när funktionen ska köras.
-Detta möjliggör en effektiv implementering som använda arrayer av konstant 
+Detta möjliggör en effektiv implementering som använder arrayer av konstant 
 storlek, vilket ger en konstant uppslagstid.
 Även thunkar kan statiskt veta sin posts storlek,
 som räknas ut på ungefär samma sätt som
@@ -129,9 +131,10 @@ Thunken \ic{THUNK [<f,0>, <y,2>]  (<f,0> <y,1>)} behöver storlek 2.
 Ett fall som är lurigt att implementera är \kw{letrec}.
 Följande funktion \ic{f} ger tillbaka en bool som säger om 
 argumentet \ic{n} är jämnt eller inte. Det är förvisso ett
-ineffektivt sätt att beräkna detta på, men illustrativt för denna diskussion.
+ineffektivt sätt att beräkna detta på, men illustrativt för denna diskussion,
+då de är ömsesidigt rekursiva.
 
-Så här ser funktionen ut skriven i vårt sockerspråk:
+Så här ser funktionen ut skriven i vårt sockerspråk, fast med thunkar som i STG:
 
 \begin{codeEx}
 f n = letrec 
@@ -140,7 +143,7 @@ f n = letrec
     } in even n;
 \end{codeEx}
 
-Funktionen lambdalyfts (se tidigare avsnitt) först till följande:
+Funktionen lambdalyfts (se avsnitt \ref{sec:LamLift}) först till följande:
 
 \begin{codeEx}
 f n = letrec 
@@ -175,7 +178,7 @@ Att mer precist hålla reda på vilka thunkar som behöver vad är svårare att 
 
 
 Nu ska vi visa hur anropsstacken kan se ut vid ett anrop till \ic{map}.
-Funkitonen \ic{enumFrom} skapar en oändlig lista \ic{[x, x+1, x+2, ...]}.
+Funkitonen \ic{enumFrom} skapar en oändlig lista, \ic{[x, x+1, x+2, ...]}.
  
 \begin{codeEx}
 enumFrom x = x : enumFrom (x + 1);
@@ -201,27 +204,25 @@ Arg list
 \end{codeEx}
 
 Maskinen ser att \ic{map} tar två argument, och funktionsapplikationen 
-kan då köras utan att ett \obj{PAP}-objekt behöver skapas.
+kan köras utan att ett \obj{PAP}-objekt behöver skapas.
 
 Vid funktionsapplikation tas den nuvarande aktiveringsposten bort och ersätts 
-med funktionsens aktiveringspost. Detta är för att alla anrop betraktas vara
+med funktionens aktiveringspost. Detta är för att alla anrop betraktas vara
 svansanrop.
-
 När det sista uttrycket som utförs i en funktion är ett funktionsanrop, är
 detta ett svansanrop. De fall som inte är svansanrop
 är de som är i casegranskaren. Dessa kommer att återvända till den anropande
-funktionen för att sen välja rätt gren. Vi kommer senare att se att i detta
-fall duplicerar vi den översta aktiveringsposten. 
-
+funktionen för att sen välja rätt gren. Vi kommer senare att se att vi i detta
+fall duplicerar den översta aktiveringsposten. 
 Att \kw{let}-binda resultatet av ett
 funktionsanrop är inte heller ett svansanrop, för att det är faktiskt inte ett
 anrop alls! Som bekant senareläggs det anropet i en thunk. Detta kan sen vara
 del av ett svansanrop, om denna thunk returneras från någon funktion, eller inte,
-om denna thunks innehåll forceras av en casegranskare.
+om denna thunks innehåll forceras av en \kw{case}-granskare.
 
 Tillbaka till anropet till \ic{map}. 
-Vi lägger argumenten i en ny aktiveringspost, ersätter den \ic{main} skapat,
-och går in i funktionen. 
+Argumenten läggs i en ny aktiveringspost, ersätter den som \ic{main} har skapat,
+och maskinen går in i funktionen. 
 Aktiveringsposten blir:
 \begin{codeEx}
 [cube, list]
@@ -231,17 +232,17 @@ I definitionen av \ic{map} såg vi förut att \ic{f} har index 0 och
 
 Det ska utföras en \kw{case}-granskning på \ic{<xs,1>} och på position 1 i
 aktiveringsposten ligger \ic{list}. Aktiveringsposten dupliceras eftersom
-det är i en casegranskare. Detta är för att när maskinen senare kommer
-att återvända från att ha evaluerat granskaren kommer den ta bort den 
+det är i en \kw{case}-granskare. Detta är för att när maskinen senare kommer
+att återvända från att ha evaluerat granskaren kommer den att ta bort den 
 översta posten. Maskinen börjar evaluera \ic{list}, och anropstacken blir:
 \begin{codeEx}
 [cube, list]
 [cube, list]
 \end{codeEx}
 
-\ic{list} pekar på den ovan definierade thunken. Maskinen kommer att gå in i den
-koden. Detta räknas som ett svansanrop och den översta aktiveringsposten byts
-ut mot thunkens, som är tom.
+\ic{list} pekar på den ovan definierade thunken, och maskinen kommer evaluera den.
+Detta räknas som ett svansanrop och den översta aktiveringsposten byts
+ut mot thunkens tomma.
 
 Anropstacken blir:
 \begin{codeEx}
@@ -250,7 +251,7 @@ Anropstacken blir:
 \end{codeEx}
 
 På koden ligger nu \ic{enumFrom 1} från thunken. 
-Det kommer efter några steg att evalueras till en atom 
+Detta kommer efter några steg att evalueras till en atom 
 %, låt oss kalla den \ic{l}, 
 som pekar på 
 konstruktorn \ic{Cons 1 list'}, där list' är
@@ -286,7 +287,7 @@ map <f,0> <xs,1> = case <xs,1> of
     ; Nil -> <xs,1>};
 \end{codeEx}
 
-Så \ic{<a,4>}-thunken \ic{map} vill ha 0 och 2 från
+Så \ic{<a,4>}-thunken  vill ha index $0$ och $2$ från
 aktiveringsposten. Det är \ic{cube} och \ic{1}, precis anropen till
 \ic{cube 1}. 
 Thunken som allokeras kommer alltså se ut så här
@@ -294,12 +295,12 @@ Thunken som allokeras kommer alltså se ut så här
 Om den senare kommer att evalueras skapas aktiveringsposten \ic{[cube,1]}.
 
 
-Sammanfattningsvis så ersätts den översta aktiveringsposten vid 
-evaluering av funktioner och thunkar. När en casegranskare börjar evalueras
-så dupliceras den översta aktiveringsposten. Att returnera från en funktion,
+Sammanfattningsvis ersätts den översta aktiveringsposten vid 
+evaluering av funktioner och thunkar. När en \kw{case}-granskare börjar evalueras
+dupliceras den översta aktiveringsposten. Att returnera från en funktion,
 och för STG-maskinen innebär det att returnera från en casegranskare,
 resulterar i att poppa den översta aktiveringsposten. Då pushas också 
-de variabler som rätt gren i casesatsen på posten.  
+de variabler som rätt gren i \kw{case}-satsen binder på posten.  
 
 
 

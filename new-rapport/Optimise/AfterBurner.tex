@@ -1,7 +1,7 @@
 \documentclass[../Optimise]{subfiles}
 \begin{document}
 
-\section{Afterburner}
+\paragraph{Afterburner}
 \label{sec:Afterburner}
 
 Alla optimeringar hittills i det här arbetet har arbetat tillsammans, i en gemensam
@@ -9,11 +9,11 @@ traversering av syntaxträdet som följer en gemensam semantik för att nå det 
 Detta är bra ur tidssynpunkt men gör det ibland svårt att byta ut enskilda delar i koden
 eftersom många ställen då ofta behöver ändras på samma gång.
 
-Det finns även en del optimeringar som behöver se större delar av syntaxträdet
-samtidigt för att kunna vara verksamma. Dessa optimeringar är som regel långsammare att utföra.
+Det finns dock en del optimeringar som behöver ha tillgång till hela syntaxträdet
+samtidigt för att kunna appliceras. Dessa optimeringar är som regel långsammare att utföra.
 
-Vi har valt att utföra ett antal sådana optimeringar efter att de vanliga
-optimeringana har körts, därav namnet `after burner'. Följande regel beskriver
+Vi har valt att utföra en sådan optimering efter att de vanliga
+optimeringarna har körts, därav namnet `afterburner'. Följande regel beskriver
 var i semantiken som afterburnern kommer in:
 
 \begin{align*}
@@ -25,16 +25,16 @@ var i semantiken som afterburnern kommer in:
 Att \kw{case}:a på samma uttryck två gånger kommer i ett funktionellt språk alltid att ge
 samma resultat då alla variabler egentligen är konstanter. För varje \kw{case}-gren
 som optimeringen går in i är det säkert att alla nästlade \kw{case}:ar på samma uttryck måste välja samma
-gren som den första.
+gren som den första. Här är koden för funktionen att kvadrera ett tal:
 
 \begin{codeEx}
-test x = x * x;
+square x = x * x;
 \end{codeEx}
 
-Blir efter vanlig optimering
+Den blir efter vanlig optimering:
 
 \begin{codeEx}
-test x = case x of
+square x = case x of
             { I# a -> case x of
                 { I# b -> case a #* b of
                     { r' -> let r = CON (I# r')
@@ -44,7 +44,7 @@ test x = case x of
 
 Om optimeringen för gemensamma \kw{case}-granskare sedan körs erhålls följande:
 \begin{codeEx}
-test x = case x of
+square x = case x of
             { I# a -> case a #* a of
                 { r' -> let r = CON (I# r')
                         in r
@@ -58,8 +58,8 @@ case x of
     D a b -> e2
 \end{codeEx}
 
-\ic{case x} söks upp i \ic{e1} och 
-\ic{C}-grenen initieras med \ic{a} och \ic{b} som värden. I \ic{e2} görs samma 
+\ic{case x} söks upp i \ic{e1} och varje gång den hittas initieras
+\ic{C}-grenen med \ic{a} och \ic{b} som värden. I \ic{e2} görs samma 
 sak men i det fallet är det \ic{D}-grenen som initieras.
 
 

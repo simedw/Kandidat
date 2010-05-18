@@ -1,0 +1,174 @@
+\documentclass[../Appendix]{subfiles}
+\begin{document}
+
+\chapter{Tidsplan}
+
+Här följer projektets tidsplan, vilket är en obligatorisk del i kandidatarbetet,
+men som även har fungerat väldigt väl: 
+
+\paragraph{Milstolpe 2010-02-12 }
+\begin{itemize}
+\item Ha satt upp ett versionskontrolleringssystem för projektets kod.
+\item Ha definierat en Haskelldatastruktur som representerar STG.
+\item Ha definierat en Haskelldatastruktur som representerar resultatet
+av en parsning.
+\item Göra klart den här rapporten.
+\end{itemize}
+
+\paragraph{Milstolpe 2010-02-19}
+\begin{itemize}
+\item Standardbibliotek
+
+\begin{itemize}
+\item Listfunktioner: foldr, map, filter, length, replicate, repeat, iterate,
+take, drop, head, tail
+\item Funktionella funktioner: S, K, compose, flip, id
+\item Tupelfunktioner: fst, snd, first, second
+\item Booleska funktioner: \&\&, ||
+\end{itemize}
+\item En testsvit som testar alla ovan nämnda funktioner i standardbiblioteket
+(och därmed också case- och let-uttryck).
+\item En parser som kan parsa alla program i testsviten.
+\item Ha en pretty printer för STG-språket som kan skriva ut alla program
+i testsviten.
+\item Parsern och pretty printern uppfyller $parse\circ pretty=id$.
+\item Kunna tolka (köra) funktionsapplikation i STG.
+
+\begin{itemize}
+\item Undersöka och bestämma hur vi ska göra \textit{expression instantiation}%
+\end{itemize}
+\end{itemize}
+
+\paragraph{Milstolpe 2010-03-05}
+\begin{itemize}
+\item Kunna avsockra funktionsapplikationer och case-satser från parsersyntaxträd
+till STG, med scopeanalys om det behövs (beroende på hur vi ska göra
+\textit{expression instantiation}):
+
+\begin{codeEx}
+fac x = case x == 0 of
+	{ True -> 1
+	; False -> x * fac (x - 1)
+    };
+
+main x = fac (head x);
+\end{codeEx}
+översätts till
+
+\begin{codeEx}
+fac = FUN (x -> case (==) x 0 of 
+    { True  -> 1
+    ; False -> let { p1 = THUNK ((-) x 1)
+	               ; p2 = THUNK (fac p1)
+	               } in (*) x p2 
+    });
+
+main = FUN (x -> fac x);
+\end{codeEx}
+
+\item Sammanställ tre idéer på icke-triviala exempelprogram som illustrerar
+optimeringsfunktionens förträfflighet.
+\item Kunna tolka (köra) let, case och de inbyggda primitiva funktionerna.
+\end{itemize}
+
+\paragraph{Milstolpe 2010-03-15}
+\begin{itemize}
+\item Köra programmens mainfunktion enligt basspecifikationen.
+\item Göra optimeringarna nämnda i syfte under körningstid (caseeliminering
+och konstantfolding).
+\item Kunna mäta programmens snabbhet m.h.a. stegräknare.
+\item Välja ut och skriva ett av de tre exempelprogrammen. Tolken ska kunna
+köra programmet.
+\item Föreberedelser för halvtidsredovisningen som skall presenteras 16
+mars.
+\end{itemize}
+
+\paragraph{Milstolpe 2010-03-19 (Fredag LV 1)}
+\begin{itemize}
+\item Ha gjort ett skelett för rapporten som innehåller rubriker och i grova
+drag innehåll (punktlistor eller stolpar).
+\item Kunna stänga av och på inlining med hjälp av en ny språkkonstruktion
+(optimise with).
+
+
+\begin{codeEx}
+optimise power 4 with 
+	{ inline     = power : if : Nil 
+	; caseInCase = False
+	}
+
+opt f n = optimise f with 
+	{ noInline  = take : Nil
+	; maxInline = n
+	}
+\end{codeEx}
+
+\item Analysera vilka optimeringar shapesexemplet skulle kunna dra nytta
+av.
+\end{itemize}
+
+\paragraph{Milstolpe 2010-03-26 (Fredag LV 2)}
+\begin{itemize}
+\item Få optimeringen att enbart forcera thunkar som behövs. Detta gör så
+att till exempel optimise av if-funktionen terminerar.
+\item Kortare texter i rapporten där det är möjligt. I alla fall ska det
+här innefatta tidigare arbeten, inledning/problemställning, beskrivning
+av stg-maskinen, arbetsmetodik och den optimise-semantik som vid den
+här tidpunkten är klar.
+\end{itemize}
+
+\paragraph{Milstolpe 2010-04-16 (Fredag LV 3)}
+\begin{itemize}
+\item Använda en anropsstack istället för (hjärndöd) substituering i tolken.
+
+\begin{itemize}
+\item Alla program ska fortfarande fungera med den här ändringen och de
+ska vara snabbare.
+\end{itemize}
+\item Utkast till sammanfattning, resultat, diskussion för rapporten.
+\end{itemize}
+
+\paragraph{Milstolpe 2010-04-23 (Fredag LV 4)}
+\begin{itemize}
+\item $\alpha$-rapport. En sammanställd rapport som innehåller tillräckligt
+mycket information för att en läsare ska kunna förstå den, vilket
+möjliggör återkoppling. Detta betyder att våra poänger måste gå fram
+men att den är så koncentrerad att vi snabbt kan få synpunkter på
+den. $\alpha$-rapporten ska vara inlämningsbar men kanske inget vi
+skulle vara stolta över.
+\item Regexpexempel klart.
+\end{itemize}
+
+\paragraph{Milstolpe 2010-04-30 (Fredag LV 5)}
+\begin{itemize}
+\item En optimisefunktion som fungerar med callstacken, som har samma funktionalitet
+som den förra call-by-name-optimeringen1.
+\end{itemize}
+
+\paragraph{Milstolpe 2010-05-07 (Fredag LV 6)}
+\begin{itemize}
+\item $\beta$-rapport. En enligt oss helt inlämningsbar (med stoltheten
+och betyget i behåll) rapport som vi kan få synpunkter på.
+\end{itemize}
+
+\paragraph{Milstolpe 2010-05-17 (Måndag LV 8)}
+\begin{itemize}
+\item Helt klar rapport ändrad utifrån givna synpunkter och finslipad
+på alla sätt och vis.
+\end{itemize}
+
+\paragraph{Milstolpe 2010-05-24 (Måndag {}``LV 9'')}
+\begin{itemize}
+\item Skriftlig opponering färdig. (Ska vara klar 26:e).
+\item Demonstrationsbara exempel - shapes och regexp.
+\item Förberett en slutpresentation med demo. (Slutpresentation 31:a)
+\end{itemize}
+
+\paragraph{Milstolpe 2010-05-28 (Fredag {}``LV 9'')}
+\begin{itemize}
+\item Allting färdigt, speciellt presentationsförberedelser och muntlig
+opponeringsförberedelser. 
+\item Melonfest!
+\end{itemize}
+
+\end{document}

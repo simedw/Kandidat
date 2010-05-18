@@ -6,7 +6,7 @@
 STG är ett ganska primitivt språk där man t.ex. bara kan anropa funktioner
 och skapa konstruktorer med argument som är atomer. Alla objekt måste även
 explicit annoteras med information om huruvida de är thunkar eller konstruktorer. För att underlätta
-att skriva mycket kod skapades som bekant sockerspråket (sektion \ref{sec:sugar})
+att skriva mycket kod skapades som bekant sockerspråket (kapitel \ref{sec:Socker})
 , och ett
 pass som går igenom koden och avsockrar den till STG. Här är ett exempel:
 
@@ -36,7 +36,7 @@ let temp = THUNK (t * t)
 in  temp >= n
 \end{codeEx}
 
-Liknande för \ic{if}-funktionen: \ic{if}s argument \miniCode{(n \% t == 0)} och 
+Liknande gäller för \ic{if}-funktionen: \ic{if}s argument \miniCode{(n \% t == 0)} och 
 \miniCode{isPrimer n (t + 1)} är inte atomer så de behövs bindas och vidare
 är \miniCode{n \% t} och \miniCode{t + 1} inte atomer i  
 funktionsanropen till \miniCode{==} och \miniCode{isPrimer}.
@@ -46,17 +46,18 @@ Allt med inledande versal i sockerspråket tolkas som konstruktorer,
 precis som i Haskell. Så \miniCode{True} i koden ovan behöver allokeras med
 en \kw{let}. Den första grenen blir i så fall
   \miniCode{True -> let temp = CON (True) in temp}.
-Faktum är att alla nullära konstruktorer som \miniCode{True}, \miniCode{False}, \miniCode{Nil}, finns 
-allokerade på toppnivå i tolken och instantieras endast en gång. 
+Alla nullära konstruktorer som \miniCode{True}, \miniCode{False} och \miniCode{Nil} 
+allokeras på toppnivå i tolken och instantieras endast en gång. 
 Men i alla andra fall behöver de \kw{let}-bindas.
 
 Detta gäller även heltal och andra primitiver. $0$ avsockras till
     \miniCode{let temp = CON (I\# 0) in  temp}
-. Notera att alla temporära variabler som skapas är unika.
+. Alla temporära variabler som skapas är unika, men skrivs här för enkelhetens
+skull bara som \ic{temp}.
             
     
-För att göra det lättare att operera på listor och göra booleska
-jämförelser finns infixoperatorerna \ic{\&\&} och \ic{||} som alias för \ic{and} respektive \ic{or},
+För att göra det lättare att göra booleskajämförelser och operera på listor
+ finns infixoperatorerna \ic{\&\&} och \ic{||} som alias för \ic{and} respektive \ic{or},
 samt \ic{++} och \ic{:} för \ic{append} och \ic{Cons}. Under avsockringen byts dessa
 infixvarianter ut mot motsvarande vanliga funktioner. 
 
@@ -75,7 +76,7 @@ Detta avsockras till motsvarande funktionsanrop:
 main = qsort (reverse (take 3 (iterate (\x.x + 1) 0)));
 \end{codeEx}
 
-En annan metod är att göra \ic{\$} ett alias för en funktion \ic{apply} som
+En annan metod skulle vara att göra \ic{\$} ett alias för en funktion \ic{apply} som
 helt enkelt utför ett funktionsanrop:
 
 \begin{codeEx}
@@ -86,8 +87,9 @@ main = apply qsort
 apply f x = f x;
 \end{codeEx}
 
-Detta ger så stor extrakostnad för något så simpelt som funktionsapplikation
-att det är bättre att göra det till funktionsanrop direkt.
+Detta ger dock så stor extrakostnad för något så simpelt som funktionsapplikation
+att det är bättre att göra det till funktionsanrop direkt, när det inte finns
+någon statisk optimering.
         
 
 
@@ -115,8 +117,8 @@ att det är bättre att göra det till funktionsanrop direkt.
 
 I tolkandet av koden underlättar det om man inte har några \kw{let}-bundna funktioner.
 Dessa behöver lyftas ut till toppnivå. I sockret kan dessa uppstå antingen
-av att man skriver lambdafunktioner eller \kw{let}-bundna funktioner. Ett exempel
-från quicksort:
+om man skriver lambdafunktioner eller \kw{let}-bundna funktioner. Ett exempel
+med quicksort:
 
 \begin{codeEx}
   Cons x xs ->
@@ -141,7 +143,7 @@ När dessa funktioner \ic{lesser} och \ic{lambda0} lambdalyfts, skapas nya funkt
 på toppnivå. En sak att ha i åtanke då är att de fria variablerna i funktionskroppen 
 kan komma från ursprungsfunktionen. Dessa måste skickas med
 som extra parametrar. I det här fallet rör det sig om variabeln \ic{x} i båda fallen.
-Dessa parametrar måste också skickas med när de anropas.
+Dessa parametrar måste också skickas med när de anropas:
 %s/kan/nödvändigtvis
 \begin{codeEx}
 lesserLifted  = FUN(x y -> let t = THUNK (y <  x) in t)
@@ -155,7 +157,7 @@ lambda0Lifted = FUN(x y -> let t = THUNK (y >= x) in t)
 \end{codeEx}
 
 Notera att \miniCode{listLess} och \miniCode{listMore} 
-inte behöver modifieras eftersom de lyftna funktionerna partialevalueras 
+inte behöver modifieras eftersom de lyfta funktionerna finns kvar som partiellt applicerade funktioner 
 med samma namn. \miniCode{lesser} är här funktionen \miniCode{lesserLifted}
 partiellt applicerad på \miniCode{x}.
 

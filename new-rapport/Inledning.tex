@@ -8,7 +8,7 @@ vars värden är kända statiskt (när programmet kompileras) kan utnyttjas när
 körs kan det ibland finnas mer information tillgänglig som skulle möjliggöra 
 fler optimeringar. I följande exempel, skrivet
 i programmeringsspråket Haskell, skulle en kompilator inte kunna
-utnyttja alla värden vid sin optimering eftersom de inte är kända förrän programmet körs:
+utnyttja alla värden vid sin optimering eftersom de blir kända först när programmet körs:
 
 \begin{codeEx}
 power :: Integer -> Integer -> Integer
@@ -46,7 +46,7 @@ I \miniCode{main}-funktionen ovan är dock \miniCode{n} inte känt när programm
 istället in från användaren under körningstid. Detta gör att en kompilator inte 
 har tillräckligt mycket information för att kunna göra en specialiserad version av \miniCode{power}.
 
-I det här rapporten presenteras en möjlig lösning på detta problem,
+I den här rapporten presenteras en möjlig lösning på detta problem,
 där programmeraren kan annotera var i koden optimeringar ska ske under körningstid.
 Så här skrivs funktionen \ic{powers} om,
 annoterad med var den ska optimeras:
@@ -68,8 +68,8 @@ Ju större listan \ic{xs} blir, desto mer tid sparas.
 
 Hur kan man utföra en sådan optimering under körningstid? I den här rapporten
 presenteras en lösning på problemet genom utvecklingen av en tolk för ett
-funktionellt programmeringsspråk som stödjer den ovannämnda \ic{optimise}-funktionen. Vi försöker
-att från grunden bygga upp de beståndsdelar som behövs för att förstå projektet.
+funktionellt programmeringsspråk som stödjer den ovan nämnda \ic{optimise}-funktionen. 
+Från grunden byggs de beståndsdelar upp som behövs för att förstå projektet.
 I grova drag har följande gjorts i projektet:
 
 \begin{comment}
@@ -99,43 +99,47 @@ vill vi separera bidrag? ja
 
 
 \begin{itemize}
-    \item Vi har utvecklat ett programmeringsvänligt språk som vi kallar för sockerspråk
-          som sedan kan översättas till andra representationer som en tolk kan arbeta på. Målet med sockerspråket är att erbjuda en hög abstraktionsnivå vilket gör det enklare att skriva mer komplexa program.
+    \item Ett programmeringsvänligt språk har
+          utvecklats, som kallas för sockerspråket. Det 
+          kan översättas till andra representationer som en tolk kan arbeta på. Målet med sockerspråket är att erbjuda en hög abstraktionsnivå vilket gör det enklare att skriva mer komplexa program.
 %Det är smidigt att programmera i detta språk som har en hög abstraktionsnivå.
 Hur sockerspråket är definierat
-          går att läsa i sektion \ref{sec:Socker}.
+          kan läsas i kapitel \ref{sec:Socker}.
           
     \item Sockerspråket översätts sedan till ett språk som är en utökning 
-          av STG. STG i sin tur är en abstrakt maskin för evaluering av
-          lata funktionella programmeringsspråk \cite{stg}, som används i bland annat
-          Haskell-kompilatorn GHC. Vi förklarar hur både STG och våra utökningar
-          fungerar i sektion \ref{sec:Core}.
+          av STG, en abstrakt maskin för evaluering av
+          lata funktionella programmeringsspråk \cite{stg} som används i bland annat
+          Haskell-kompilatorn GHC\footnote{http://www.haskell.org/ghc/}. 
+
+          Både hur STG fungarar och de utökningar som gjordes på det beskrivs
+          i kapitel \ref{sec:Core}.
     
-    \item För att kunna kör STG-kod behövdes en tolk, i sektion \ref{sec:Tolken} förklaras de implementationsmässiga detaljer om denna.
+    \item För att kunna köra STG-kod behövs en tolk. 
+          I kapitel \ref{sec:Tolken} förklaras arbetets implementation i detalj.
     
-    \item Tolken har vi sedan utökat med en optimeringsfunktion som kan utföra optimeringar
-          när ett program körs. Först utvecklas en optimeringsfunktion i sektion 
+    \item Tolken har sedan utökats med en optimeringsfunktion som kan utföra optimeringar
+          när ett program körs. Först utvecklas en optimeringsfunktion i avsnitt 
           %Vi utvecklar en första optimeringsfunktion i sektion
-          \ref{sec:Optimise:CBV}, den visar sig vara för strikt i sin optimering,
-          vilket leder till problem i vissa fall. Men den hjälper ändå till
-          i förståelsen för nästa sektion, \ref{sec:Optimise:CBN}, som visar hur
+          \ref{sec:Optimise:CBV} som visar sig vara för strikt i sin optimering.
+          Detta leder till problem i vissa fall, men den hjälper ändå till
+          i förståelsen för efterkommande avsnitt, \ref{sec:Optimise:CBN}, som visar hur
           den slutliga optimeringsfunktionen fungerar.
     
     \item För att kunna få en uppfattning om hur bra optimeringen fungerar har
-          vi utfört prestandatest i vår tolk för några program där vi jämför
-          evalueringstid med och utan optimering under körningstid, 
-          detta presenteras i sektion \ref{sec:Resultat}
+          ett prestandatest utförts med tolken för några program där 
+          evalueringstid jämförs med och utan optimering under körningstid. 
+          Detta presenteras i kapitel \ref{sec:Resultat}
     
 \end{itemize}
 
-Figur \ref{figure:overviewIntro} ger en översikt över projektets uppbyggnad. Den kommer
-att återkomma i de olika avsnitten med skuggade rutor som visar var
-vi befinner oss just nu.
+Figur \ref{figure:overviewIntro} ger en översikt över projektets uppbyggnad. Figuren kommer
+att återkomma i de olika kapitlen med skuggade rutor som visar 
+vilken del av projektet som beskrivs.
 
 \overviewIntro
 
 
-\begin{comment}
+\begin{comment} :(
 
       ^
       |
@@ -157,6 +161,7 @@ under olles text
        V
 \end{comment}
 
+\begin{comment}
 \section{Bakgrund : Partiell evaluering}
 Detta arbete handlar till stor del om partiell evaluering. Vi ska nu försöka ge en kort förklaring. % Men vad innebär det?
 I funktionella språk är funktioner första klassens objekt och kan till exempel
@@ -185,6 +190,8 @@ insatta medan resterande argument är okända, att partiellt evaluera,
 men är vad som undersöks i detta projekt. Funktionen \ic{optimise} är
 tänkt att användas på en funktion som är partiellt applicerad. Då kan optimise göra en
 partiell evaluering av funktionen, så långt det är möjligt utan de okända argumenten.
+\end{comment}
+
 
 %\subsection{Avgränsningar}
 %%vi är fegr

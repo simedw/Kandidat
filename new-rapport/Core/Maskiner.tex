@@ -12,23 +12,25 @@
 
 För att evaluera program skrivna i ett funktionellt programmeringsspråk
 behövs en evalueringsmodell. Det finns olika abstrakta maskiner utvecklade för
-detta ändamål, till exempel G-maskinen, TIM (Three Instruction Machine), GRIN \cite{grin} och STG.
+detta ändamål, till exempel G-maskinen \cite{G-machine}, TIM\footnote{Three Instruction Machine}\cite{TIM}
+, Grin \cite{grin} och STG.
 Dessa går att dels tolka, det vill säga att i något programmeringsspråk (exempelvis
-Haskell) skriva ett program som kopierar maskinens funktionalitet. Det går också att
-kompilera dem till något lågnivåspråk som C, assemblyspråk eller LLVM.
+Haskell) skriva ett program som simulerar maskinens funktionalitet. Det går också att
+kompilera dem till ett lägre språk som C, assemblyspråk eller LLVM\footnote{http://llvm.org/}.
 
 
-Av de olika maskiner vi undersökte ansågs STG var lämpligast. I G-maskinen och TIM  är
-instruktionerna på låg nivå, liknande assemblerinstruktioner. Men istället för skifta register manipuleras ett tänkt syntaxträd. STG och Grin, är å andra sidan mer som ett funktionellt
+Av de olika maskiner som övervägdes ansågs STG var lämpligast. I G-maskinen och TIM  är
+instruktionerna på låg nivå, liknande assemblerinstruktioner, som manipulerar
+ett tänkt syntaxträd. STG och Grin, är å andra sidan mer som funktionella
 programmeringsspråk vilket skulle underlätta arbetet på optimeringen.
 
-STG är förhållandevis enkel att implementera, och är tillräckligt explicit för att
-tillåta oss göra de utökningar som optimering under körningstid kräver.
+STG-maskinen är förhållandevis enkel att implementera, och är tillräckligt flexibel för att
+tillåta de utökningar som optimering under körningstid kräver.
 %för att kunna optimera under körningstid som vi vill göra.
-Medan många av Grin-maskinens fördelar kommer från att den känner till alla funktioner i hela
-programmet (funktioner i andra moduler kopieras in när de används). Den här informationen
+Många av Grin-maskinens optimeringar kommer från att den känner till alla funktioner i hela
+programmet, och funktioner i andra moduler kopieras in när de används. Den här informationen
 använder Grin sedan för att göra en stor graf över vilka funktioner som kallar på
-vilka andra funktioner. Detta gör att vi tror att det blir enklare att jobba med STG 
+vilka andra funktioner. Eftersom Grin arbetar på det sättet tror vi att det blir enklare att jobba med STG 
 som är mer traditionell.
 % skriva något om STG
 % omstrukturera

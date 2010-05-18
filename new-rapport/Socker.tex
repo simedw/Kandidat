@@ -44,7 +44,7 @@
 
 \overviewSugar
 
-Som figur \ref{figure:overviewSugar} visar är vi alltså i början av tolkens pipeline, där kod skriven i sockerspråket parsas till ett abstrakt syntaxaträd.
+Som figur \ref{figure:overviewSugar} visar är vi alltså i början av tolkens pipeline, där kod skriven i sockerspråket parsas till ett abstrakt syntaxträd.
 % vid den kod som är skriven i sockerspråket
 %och parsats till ett abstrakt syntaxträd.
 
@@ -58,15 +58,15 @@ för listor i Haskell: \miniCode{[5,0,4]} är socker för \miniCode{5 : 0 : 4 : 
 
 Sockerspråket är så likt Haskell att det går enkelt att översätta mellan språken.
 Det är också designat så att det är lätt att översätta och avsockra det till 
-STG-språket som introduceras i nästa kapitel. I den här sektionen
+STG-språket som introduceras i nästa kapitel. I det här kapitlet
 förklaras istället hur sockerspråket ser ut och hur det används, och hur
 det skiljer sig från Haskell.
 
-Det finns ingen typcheckare till sockerspråket, men eftersom den här optimeringen
+Det finns ingen typcheckare till sockerspråket, men då den här optimeringen
 är tänkt att fungera i Haskell, som är statiskt typat och typcheckat, antas
-alla program som körs vara typkorrekta. Vi kommer inte resonera om några program
-som använder dynamisk typning eller annan typning som inte skulle kunna gå
-att skrivas i Haskell.
+alla program som körs vara typkorrekta. Vi kommer inte att resonera om några program
+som använder dynamisk typning eller typning som inte skulle kunna gå
+att skriva i Haskell.
 
 \section{Grammatik}
 
@@ -84,11 +84,11 @@ Definitioner  \quad & def & ::=&\; f \; \overline{v} \, \mathtt{=} \, e \mathtt{
 Uttryck \quad & e &::=&\;  v \\
        &&|&\; f \; \overline{e}  
             & \text{Funktionsanrop} \\ 
-       &&|&\; \mathtt{let \{} \overline{def} \mathtt{\} in }\; e 
-            & \text{Flera lokal definitioner}\\
-       &&|&\; \mathtt{letrec \{} \overline{def} \mathtt{\} in} \; e 
-            & \text{Flera lokala rekursiva definitioner} \\
-       &&|&\; \mathtt{case} \, e \, \mathtt{of \{} \overline{brs} \mathtt{\}} 
+       &&|&\; \mathtt{let \, \{} \, \overline{def} \, \mathtt{\} \, in }\; e 
+            & \text{Lokala definitioner}\\
+       &&|&\; \mathtt{letrec \, \{} \, \overline{def} \, \mathtt{\} \, in } \; e 
+            & \text{Lokala rekursiva definitioner} \\
+       &&|&\; \mathtt{case} \, e \, \mathtt{of \, \{} \, \overline{brs} \, \mathtt{\}} 
             & \text{Mönstermatchning av uttryck} \\
        &&|&\; \mathtt{\lambda } v \mathtt{.} e
             & \text{Anonym funktion} \\
@@ -100,7 +100,7 @@ Uttryck \quad & e &::=&\;  v \\
             & \text{Primitiv datatyp} \\
        &&|&\; \mathtt{optimise} \; e 
             & \text{Optimera uttrycket} \\
-       &&|&\; \mathtt{optimise } \; e \; \mathtt{ with \{} \text{direktiv} \} 
+       &&|&\; \mathtt{optimise } \; e \; \mathtt{ with \{} \, \text{direktiv} \, \} 
             & \text{Optimera uttrycket} \\
 Alternativ \quad & brs &::=&\; K \; \overline{v} \; \mathtt{\rightarrow} \; e \mathtt{;} 
             & \text{Matchning mot konstruktor} \\
@@ -133,11 +133,11 @@ och multiplikation. Konstruktorer och primitiver (heltal, decimaltal och sträng
 %som bestämmer hur optimeringen skall gå till. Mer om vilka direktiv som finns går
 %att läsa i sektion \ref{sec:Optimise:With}.
 
-\item  Det sista uttrycken, \kw{optimise ...}, tar ett uttryck som ska optimeras. Det finns även direktiv för hur optimeringen ska gå till, de går att läsa om i sektion \ref{sec:Optimise:With}.
+\item  Det sista uttrycket, \kw{optimise ...}, tar ett uttryck som ska optimeras. Det finns även direktiv för hur optimeringen ska gå till, som går att läsa om i sektion \ref{sec:Optimise:With}.
 
 
-\item En gren kan antingen vara att mönstermatcha mot en konstruktor och binda
-dess konstruktionsvariabler, eller att matcha mot vad som helst.
+\item En gren består antingen av en mönstermatchning med en konstruktor där
+      dess konstruktionsvariabler binds, eller en variabel som kan matcha mot vad som helst.
 \end{itemize}
 
 \section{Jämförelse med Haskell}
@@ -186,7 +186,7 @@ konstruktorerna \miniCode{Just} och \miniCode{Nothing} när de behövs.
 Sockerspråket skiljer på rekursiva och vanliga \kw{let}-bindningar. 
 
 \begin{codeEx}
-repeat x = letrec xs = x : xs in xs  
+repeat x = letrec xs = x : xs in xs;
 \end{codeEx}
 
 Här används \miniCode{xs}, som binds av \kw{letrec}-satsen, även i uttrycket i högerledet.
@@ -202,26 +202,27 @@ in  h t1 t2
 \end{codeEx}
 
 %Här går det inte, till skillnad från i Haskell, att byta plats på \kw{t1} och \kw{t2}.
-Vilket innebär, i skillnad mot Haskell, att det inte går att byta plats på \kw{t1} och \kw{t2}.
+Vilket innebär, till skillnad från hur det fungerar i Haskell, att det inte går att byta plats på \kw{t1} och \kw{t2}.
 
 Sammanfattningsvis är sockerspråket nästan en delmängd av Haskell. Ett program
-skrivet i sockerspråket kan köras i Haskell med följande förändringar:
+skrivet i sockerspråket kan köras som Haskell-kod med följande förändringar:
 \begin{itemize}
     \item \kw{data}-deklarationer läggs till
     \item nyckelordet \kw{letrec} ändras till \kw{let}
     \item lambdauttryck byts från formen \ic{(\textbackslash x . x)} till \ic{(\textbackslash x -> x)}
           %AGDA-STYLE MIXFIX
-    \item \kw{if\_then\_else\_}-satser behöver användas 
+    \item \kw{if\_then\_else\_}-satser används 
           istället för den treställiga \ic{if}-funktionen 
 \end{itemize}
-Det finns också vissa skillnader i de olika standardbiblioteken, \emph{Prelude}.
+Det finns också vissa skillnader i de olika standardbiblioteken, I Haskell 
+kallas detta \emph{Prelude}.
 Den främsta skillnaden är att alla funktioner som opererar på listor använder 
 konstruktörerna \ic{Cons} och \ic{Nil} i sockerspråket
 där Haskell använder \ic{(:)} och \ic{[]}.
 
     En viktig semantisk skillnad mellan sockerspråket och Haskell är att
-\kw{case}-satser i sockerspråket alltid evaluerar uttrycket till whnf, se
-sektion \ref{sec:whnf}, medan det i Haskell inte är någon semantisk skillnad mellan att
+\kw{case}-satser i sockerspråket alltid evaluerar uttrycket till WHNF (se
+kapitel \ref{sec:whnf}) medan det i Haskell inte är någon semantisk skillnad mellan att
 \kw{case}-granska på ett uttryck eller att mönstermatcha på det i högerledet
 i en funktion- eller let-definition. I Haskell forcerar ingen av dessa någon
 evaluering. 

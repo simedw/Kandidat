@@ -6,17 +6,17 @@
 \label{sec:Core}
 \label{sec:STG}
 
-% TODO skriv om bilden och sånt
+
 \overviewStg
 
 I förra avsnittet introducerades sockerspråket, ett litet men användbart
 funktionellt programmeringsspråk, som används genomgående i det här
 arbetet för att skriva lättläst kod.
-    I detta avsnitt ska vi presentera ett sätt att tolka funktionell kod, med hjäp av  
+    I detta avsnitt presenteras ett sätt att tolka funktionell kod, med hjäp av  
 en abstrakt evalueringsmaskin. För att underlätta
-tolkningen översätts koden till ett annat språk, STG. 
+tolkningen översätts koden till ett annat språk, som kallas STG. 
 Huvudavsnittet för det här kapitlet är \ref{sec:SemStg} %, \emph{En semantik för STG}
-som förklarar reglerna som används vid tolkningen, men först ska vi kort presentera
+som förklarar reglerna som används vid tolkningen, men först presenteras först kort
 vilka abstrakta maskiner som finns för funktionella språk samt hur de skiljer sig.
 
 \subfile{Core/Maskiner}
@@ -27,11 +27,9 @@ vilka abstrakta maskiner som finns för funktionella språk samt hur de skiljer 
 \chapter{Tolken}
 \label{sec:Tolken}
 
-I figur \ref{figure:overviewStgInt} ser vi var vi befinner oss i projektet just nu:
-
 \overviewStgInt
 
-Vi kan se att vi nu har nått projektets tolk som använder sig av den abstrakta maskinen STG, vars
+Vi kan se i figur \ref{figure:overviewStgInt} att vi nu har nått projektets tolk som använder sig av den abstrakta maskinen STG, vars
 evalueringsmodell förklarades i förra avsnittet. Denna evalueringsmodell går
 dock inte att använda förrän man har översatt
 sockerspråket till den representation av koden som STG förväntar sig, STG-språket.
@@ -41,10 +39,10 @@ Vi får även se hur lambdafunktioner lyfts upp till toppnivå i avsnitt \ref{se
 I avsnitt \ref{sec:CallStack}, beskrivs \emph{anropsstacken}, som förklarar hur tolken
 sparar undan lokala variabler i en funktion. Anropsstacken är en 
 stor prestandahöjare jämfört med substitution, och därför är det här också ett
-viktigt avsnitt i den här sektionen.
-
-Men först hur boxning av primitiva datatyper fungerar, och vad tolken har
-för modell för IO.
+viktigt avsnitt i det här kapitlet. Först introduceras vad normalform är,
+och hur boxning av 
+primitiva datatyper fungerar, och vad tolken har
+för IO-modell.
 
 \subfile{Core/Extensions}
 
