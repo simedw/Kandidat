@@ -93,7 +93,7 @@ and
 
 \begin_layout Standard
 För det första skulle vi vilja säga att vi tycker att arbetet är välskrivet,
- med bra språk och en indelning som gör det lätt att överblicka.
+ med en indelning som gör det lätt att överblicka och ett bra språk.
  De anmärkningar och funderingar vi har är mestadels småsaker.
 \end_layout
 
@@ -108,13 +108,12 @@ Något som är lite oklart är huruvida algoritmerna ger den bästa lösningen
 \end_layout
 
 \begin_layout Standard
-En annan sak som vi har lite funderingar på är vart den åttonde algoritmen
- tagit vägen.
+En annan sak som vi har funderingar på är vart den åttonde algoritmen tagit
+ vägen.
  I introduktionen och abstraktet står det åtta, men så vitt vi har förstått
  är det sju algoritmer som används i resultatdelen.
- Antalet algoritmer är stort, varför det kanske skulle vara tydligare att
- istället fokusera på ett mindre antal algoritmer som istället skiljer sig
- åt mer.
+ Antalet algoritmer är stort, varför det skulle vara tydligare att istället
+ fokusera på ett mindre antal algoritmer som istället skiljer sig åt mer.
  Det skulle även vara trevligt att redan från början ha kortare namn på
  algoritmerna så att det är lättare att komma ihåg vilken som är vilken
  när de återkommer i avsnitten.
@@ -135,9 +134,9 @@ currentSolution
 
 \begin_layout Standard
 Graferna i resultatavsnittet har vi några funderingar på: Vad beror sicksackform
-en på i figur 4.3? Allmänt skulle graferna som behandlar tid kanske vara
- bättre med tiden i logaritmisk skala, eftersom man då lättare kan se hur
- komplexiteten hos olika algoritmer skiljer sig.
+en på i figur 4.3? Allmänt skulle graferna som behandlar tid vara bättre
+ med tiden i logaritmisk skala, eftersom man då lättare kan se hur komplexiteten
+ hos olika algoritmer skiljer sig.
 \end_layout
 
 \begin_layout Standard
@@ -145,7 +144,8 @@ Ni nämner att det inte är intressant att titta på stora
 \begin_inset Formula $s$
 \end_inset
 
- inom datamining, vilket inte är helt klart varför det är så.
+ inom datamining.
+ Det är int helt klart för oss varför det är så.
  Ett konkret exempel hade hjälpt förståelsen.
 \end_layout
 
@@ -172,8 +172,8 @@ Vidare till lite mer strukturella tankar:
 
 \begin_layout Standard
 Avsnittet "Experimenting with rectangles" har en lite informell titel, som
- inte riktigt innefattar hela dess innehåll, trots att det är en av de viktigast
-e delarna i rapporten.
+ inte innefattar hela dess innehåll, trots att det är en av de viktigaste
+ delarna i rapporten.
  Kanske skulle det namnet kunna ändras.
  På tal om titlar känns även rapportens titel lite tråkig med variabeln
  
@@ -184,7 +184,7 @@ e delarna i rapporten.
 \end_layout
 
 \begin_layout Standard
-En annan tanke är att innan sektionerna börjar i ett nytt kapitel kan man
+En annan tanke är att man innan sektionerna börjar i ett nytt kapitel kan
  ha en liten övergångstext som berättar för läsaren var i texten hon är
  och vad kommande kapitel handlar om.
  Dessa texter skulle kunna knyta an till sektion 1.5, 
@@ -199,11 +199,11 @@ Outline
 \end_layout
 
 \begin_layout Standard
-Avsnittet "Implementations" känns lite malplacerat och inte helt relevant
- för läsaren.
- Det kanske skulle kunna vara med i en bilaga.
- (Dessutom är det inte helt faktakorrekt, då även C# kompileras till en
- virtuell maskin.)
+Avsnittet "Implementations" känns malplacerat och inte helt relevant för
+ läsaren.
+ Det skulle kunna vara med i en bilaga.
+ (Dessutom är det inte helt faktakorrekt, då även C# vanligtvis kompileras
+ till en virtuell maskin.)
 \end_layout
 
 \begin_layout Standard
@@ -222,7 +222,7 @@ Här kommer några mindre viktiga anmärkningar som vi ändå skulle vilja ta
 
 .
  Det vore bra att skriva vad det verkligen betyder första gången det används.
- Algoritm 3.3 har variabelnamn som ser lite konstiga ut (troligen 
+ Algoritm 3.3 har variabelnamn som ser konstiga ut (troligen 
 \begin_inset ERT
 status open
 

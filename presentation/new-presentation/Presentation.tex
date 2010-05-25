@@ -8,6 +8,8 @@
 \usepackage[utf8]{inputenc}
 \usepackage[swedish]{babel}
 
+\usepackage{tikz}
+\usetikzlibrary{trees,arrows,automata}
 
 \usepackage{fancyvrb}
 \DefineVerbatimEnvironment{code}{Verbatim}{fontsize=\small}
@@ -107,6 +109,30 @@ Daniel Gustafsson \and Dan Rosén}
 \end{frame}
 
 
+\newcommand{\ndist}{1.4cm}
+\newcommand{\nshift}{0.8cm}
+\newcommand{\ncol}{blue!20!white}
 
+\begin{frame}
+\begin{figure}[H]
+    \centering
+        \begin{tikzpicture}[->,node distance=\ndist, semithick]
+            \tikzstyle{every state}=[fill=red!20!white,text=black]
+            \node[state,fill=\ncol](add) {$+$};
+            \node[state,fill=\ncol](mul)[below of=add, xshift=-\nshift] {$*$};
+            \node[state,fill=\ncol](sin)[below of=mul, xshift=-\nshift] {sin};
+            \node[state](x1)  [below of=sin, xshift=-\nshift] {$x$};
+            \node[state](x2)  [below of=mul, xshift=\nshift]  {$x$};
+            \node[state](five)[below of=add, xshift=\nshift]  {$5$};
+            \path (add) edge node {} (mul)
+                        edge node {} (five)
+                  (mul) edge node {} (sin)
+                        edge node {} (x2)
+                  (sin) edge node {} (x1);
+        \end{tikzpicture}
+        \caption{ sin x * x + 5 }
+    \end{figure}
+
+\end{frame}
 
 \end{document}
