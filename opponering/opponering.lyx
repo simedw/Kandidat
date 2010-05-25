@@ -1,0 +1,249 @@
+#LyX 1.6.5 created this file. For more info see http://www.lyx.org/
+\lyxformat 345
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\language english
+\inputencoding auto
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\paperfontsize default
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\author "" 
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Opponering
+\end_layout
+
+\begin_layout Author
+Simon Edwardsson 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+and
+\end_layout
+
+\end_inset
+
+ Olle Fredriksson 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+and
+\end_layout
+
+\end_inset
+
+ Daniel Gustafsson 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+and
+\end_layout
+
+\end_inset
+
+ Dan Rosén
+\end_layout
+
+\begin_layout Standard
+För det första skulle vi vilja säga att vi tyckte att arbetet var välskrivet,
+ med bra språk och en indelning som gör det lätt att överblicka.
+ De anmärkningar och funderingar vi har är mestadels småsaker.
+\end_layout
+
+\begin_layout Standard
+Något som är lite oklart är huruvida algoritmerna ger den bästa lösningen
+ eller en approximation.
+ I de fall då de inte ger en optimal lösning skulle det vara intressant
+ att ha med en jämförelse med en optimal lösning (om det är möjligt).
+ Är det korrekt av oss att anta att era alogritmer ger en bättre lösning
+ än Edmonds, och att det är anledningen till att man skall använda eran?
+ Är problemet NP-komplett? Isåfall kanske det borde poängteras mer.
+\end_layout
+
+\begin_layout Standard
+En annan sak som vi hade lite funderingar på var vart den åttonde algoritmen
+ tagit vägen.
+ I introduktionen och abstraktet står det åtta, men så vitt vi har förstått
+ är det sju algoritmer som används i resultatdelen.
+ Antalet algoritmer är stort, varför det kanske skulle vara tydligare att
+ istället fokusera på ett mindre antal algoritmer som istället skiljer sig
+ åt mer.
+ Det skulle även vara trevligt att redan från början ha kortare namn på
+ algoritmerna så att det är lättare att komma ihåg vilken som är vilken
+ när de återkommer i avsnitten.
+\end_layout
+
+\begin_layout Standard
+Pseudokoden för algoritmerna skulle vara tydligare om variabler som är globala
+ initieras före de används.
+ Variablerna verkar även användas på sätt som är lite mystiska för oss;
+ exempelvis att 
+\emph on
+currentSolution
+\emph default
+ används både som en mängd och som en numerisk variabel.
+ Om typerna skrevs ut explicit och variablerna användes på ett mer uniformt
+ sätt skulle koden vara lättare att tyda.
+\end_layout
+
+\begin_layout Standard
+Graferna i resultatavsnittet har vi några funderingar på: Vad beror sicksackform
+en på i figur 4.3? Allmänt skulle graferna som behandlar tid kanske vara
+ bättre med tiden i logaritmisk skala, eftersom man då lättare kan se hur
+ komplexiteten hos olika algoritmer skiljer sig.
+\end_layout
+
+\begin_layout Standard
+Ni nämner att det inte är intressant att titta på stora 
+\begin_inset Formula $s$
+\end_inset
+
+ inom datamining, vilket inte är helt klart varför det är så.
+ Ett konkret exempel hade hjälpt förståelsen.
+\end_layout
+
+\begin_layout Standard
+Trots att vi kanske förväntas komma ihåg skillnaden mellan begreppen 
+\begin_inset Formula $\mathcal{O}$
+\end_inset
+
+, 
+\begin_inset Formula $\Omega$
+\end_inset
+
+ och 
+\begin_inset Formula $\Theta$
+\end_inset
+
+ skulle det ändå vara trevligt med en kort förklaring av uttrycken för att
+ fräscha upp våra minnen (kanske som en fotnot).
+\end_layout
+
+\begin_layout Standard
+Vidare till lite mer strukturella tankar:
+\end_layout
+
+\begin_layout Standard
+Avsnittet "Experimenting with rectangles" har en lite informell titel, som
+ inte riktigt innefattar hela dess innehåll, trots att det är en av de viktigast
+e delarna i rapporten.
+ Kanske skulle det namnet kunna ändras.
+ På tal om titlar känns även rapportens titel lite tråkig med variabeln
+ 
+\begin_inset Formula $s$
+\end_inset
+
+ som någon som inte läst rapporten bara kan gissa sig till betydelsen för.
+\end_layout
+
+\begin_layout Standard
+En annan tanke är att innan sektionerna börjar i ett nytt kapitel kan man
+ ha en liten övergångstext som berättar för läsaren var i texten hon är
+ och vad kommande kapitel handlar om.
+ Dessa texter skulle kunna knyta an till 
+\begin_inset Quotes eld
+\end_inset
+
+1.5 Outline
+\begin_inset Quotes erd
+\end_inset
+
+ i er rapport.
+\end_layout
+
+\begin_layout Standard
+Avsnittet "Implementations" känns lite malplaceras och inte helt relevant
+ för läsaren.
+ Det kanske skulle kunna vara med i en bilaga.
+ (Dessutom är det inte helt faktakorrekt, då även C# kompileras till en
+ virtuell maskin.)
+\end_layout
+
+\begin_layout Standard
+Här kommer några mindre viktiga anmärkningar som vi ändå skulle vilja ta
+ upp: Vi hade en liten diskussion om vad 
+\begin_inset Formula $\mbox{log}^{2}n$
+\end_inset
+
+ betyder innan vi kom fram till vad det måste vara, varför det kanske vore
+ bra att skriva vad det verkligen betyder (
+\begin_inset Formula $\mbox{log }n*\mbox{log }n$
+\end_inset
+
+, eller?) första gången det används.
+ Algoritm 3.3 har variabelnamn som ser lite konstiga ut (troligen 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+LaTeX
+\end_layout
+
+\end_inset
+
+ s mathmode).
+ 
+\end_layout
+
+\begin_layout Standard
+Det framgår inte klart om ni använder samma seed för era benchmarks, vilket
+ det kanske borde göra om det är så.
+\end_layout
+
+\begin_layout Standard
+På sidan 41 skriver ni att exekutionstider inte presenteras eftersom de
+ inte är intresseanta, men de nämns ändå på sidan 42.
+\end_layout
+
+\begin_layout Standard
+Tack för trevlig läsning!
+\end_layout
+
+\end_body
+\end_document
