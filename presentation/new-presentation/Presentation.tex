@@ -1,0 +1,52 @@
+\documentclass{beamer}
+\mode<presentation>{
+  \usetheme{boxes}
+}
+
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[swedish]{babel}
+
+
+\usepackage{fancyvrb}
+\DefineVerbatimEnvironment{code}{Verbatim}{fontsize=\small}
+\DefineVerbatimEnvironment{example}{Verbatim}{fontsize=\small}
+\newcommand{\ignore}[1]{
+}
+
+\begin{document}
+
+\title{Optimering under körningstid}
+
+
+\author{Simon Edwardsson \and Olle Fredriksson
+\and \linebreak{}
+Daniel Gustafsson \and Dan Rosén}
+
+
+\institute{Chalmers Tekniska Högskola\and Göteborgs Universitet}
+
+\begin{frame}
+    \titlepage
+\end{frame}
+
+
+\begin{frame}
+\begin{itemize}
+	\item Vad sysslar vi med?
+	\item Compile exempel.. (förklarning, genomsteganade, grafer)
+	\item Prata om vad som skiljer sig
+	\begin{itemize}
+		\item Callstack (2500\% snabbare)
+		\item Optimise fungerar (inte loopar)
+		\item Vi har settings till optimsie (ge ex?)
+	\end{itemize}
+\end{itemize}
+    $\ddot\smile$ 
+\end{frame}
+
+
+
+
+\end{document}
