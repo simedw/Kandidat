@@ -89,32 +89,31 @@ Daniel Gustafsson \and Dan Rosén}
         \tikzstyle{every state}=[fill=\haskellcol
                                 ,rectangle
                                 ,minimum size=2.0cm]
-        \node[state](haskell)[]                   {Haskell};
-        \node[state,fill=\stgcol](stg)    [below of=haskell]   {STG-kod};
-        \node[state,fill=\ourcol](socker) [left of=stg]        {Sockerkod};
-        \node[state,fill=\runcol](int) [right of=stg,xshift=3.0cm] {
+        \node<5->[state](haskell)[above of=stg]                   {Haskell};
+        \node<1->[state,fill=\stgcol](stg)    []                   {STG-kod};
+        \node<2->[state,fill=\ourcol](socker) [left of=stg]        {Sockerkod};
+        \node<3->[state,fill=\runcol](int) [right of=stg,xshift=3.0cm] {
           \begin{tikzpicture}[semithick]
-            \node[state,fill=\ourcol](stgint) [right of=stg]       {STG-tolk};
-            \node[state,fill=\ourcol](opt)    [right of=stgint]    {Optimering};
-            \path
+            \node<3->[state,fill=\ourcol](stgint) [right of=stg]       {STG-tolk};
+            \node<4->[state,fill=\ourcol](opt)    [right of=stgint]    {Optimering};
+            \path<4->
               (stgint) edge[bend left] node {} (opt)
               (opt)    edge[bend left] node {} (stgint);
           \end{tikzpicture}
           Körning
         };
-        \node[state](comp)   [below of=stg]       {Kompilering \& optimering};
-        \node[state,fill=\runcol](run)    [below of=comp]      {
+        \node<6->[state](comp)   [below of=stg]       {Kompilering \& optimering};
+        \node<7->[state,fill=\runcol](run)    [below of=comp]      {
           \begin{tikzpicture}[semithick]
             \node[state](runinner) [] {Körbart program};
           \end{tikzpicture}
           Körning
         };
-        \path (socker) edge            node {} (stg)
-              (stg)    edge            node {} (int)
-                       edge            node {} (comp)
-              (haskell) edge           node {} (stg)
-              (comp)   edge            node {} (run)
-              ;
+        \path<2-> (socker) edge            node {} (stg);
+        \path<3-> (stg)    edge            node {} (int);
+        \path<6-> (stg)    edge            node {} (comp);
+        \path<5-> (haskell) edge           node {} (stg);
+        \path<7-> (comp)   edge            node {} (run);
         \end{tikzpicture}
     \caption{Översikt}
     \label{figure:overviewSugar}
