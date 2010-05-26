@@ -11,7 +11,9 @@
 \usepackage{array}
 
 \usepackage{listings}
+\usepackage{graphics}
 \usepackage{tikz}
+\usepackage{comment}
 \usetikzlibrary{trees,arrows,automata}
 
 \usepackage{wasysym}
@@ -31,6 +33,13 @@
         } }
 {}
 
+\newcommand{\sepFrame}[1] {
+\begin{frame}
+\begin{center}
+	\Huge{#1}
+\end{center}
+\end{frame}
+}
 
 \newcommand{\ndist}{1.7cm}
 \newcommand{\nshift}{0.6cm}
@@ -58,6 +67,19 @@
 
 }
 
+\newcommand{\haskellcol}{red!20!white}
+\newcommand{\ourcol}    {blue!20!white}
+\newcommand{\stgcol}    {purple!20!white}
+\newcommand{\runcol}    {green!20!white}
+
+
+\usepackage{listings}
+\usepackage{tikz}
+
+\lstset{escapechar=\%}
+
+\tikzstyle{every picture}+=[remember picture]
+\tikzstyle{na} = [baseline=-.5ex]
 
 
 
@@ -65,13 +87,12 @@
 
 \title{Optimering under körningstid}
 
-
-\author{Simon Edwardsson\smiley \and Olle Fredriksson\smiley
+\author{Simon Edwardsson \and Olle Fredriksson
 \and \linebreak{}
-Daniel Gustafsson\smiley \and Dan Rosén\frownie}
+Daniel Gustafsson \and Dan Rosén}
 
 
-\institute{\smiley Chalmers Tekniska Högskola\and \frownie Göteborgs Universitet}
+\institute{Chalmers Tekniska Högskola\and Göteborgs Universitet}
 
 \everymath{\displaystyle}
 
@@ -81,15 +102,17 @@ Daniel Gustafsson\smiley \and Dan Rosén\frownie}
 
 
 \begin{frame}
-
-[sin(x) * x] [Draw!]
+\begin{figure}[H]
+\centering
+    \includegraphics[width=0.9\textwidth]{img/interface.pdf} 
+\end{figure}
 
 \end{frame}
 
 \begin{frame}[fragile]
 \centering
 \begin{tabular}{ m{2.4cm} m{0.5cm} m{5cm} }
-    sin(x) + x * 5 & \pause $\Rightarrow$
+    sin(x) + x * 5 &  $\Rightarrow$
     &
 	\tree{sin}{+}{*}{x}{5}
 \\
@@ -112,18 +135,20 @@ Daniel Gustafsson\smiley \and Dan Rosén\frownie}
 \tree{Sin}{Add}{Mul}{Var}{Num} \\
 \begin{codeEx}
 eval :: Expr -> Double -> Double
-eval Var       x = x
-eval (Num i)   x = i
 eval (Add l r) x = eval l x + eval r x 
-eval (Mul l r) x = eval l x * eval r x
+eval (Sin e)   x = sin (eval e x)
+eval Var       x = x
+..
 \end{codeEx}
+% eval (Num n)   x = n
+% eval (Mul l r) x = eval l x * eval r x
 \\
 \end{tabular}
 \end{frame}
 
 \begin{frame}[fragile]
 
-Bild på en graf, där vi visar att det finns många olika x värden. Här säger vi också att det finns ett problem.
+%Bild på en graf, där vi visar att det finns många olika x värden. Här säger vi också att det finns ett problem.
 \begin{codeEx}
 map (eval expr) [-10..10]
 \end{codeEx}
@@ -131,16 +156,25 @@ map (eval expr) [-10..10]
 \end{frame}
 
 \begin{frame}[fragile] 
-\centering
 \begin{codeExDiff}
 map (|optimise| (eval expr)) [-10..10]
 \end{codeExDiff}
 
 \pause
 
-\begin{codeEx}
-eval' x = sin x + x * 5
-\end{codeEx}
+\verb|eval' :: Double -> Double|
+\verb|eval' x = eval (Add (Sin Var) (Mul Var (Num 5))) x|
+\pause
+\verb|eval' x = eval (Sin Var) x + eval (Mul Var (Num 5)) x|
+\pause
+\verb|eval' x = sin (eval Var x) + eval (Mul Var (Num 5)) x|
+\pause
+\verb|eval' x = sin x + eval (Mul Var (Num 5)) x |
+\pause
+\verb|...                          |
+
+\verb|eval' x = sin x + x * 5|
+%\end{verbatim}
 
 \pause
 
@@ -149,11 +183,7 @@ map |eval'| [-10..10]
 \end{codeExDiff}
 \end{frame}
 
-\begin{frame}
-\centering
-	\Huge{Demo}
-
-\end{frame}
+\sepFrame{Demo}
 
 
 % knyta an till f;rra presentationen utan att utesluta de nya, kort namna att vi optimerar saker och forklarar ett vi nu ska ge ett exempel dar det ar anvandbart
@@ -161,45 +191,69 @@ map |eval'| [-10..10]
 
 \begin{frame}
 
-	Vad sysslar vi egentligen med (vart befinner vi oss) (graf fran olle)
+	%Vad sysslar vi egentligen med (vart befinner vi oss) (graf fran olle) 
+	\begin{figure}[H]
+        \begin{tikzpicture}[scale=0.5,transform shape,->,rounded corners
+                           ,auto,node distance=3.2cm, semithick]
+        \tikzstyle{every state}=[fill=\haskellcol
+                                ,rectangle
+                                ,minimum size=2.0cm]
+        \node<1->[state](haskell)[]                   {Haskell};
+        \node<2->[state,fill=\stgcol](stg)    [below of=haskell]                   {STG-kod};
+        \node<3->[state,fill=\ourcol](socker) [left of=stg]        {Sockerkod};
+        \node<4->[state,fill=\runcol](int) [right of=stg,xshift=3.0cm] {
+          \begin{tikzpicture}[semithick]
+            \node<4->[state,fill=\ourcol](stgint) [right of=stg]       {STG-tolk};
+            \node<5->[state,fill=\ourcol](opt)    [right of=stgint]    {Optimering};
+            \path<5->
+              (stgint) edge[bend left] node {} (opt)
+              (opt)    edge[bend left] node {} (stgint);
+          \end{tikzpicture}
+          Körning
+        };
+        \path<3-> (socker) edge            node {} (stg);
+        \path<4-> (stg)    edge            node {} (int);
+        \path<2-> (haskell) edge           node {} (stg);
+    \end{tikzpicture}
+\end{figure}
 
 \end{frame}
 
-\begin{frame}[fragile]
-	Vad har hant sen sist?
-	\pause
-	Callstack
-		Cool bild, forklarning
-	\pause 
-	Lathet, ge if exempel.
-
-\begin{codeEx}
-fact x = if (x == 0) 
-    then 1
-    else x * fact (x-1)
-\end{codeEx}
-
-\end{frame}
+\sepFrame{Användningsområden}
 
 \begin{frame}
-	Användningsområden.
+%\frametitle{Användningsområden}
+
+\begin{tabular}{ m{5.5cm} m{4cm} }
+
 \begin{itemize}
 	\item Regular expressions
 	\item Vetenskapliga beräkningar % dotproduct, power, newtonraphson, simuleringar
 	\item Raytracer
 \end{itemize}
+&
+\begin{figure}[H]
+\centering
+    \includegraphics[width=0.3\textwidth]{img/metod.png} 
+\end{figure}
 
-Bild pa t ex newtonraphson kurva, nollpunkter och sant.
+\end{tabular}
+
 
 \end{frame}
 
 \begin{frame}
-	Focusera pa raytracer med resultat och bild pa alien.
-	Fin bild.
+\begin{figure}[H]
+\centering
+    \includegraphics[width=1\textwidth]{img/Ray_trace_diagram.pdf} 
+\end{figure}
+
+\end{frame}
+\begin{frame}
 
 \begin{figure}[H]
 \centering
-    \includegraphics[width=0.3\textwidth]{img/shapes.png} 
+    \includegraphics[width=0.6\textwidth]{img/shapes.png} 
 \end{figure}
 
 
@@ -212,72 +266,122 @@ Bild pa t ex newtonraphson kurva, nollpunkter och sant.
 
 \end{frame}
 
+\begin{comment}
 \begin{frame}
 
-	Lardomar, reflextioner
+	Gobby 
+
+\end{frame}
+\end{comment}
+
+\sepFrame{Nytt}
+
+\begin{frame}[fragile]
+%Lathet
+
+\begin{tabular}{ m{5cm} m{9cm} }
+
+
+\begin{figure}[H]
+\centering
+    \includegraphics[width=0.6\textwidth]{img/cat.jpg} 
+\end{figure}
+&
+\begin{codeEx}
+fact x = if (x == 0) 
+    then 1
+    else x * fact (x - 1)
+\end{codeEx}
+ 
+\\
+\end{tabular}
 
 \end{frame}
 
-\begin{frame}
-	Begransningar 
-	Sharing. Rec	
+\begin{frame}[fragile]
+%		Anropsstack
+\begin{lstlisting}
+roots a b c =
+    (-%\tikz[na] \coordinate(b1);%b + sqrt (b%\tikz[na] \coordinate(b2);% * b%\tikz[na] \coordinate(b3);% - 4 * a%\tikz[na] \coordinate(a1);% * c%\tikz[na] \coordinate(c1);%)) / (2 * %\tikz[na] \coordinate(a2);%a)
+
+\end{lstlisting}
+\ \\[2cm]
+\pause
+\begin{center}
+\tikz\node [baseline,draw] (a) {2};
+\tikz\node [baseline,draw] (b) {5};
+\tikz\node [baseline,draw] (c) {3};
+\end{center}
+
+\begin{tikzpicture}[overlay]
+\path<3>[->, red] (a1) edge [bend left=8] (a);
+\path<3>[->, red] (a2) edge [bend left=-20] (a);
+\path<4>[->, blue] (b1) edge [bend left=-90] (b);
+\path<4>[->, blue] (b2) edge [bend right=-20] (b);
+\path<4>[->, blue] (b3) edge [bend right=-20] (b);
+\path<5>[->, green] (c1) edge [bend left] (c);
+\end{tikzpicture}
+
+
+\end{frame}
+
+
+
+\begin{frame}[fragile]
+
+%\frametitle{Delning}
+
+\begin{codeEx}
+
+power 0 x = 1
+power n x
+    | even n = let a = power (n / 2) x
+               in  a * a
+    | otherwise = x * power (n - 1) x
+
+\end{codeEx}
+
 \end{frame} 
 
-\begin{frame}
-	Framtida arbeten?
-	Mycket pepp!
-	Riktig kompilator
-	Olles bild del 3.
-	
-	$\ddot\smile$ 
-\end{frame}
-
-
-
+\sepFrame{Framtid}
 
 \begin{frame}
-\newcommand{\haskellcol}{red!20!white}
-\newcommand{\ourcol}    {blue!20!white}
-\newcommand{\stgcol}    {purple!20!white}
-\newcommand{\runcol}    {green!20!white}
 \begin{figure}[H]
         \begin{tikzpicture}[scale=0.5,transform shape,->,rounded corners
                            ,auto,node distance=3.2cm, semithick]
         \tikzstyle{every state}=[fill=\haskellcol
                                 ,rectangle
                                 ,minimum size=2.0cm]
-        \node<5->[state](haskell)[above of=stg]                   {Haskell};
-        \node<1->[state,fill=\stgcol](stg)    []                   {STG-kod};
-        \node<2->[state,fill=\ourcol](socker) [left of=stg]        {Sockerkod};
-        \node<3->[state,fill=\runcol](int) [right of=stg,xshift=3.0cm] {
+        \node[state](haskell)[]                   {Haskell};
+        \node[state,fill=\stgcol](stg)    [below of=haskell]                   {STG-kod};
+        \node[state,fill=\ourcol](socker) [left of=stg]        {Sockerkod};
+        \node[state,fill=\runcol](int) [right of=stg,xshift=3.0cm] {
           \begin{tikzpicture}[semithick]
-            \node<3->[state,fill=\ourcol](stgint) [right of=stg]       {STG-tolk};
-            \node<4->[state,fill=\ourcol](opt)    [right of=stgint]    {Optimering};
-            \path<4->
+            \node[state,fill=\ourcol](stgint) [right of=stg]       {STG-tolk};
+            \node[state,fill=\ourcol](opt)    [right of=stgint]    {Optimering};
+            \path
               (stgint) edge[bend left] node {} (opt)
               (opt)    edge[bend left] node {} (stgint);
           \end{tikzpicture}
           Körning
         };
-        \node<6->[state](comp)   [below of=stg]       {Kompilering \& optimering};
-        \node<7->[state,fill=\runcol](run)    [below of=comp]      {
+        \node<2->[state](comp)   [below of=stg]       {Kompilering};
+        \node<3->[state,fill=\runcol](run)    [below of=comp]      {
           \begin{tikzpicture}[semithick]
-            \node<7->[state](runinner) [] {Körbart program};
-            \node<8->[state](optcomp)  [right of=runinner] {Optimering};
-            \path<8->
+            \node<3->[state](runinner) [] {Körbart program};
+            \node<4->[state](optcomp)  [right of=runinner] {Optimering};
+            \path<4->
               (runinner) edge[bend left] node {} (optcomp)
               (optcomp)  edge[bend left] node {} (runinner);
           \end{tikzpicture}
           Körning
         };
-        \path<2-> (socker) edge            node {} (stg);
-        \path<3-> (stg)    edge            node {} (int);
-        \path<6-> (stg)    edge            node {} (comp);
-        \path<5-> (haskell) edge           node {} (stg);
-        \path<7-> (comp)   edge            node {} (run);
+        \path (socker) edge            node {} (stg);
+        \path (stg)    edge            node {} (int);
+        \path<2-> (stg)    edge            node {} (comp);
+        \path (haskell) edge           node {} (stg);
+        \path<3-> (comp)   edge            node {} (run);
         \end{tikzpicture}
-    \caption{Översikt}
-    \label{figure:overviewSugar}
 \end{figure}
 \end{frame}
 
