@@ -36,6 +36,7 @@
 \tracking_changes false
 \output_changes false
 \author "" 
+\author "" 
 \end_header
 
 \begin_body
@@ -93,7 +94,7 @@ and
 
 \begin_layout Standard
 För det första skulle vi vilja säga att vi tycker att arbetet är välskrivet,
- med en indelning som gör det lätt att överblicka och ett bra språk.
+ med bra språk en indelning som gör det lätt att överblicka rapporten.
  De anmärkningar och funderingar vi har är mestadels småsaker.
 \end_layout
 
@@ -112,8 +113,8 @@ En annan sak som vi har funderingar på är vart den åttonde algoritmen tagit
  vägen.
  I introduktionen och abstraktet står det åtta, men så vitt vi har förstått
  är det sju algoritmer som används i resultatdelen.
- Antalet algoritmer är stort, varför det skulle vara tydligare att istället
- fokusera på ett mindre antal algoritmer som istället skiljer sig åt mer.
+ Antalet algoritmer är stort, varför det skulle vara tydligare att fokusera
+ på ett mindre antal algoritmer som istället skiljer sig mer åt.
  Det skulle även vara trevligt att redan från början ha kortare namn på
  algoritmerna så att det är lättare att komma ihåg vilken som är vilken
  när de återkommer i avsnitten.
@@ -145,7 +146,7 @@ Ni nämner att det inte är intressant att titta på stora
 \end_inset
 
  inom datamining.
- Det är int helt klart för oss varför det är så.
+ Det är inte helt klart för oss varför det är så.
  Ett konkret exempel hade hjälpt förståelsen.
 \end_layout
 
@@ -171,9 +172,16 @@ Vidare till lite mer strukturella tankar:
 \end_layout
 
 \begin_layout Standard
-Avsnittet "Experimenting with rectangles" har en lite informell titel, som
- inte innefattar hela dess innehåll, trots att det är en av de viktigaste
- delarna i rapporten.
+Avsnittet 
+\begin_inset Quotes eld
+\end_inset
+
+Experimenting with rectangles
+\begin_inset Quotes erd
+\end_inset
+
+ har en något informell titel, som inte innefattar hela dess innehåll, trots
+ att det är en av de viktigaste delarna i rapporten.
  Kanske skulle det namnet kunna ändras.
  På tal om titlar känns även rapportens titel lite tråkig med variabeln
  
@@ -199,8 +207,15 @@ Outline
 \end_layout
 
 \begin_layout Standard
-Avsnittet "Implementations" känns malplacerat och inte helt relevant för
- läsaren.
+Avsnittet 
+\begin_inset Quotes eld
+\end_inset
+
+Implementations
+\begin_inset Quotes erd
+\end_inset
+
+ känns malplacerat och inte helt relevant för läsaren.
  Det skulle kunna vara med i en bilaga.
  (Dessutom är det inte helt faktakorrekt, då även C# vanligtvis kompileras
  till en virtuell maskin.)
@@ -250,7 +265,11 @@ På sidan 41 skriver ni att exekutionstider inte presenteras eftersom de
 \end_layout
 
 \begin_layout Standard
-Tack för trevlig läsning!
+Som sagt tycker vi att rapporten är bra, vilket är anledningen till att
+ många av våra synpunkter är på detaljnivå.
+ Den övergripande strukturen är utmärkt och därför har vi inte framfört
+ så mycket om den.
+ Till sist skulle vi vilja tacka för en trevlig läsning! 
 \end_layout
 
 \end_body

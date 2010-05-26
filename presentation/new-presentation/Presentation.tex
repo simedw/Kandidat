@@ -241,7 +241,6 @@ Bild pa t ex newtonraphson kurva, nollpunkter och sant.
 \newcommand{\stgcol}    {purple!20!white}
 \newcommand{\runcol}    {green!20!white}
 \begin{figure}[H]
-    \centering
         \begin{tikzpicture}[scale=0.5,transform shape,->,rounded corners
                            ,auto,node distance=3.2cm, semithick]
         \tikzstyle{every state}=[fill=\haskellcol
@@ -263,7 +262,11 @@ Bild pa t ex newtonraphson kurva, nollpunkter och sant.
         \node<6->[state](comp)   [below of=stg]       {Kompilering \& optimering};
         \node<7->[state,fill=\runcol](run)    [below of=comp]      {
           \begin{tikzpicture}[semithick]
-            \node[state](runinner) [] {Körbart program};
+            \node<7->[state](runinner) [] {Körbart program};
+            \node<8->[state](optcomp)  [right of=runinner] {Optimering};
+            \path<8->
+              (runinner) edge[bend left] node {} (optcomp)
+              (optcomp)  edge[bend left] node {} (runinner);
           \end{tikzpicture}
           Körning
         };
