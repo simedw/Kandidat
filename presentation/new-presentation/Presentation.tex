@@ -7,27 +7,39 @@
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage[swedish]{babel}
+\usepackage{epstopdf}
 
+\usepackage{listings}
 \usepackage{tikz}
 \usetikzlibrary{trees,arrows,automata}
 
+\usepackage{wasysym}
 \usepackage{fancyvrb}
 \DefineVerbatimEnvironment{code}{Verbatim}{fontsize=\small}
 \DefineVerbatimEnvironment{example}{Verbatim}{fontsize=\small}
 \newcommand{\ignore}[1]{
 }
 
+\lstnewenvironment{codeEx}
+{\lstset{ basicstyle= \ttfamily }}
+{}
+
+
+
+
 \begin{document}
 
 \title{Optimering under körningstid}
 
 
-\author{Simon Edwardsson \and Olle Fredriksson
+\author{Simon Edwardsson\smiley \and Olle Fredriksson\smiley
 \and \linebreak{}
-Daniel Gustafsson \and Dan Rosén}
+Daniel Gustafsson\smiley \and Dan Rosén\frownie}
 
 
-\institute{Chalmers Tekniska Högskola\and Göteborgs Universitet}
+\institute{\smiley Chalmers Tekniska Högskola\and \frownie Göteborgs Universitet}
+
+\everymath{\displaystyle}
 
 \begin{frame}
     \titlepage
@@ -69,24 +81,51 @@ Daniel Gustafsson \and Dan Rosén}
 
 \end{frame}
 
-\begin{frame}
+\begin{frame}[fragile]
 	Vad har hant sen sist?
 	\pause
 	Callstack
 		Cool bild, forklarning
 	\pause 
 	Lathet, ge if exempel.
+
+\begin{codeEx}
+fact x = if (x == 0) 
+    then 1
+    else x * fact (x-1)
+\end{codeEx}
+
 \end{frame}
 
 \begin{frame}
-	hur/vart anvandbart?
-	
-	raytracer, regexpr, power, netwonraphson
+	Användningsområden.
+\begin{itemize}
+	\item Regular expressions
+	\item Vetenskapliga beräkningar % dotproduct, power, newtonraphson, simuleringar
+	\item Raytracer
+\end{itemize}
+
+Bild pa t ex newtonraphson kurva, nollpunkter och sant.
+
 \end{frame}
 
 \begin{frame}
-	Focusera pa raytracer med resultat.
+	Focusera pa raytracer med resultat och bild pa alien.
 	Fin bild.
+
+\begin{figure}[H]
+\centering
+    \includegraphics[width=0.3\textwidth]{img/shapes.png} 
+\end{figure}
+
+
+\end{frame}
+\begin{frame}
+\begin{figure}[H]
+\includegraphics[width=1\textwidth]{shapesnorm.eps}
+\end{figure}
+
+
 \end{frame}
 
 \begin{frame}
@@ -97,13 +136,14 @@ Daniel Gustafsson \and Dan Rosén}
 
 \begin{frame}
 	Begransningar 
-	
+	Sharing. Rec	
 \end{frame} 
 
 \begin{frame}
 	Framtida arbeten?
 	Mycket pepp!
-	Compilator
+	Riktig kompilator
+	Olles bild del 3.
 	
 	$\ddot\smile$ 
 \end{frame}
