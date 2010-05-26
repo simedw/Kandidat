@@ -1,0 +1,102 @@
+{-
+
+data Expr
+    = Add Expr Expr
+    | Lit Val
+    | Var
+    | Sin Expr
+
+type Val = Double
+
+-}
+
+parse xs = case parse' (words xs) Nil of
+    { Cons x y -> x
+    };
+
+parse' xs stack = case xs of
+    { Nil -> stack
+    ; Cons item rest 
+       -> if (strEq item "+") (parse' rest (applyBin (\x y . Add x y) stack))
+        $ if (strEq item "*") (parse' rest (applyBin (\x y . Mul x y) stack))
+        $ if (strEq item "sin") (parse' rest (applyUn (\x . Sin x) stack))
+        $ if (strEq item "x") (parse' rest (Var : stack))
+        $ parse' rest (parseNum item : stack)
+    };
+
+applyBin con stack = case stack of
+    { Cons e1 s' -> case s' of
+        { Cons e2 stack' -> (con e1 e2) : stack'
+    }   }; 
+
+applyUn con stack = case stack of
+    { Cons e1 stack' -> con e1 : stack'
+    };
+
+incrTenner prev c = chr2Dbl c +. (prev *. 10.0);
+decrTenner c prev = chr2Dbl c +. (prev /. 10.0);
+
+parseNum num = case splitAt (\p . p ==: '.') num of
+    { Tuple before after -> let
+        { intPart  = foldl incrTenner 0.0 before
+        ; fracPart = foldr decrTenner 0.0 after
+        } in Lit (intPart +. (fracPart /. 10.0))
+    };
+
+chr2Dbl chr
+    = if (chr ==: '1') 1.0
+    $ if (chr ==: '2') 2.0
+    $ if (chr ==: '3') 3.0
+    $ if (chr ==: '4') 4.0
+    $ if (chr ==: '5') 5.0
+    $ if (chr ==: '6') 6.0
+    $ if (chr ==: '7') 7.0
+    $ if (chr ==: '8') 8.0
+    $ if (chr ==: '9') 9.0
+      0.0 ;
+
+words xs = case splitAt (\p . p ==: ' ') xs of
+    { Tuple as bs -> case bs of
+        { Nil -> as : Nil
+        ; foo -> as : words bs
+        }
+    };
+
+strEq sxs sys = case sxs of
+    { Cons x xs -> case sys of
+        { Cons y ys -> x ==: y || strEq xs ys
+        ; foo -> False
+        }
+    ; foo -> False};
+
+splitAt p xs = splitAt' p xs Nil;
+
+splitAt' p xs ys = case xs of
+    { Nil -> Tuple ys Nil
+    ; Cons z zs -> if (p z) (Tuple ys zs)
+                            (splitAt' p zs (ys ++ Cons z Nil))
+    };
+
+-- eval :: Expr -> Val -> Val
+eval expr val = case expr of
+    { Add e1 e2 -> eval e1 val +. eval e2 val
+    ; Mul e1 e2 -> eval e1 val *. eval e2 val
+    ; Lit lit   -> lit
+    ; Var       -> val
+    ; Sin e     -> sin (eval e val)
+    };
+
+construct = case getDoubleList of
+    { Cons lower ds -> case ds of
+        { Cons higher buh -> let 
+            { eps = (higher -. lower) /. getDouble
+            } in takeWhile (\n . n <=. higher) (iterate (\x . x +. eps) lower)
+        ; Nil -> Nil}
+    ; Nil -> Nil
+    };
+
+
+main = let
+    { expr     = parse getString
+    ; evaluate = eval expr
+    } in map ( optimise evaluate ) getDoubleList;
