@@ -149,11 +149,12 @@ Bild pa t ex newtonraphson kurva, nollpunkter och sant.
 \end{frame}
 
 
+
+\begin{frame}
 \newcommand{\ndist}{1.4cm}
 \newcommand{\nshift}{0.8cm}
 \newcommand{\ncol}{blue!20!white}
 
-\begin{frame}
 \begin{figure}[H]
     \centering
         \begin{tikzpicture}[->,node distance=\ndist, semithick]
@@ -173,6 +174,50 @@ Bild pa t ex newtonraphson kurva, nollpunkter och sant.
         \caption{ sin x * x + 5 }
     \end{figure}
 
+\end{frame}
+
+
+\begin{frame}
+\newcommand{\haskellcol}{red!20!white}
+\newcommand{\ourcol}    {blue!20!white}
+\newcommand{\stgcol}    {purple!20!white}
+\newcommand{\runcol}    {green!20!white}
+\begin{figure}[H]
+    \centering
+        \begin{tikzpicture}[scale=0.5,transform shape,->,rounded corners
+                           ,auto,node distance=3.2cm, semithick]
+        \tikzstyle{every state}=[fill=\haskellcol
+                                ,rectangle
+                                ,minimum size=2.0cm]
+        \node<5->[state](haskell)[above of=stg]                   {Haskell};
+        \node<1->[state,fill=\stgcol](stg)    []                   {STG-kod};
+        \node<2->[state,fill=\ourcol](socker) [left of=stg]        {Sockerkod};
+        \node<3->[state,fill=\runcol](int) [right of=stg,xshift=3.0cm] {
+          \begin{tikzpicture}[semithick]
+            \node<3->[state,fill=\ourcol](stgint) [right of=stg]       {STG-tolk};
+            \node<4->[state,fill=\ourcol](opt)    [right of=stgint]    {Optimering};
+            \path<4->
+              (stgint) edge[bend left] node {} (opt)
+              (opt)    edge[bend left] node {} (stgint);
+          \end{tikzpicture}
+          Körning
+        };
+        \node<6->[state](comp)   [below of=stg]       {Kompilering \& optimering};
+        \node<7->[state,fill=\runcol](run)    [below of=comp]      {
+          \begin{tikzpicture}[semithick]
+            \node[state](runinner) [] {Körbart program};
+          \end{tikzpicture}
+          Körning
+        };
+        \path<2-> (socker) edge            node {} (stg);
+        \path<3-> (stg)    edge            node {} (int);
+        \path<6-> (stg)    edge            node {} (comp);
+        \path<5-> (haskell) edge           node {} (stg);
+        \path<7-> (comp)   edge            node {} (run);
+        \end{tikzpicture}
+    \caption{Översikt}
+    \label{figure:overviewSugar}
+\end{figure}
 \end{frame}
 
 \end{document}
