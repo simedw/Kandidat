@@ -8,6 +8,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage[swedish]{babel}
 \usepackage{epstopdf}
+\usepackage{array}
 
 \usepackage{listings}
 \usepackage{tikz}
@@ -23,6 +24,39 @@
 \lstnewenvironment{codeEx}
 {\lstset{ basicstyle= \ttfamily }}
 {}
+
+\lstnewenvironment{codeExDiff}
+{\lstset{ basicstyle=\color{black} \ttfamily
+        , moredelim=[is][\color{red}]{|}{|}
+        } }
+{}
+
+
+\newcommand{\ndist}{1.7cm}
+\newcommand{\nshift}{0.6cm}
+\newcommand{\nshiftw}{0.9cm}
+\newcommand{\ncol}{blue!20!white}
+
+\newcommand{\tree}[5] {
+\begin{figure}[H]
+    \centering
+        \begin{tikzpicture}[->,node distance=\ndist, semithick]
+            \tikzstyle{every state}=[fill=red!20!white,text=black]
+            \node[state,fill=\ncol](add) {#2};
+            \node[state,fill=\ncol](mul)[below of=add, xshift=\nshiftw] {#3};
+            \node[state,fill=\ncol](sin)[below of=add, xshift=-\nshiftw] {#1};
+            \node[state](x1)  [below of=sin, xshift=0cm] {#4};
+            \node[state](x2)  [below of=mul, xshift=-\nshift]  {#4};
+            \node[state](five)[below of=mul, xshift=\nshift]  {#5};
+            \path (add) edge node {} (mul)
+                        edge node {} (sin)
+                  (mul) edge node {} (x2)
+                        edge node {} (five)
+                  (sin) edge node {} (x1);
+        \end{tikzpicture}
+\end{figure}
+
+}
 
 
 
@@ -45,35 +79,85 @@ Daniel Gustafsson\smiley \and Dan Rosén\frownie}
     \titlepage
 \end{frame}
 
+
 \begin{frame}
 
-	Recap?
+[sin(x) * x] [Draw!]
 
 \end{frame}
 
+\begin{frame}[fragile]
+\centering
+\begin{tabular}{ m{2.4cm} m{0.5cm} m{5cm} }
+    sin(x) + x * 5 & \pause $\Rightarrow$
+    &
+	\tree{sin}{+}{*}{x}{5}
+\\
+\end{tabular}
+\end{frame}
+
+\begin{frame}[fragile]
+\centering
+\begin{tabular}{ m{2.4cm} m{0.5cm} m{5cm} }
+    sin(x) + x * 5 & $\Rightarrow$
+    &
+	\tree{Sin}{Add}{Mul}{Var}{Num}
+\\
+\end{tabular}
+\end{frame}
+
+\begin{frame}[fragile]
+\centering
+\begin{tabular}{ m{10cm} }
+\tree{Sin}{Add}{Mul}{Var}{Num} \\
+\begin{codeEx}
+eval :: Expr -> Double -> Double
+eval Var       x = x
+eval (Num i)   x = i
+eval (Add l r) x = eval l x + eval r x 
+eval (Mul l r) x = eval l x * eval r x
+\end{codeEx}
+\\
+\end{tabular}
+\end{frame}
+
+\begin{frame}[fragile]
+
+Bild på en graf, där vi visar att det finns många olika x värden. Här säger vi också att det finns ett problem.
+\begin{codeEx}
+map (eval expr) [-10..10]
+\end{codeEx}
+
+\end{frame}
+
+\begin{frame}[fragile] 
+\centering
+\begin{codeExDiff}
+map (|optimise| (eval expr)) [-10..10]
+\end{codeExDiff}
+
+\pause
+
+\begin{codeEx}
+eval' x = sin x + x * 5
+\end{codeEx}
+
+\pause
+
+\begin{codeExDiff}
+map |eval'| [-10..10]
+\end{codeExDiff}
+\end{frame}
+
 \begin{frame}
+\centering
+	\Huge{Demo}
+
+\end{frame}
+
 
 % knyta an till f;rra presentationen utan att utesluta de nya, kort namna att vi optimerar saker och forklarar ett vi nu ska ge ett exempel dar det ar anvandbart
 
-	En graf-ritare\\
-	\pause
-	$sin(x) + x$
-	
-	Om funktionen kommer fran anvandare?\\
-	\pause
-	Tree
-
-	\pause
-	Eval-funktionen.
-	Stega igenom nagot...
-	
-	\pause
-	Problembeskrivning + lsg
-
-	\pause
-	Till slut ett demo?
-
-\end{frame}
 
 \begin{frame}
 
@@ -122,7 +206,7 @@ Bild pa t ex newtonraphson kurva, nollpunkter och sant.
 \end{frame}
 \begin{frame}
 \begin{figure}[H]
-\includegraphics[width=1\textwidth]{shapesnorm.eps}
+\includegraphics[width=1\textwidth]{shapesnormnocb.eps}
 \end{figure}
 
 
@@ -149,32 +233,6 @@ Bild pa t ex newtonraphson kurva, nollpunkter och sant.
 \end{frame}
 
 
-
-\begin{frame}
-\newcommand{\ndist}{1.4cm}
-\newcommand{\nshift}{0.8cm}
-\newcommand{\ncol}{blue!20!white}
-
-\begin{figure}[H]
-    \centering
-        \begin{tikzpicture}[->,node distance=\ndist, semithick]
-            \tikzstyle{every state}=[fill=red!20!white,text=black]
-            \node[state,fill=\ncol](add) {$+$};
-            \node[state,fill=\ncol](mul)[below of=add, xshift=-\nshift] {$*$};
-            \node[state,fill=\ncol](sin)[below of=mul, xshift=-\nshift] {sin};
-            \node[state](x1)  [below of=sin, xshift=-\nshift] {$x$};
-            \node[state](x2)  [below of=mul, xshift=\nshift]  {$x$};
-            \node[state](five)[below of=add, xshift=\nshift]  {$5$};
-            \path (add) edge node {} (mul)
-                        edge node {} (five)
-                  (mul) edge node {} (sin)
-                        edge node {} (x2)
-                  (sin) edge node {} (x1);
-        \end{tikzpicture}
-        \caption{ sin x * x + 5 }
-    \end{figure}
-
-\end{frame}
 
 
 \begin{frame}
