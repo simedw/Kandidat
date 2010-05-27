@@ -15,15 +15,15 @@ data View = View
     , viewHeight :: GLfloat
     }
 
-defaultView = View (0) (-0.5) 10 10
+--defaultView = View (0) (-0.5) 10 10
 
-prog fun step var opt = do
-    let l = [0,step..50]
-    res <- G.getList opt l fun
+prog fun step var opt left right trans = do
+    let l = [left,left+step..right]
+    res <- G.getList opt (map (+trans) l) fun
     let result = zipWith (\x y -> (realToFrac x, realToFrac y)) l res
     writeIORef var result
     postRedisplay Nothing
-    prog fun (step / 1.2) var opt
+    prog fun step var opt left right (trans + step)
 {-
 prog f step var = do
     let res = map (\x -> (x, f x)) [0,step..5]
@@ -34,28 +34,40 @@ prog f step var = do
     -}
 
 main = do
-    (_, fkn:_) <- getArgsAndInitialize
+    (_, fkn:x:y:w:h:_) <- getArgsAndInitialize
+    let view = View (read x) (read y) (read w) (read h * 2)
+    let step = read w / 200
     createWindow "OMG Optimise"
     points1 <- newIORef []
     points2 <- newIORef []
-    displayCallback $= display defaultView points1 points2
-    forkOS $ prog fkn 1 points1 True
-    forkOS $ prog fkn 1 points2 False
+    displayCallback $= display fkn view points1 points2
+    let right = read x + read w + 1
+        left  = read x - 1
+    forkOS $ prog fkn step points1 True  left right 0
+    forkOS $ prog fkn step points2 False left right 0
     mainLoop
 
 
-display v points1 points2 = do
+display fkn v points1 points2 = do
     loadIdentity
     clearColor $= Color4 1.0 1.0 1.0 0.0
     clear [ColorBuffer]
+
     color black
-    renderString TimesRoman24 "foobar"
-    renderPrimitive Lines $ do
-        vert 0 (-1000); vert 0 1000
-        vert (-1000) 0; vert 1000 0
+    renderText fkn (-0.9) 0
+
+    cross
+
     render points1 blue
-    translate $ Vector3 (0 :: GLfloat) 0.2 0
+    renderText "Icke-optimerad" 0 (-0.3)
+
+    translate $ Vector3 (0 :: GLfloat) 1 0
+
+    cross
+
     render points2 red
+    renderText "Optimerad" 0 (-0.3)
+
     swapBuffers
   where
     render var c = do
@@ -65,6 +77,14 @@ display v points1 points2 = do
     vert x y = vertex $ Vertex3 ((x - viewStartX v) / viewWidth  v * 2 - 1)
                                 ((y - viewStartY v) / viewHeight v * 2 - 1)
                                 (0.0 :: GLfloat)
+    cross = do
+      color black
+      renderPrimitive Lines $ do
+        vert 0 (-1000); vert 0 1000
+        vert (-1000) 0; vert 1000 0
+    renderText text x y = do
+      currentRasterPosition $= Vertex4 x y 0 1
+      renderString TimesRoman24 text
 
 white, black, red, green, blue :: Color3 GLfloat
 white = Color3 1.0 1.0 1.0
