@@ -45,6 +45,7 @@ main = do
         left  = read x - 1
     forkOS $ prog fkn step points1 True  left right 0
     forkOS $ prog fkn step points2 False left right 0
+
     mainLoop
 
 
@@ -59,18 +60,19 @@ display fkn v points1 points2 = do
     cross
 
     render points1 blue
-    renderText "Icke-optimerad" 0 (-0.3)
+    renderText "Icke-optimerad" 0 (-0.1)
 
     translate $ Vector3 (0 :: GLfloat) 1 0
 
     cross
 
     render points2 red
-    renderText "Optimerad" 0 (-0.3)
+    renderText "Optimerad" 0 (-0.1)
 
     swapBuffers
   where
     render var c = do
+        lineWidth $= 3
         color c
         ps <- readIORef var
         renderPrimitive LineStrip $ forM ps (uncurry vert)
@@ -78,6 +80,7 @@ display fkn v points1 points2 = do
                                 ((y - viewStartY v) / viewHeight v * 2 - 1)
                                 (0.0 :: GLfloat)
     cross = do
+      lineWidth $= 1
       color black
       renderPrimitive Lines $ do
         vert 0 (-1000); vert 0 1000
