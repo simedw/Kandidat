@@ -198,17 +198,17 @@ map (#optimise# (eval expr)) [-10..10]
 
 \verb|eval' :: Double -> Double|
 \pause
-\verb|eval' x = eval (Add (Sin Var) (Mul Var (Num 5))) x|
+\verb|eval' x = eval (Add (Sin Var) (Mul Var (Num 0.5))) x|
 \pause
-\verb|eval' x = eval (Sin Var) x + eval (Mul Var (Num 5)) x|
+\verb|eval' x = eval (Sin Var) x + eval (Mul Var (Num 0.5)) x|
 \pause
-\verb|eval' x = sin (eval Var x) + eval (Mul Var (Num 5)) x|
+\verb|eval' x = sin (eval Var x) + eval (Mul Var (Num 0.5)) x|
 \pause
-\verb|eval' x = sin x + eval (Mul Var (Num 5)) x |
+\verb|eval' x = sin x + eval (Mul Var (Num 0.5)) x |
 \pause
 \verb|...                          |
 
-\verb|eval' x = sin x + x * 5|
+\verb|eval' x = sin x + x * 0.5|
 %\end{verbatim}
 
 \pause
