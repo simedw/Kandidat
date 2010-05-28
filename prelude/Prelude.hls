@@ -40,7 +40,7 @@ length li = case li of
     ; Cons x xs -> 1 + length xs
     };
 
-replicate n x = if (n == 0) 
+replicate n x = if (n <= 0) 
                    Nil 
                    (Cons x (replicate (n - 1) x));
 
@@ -48,7 +48,7 @@ repeat x = letrec xs = Cons x xs in xs;
 
 iterate f x = Cons x (iterate f (f x));
 
-take n li = if (n == 0)
+take n li = if (n <= 0)
                Nil
                (case li of
                  { Nil -> Nil
@@ -56,7 +56,7 @@ take n li = if (n == 0)
                  }
                );
 
-drop n li = if (n == 0)
+drop n li = if (n <= 0)
                li
                (case li of
                  { Nil -> Nil
@@ -88,9 +88,8 @@ zipWith f as bs = case as of
 
 -- Bools
 
--- These are used by the primitive relational operations
-true = True;
 false = False;
+true  = True;
 
 if b x y = case b of
     { True -> x
@@ -99,7 +98,7 @@ if b x y = case b of
 
 and x y = if x y False;
 or  x y = if x True y;
-not x = if p False True;
+not x = if x False True;
 
 andList xs = foldr and True  xs;
 orList  xs = foldr or  False xs;
@@ -155,6 +154,17 @@ fromMaybe d m = case m of
 isJust m = maybe False (const True) m;
 isNothing m = maybe True (const False) m;
 
+-- either : (a -> c) -> (b -> c) -> a \/ b -> c
+either f g v = case v of
+    { Left  x -> f x
+    ; Right y -> g y
+    };
+    
+abs x = case x < 0 of
+		 { True  -> 0 - x
+		 ; False -> x
+		 };
+
 -- Double functions
 pi = 3.141519265;
 
@@ -167,3 +177,14 @@ listSeq li = case li of
     { Cons x xs -> seq x (seq (listSeq xs) li)
     ; Nil       -> Nil
     };
+
+min a b = case a < b of
+		{ True  -> a
+		; False -> b
+		};
+
+max a b = case a > b of
+		{ True  -> a
+		; False -> b
+		};
+

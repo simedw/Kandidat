@@ -1,7 +1,9 @@
 main = listSeq (case getIntList of
     { Cons x ys -> case ys of
         { Cons y r -> map (optimise (foo x y)) r
+		; Nil -> Nil
         }
+	; Nil -> Nil
     });
 
 foo x y z = case x > y of

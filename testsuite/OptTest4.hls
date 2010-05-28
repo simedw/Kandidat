@@ -29,7 +29,7 @@ det m = case m of
     { Mat2 a b c d -> a * d - b * c 
     };
 
-main = listSeq (case listToMatrices getIntList of 
+main = if (length getIntList < 4) Nil (case listToMatrices getIntList of 
     { Cons m ms -> map (optimise (mult m)) ms
     });
 

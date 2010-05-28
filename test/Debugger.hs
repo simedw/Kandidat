@@ -13,12 +13,14 @@ import System.Console.GetOpt
 import System.Directory
 import System.FilePath
 import qualified Text.PrettyPrint.ANSI.Leijen as PP
+import Text.PrettyPrint.ANSI.Leijen(Doc)
 
 import System.Console.Haskeline (InputT, outputStrLn, getInputLine) 
 import qualified System.Console.Haskeline as Hl
 
 import Text.ParserCombinators.Parsec
 import Parser.Diabetes
+import qualified Parser.Locals as Locals
 import Parser.Pretty.Pretty
 import Parser.SugarParser
 import Parser.STGParser
@@ -26,7 +28,7 @@ import Stg.AST
 import Stg.GC
 import Stg.Input
 import Stg.Interpreter
-import Stg.PrePrelude
+import Shared.BoxPrimitives
 import Stg.Rules
 import Stg.Types hiding (settings)
 import qualified Stg.Types as ST
@@ -34,10 +36,11 @@ import qualified Stg.Types as ST
 import Stg.Heap (Heap,Location(..))
 import qualified Stg.Heap as H
 
+import Util
+
 data Settings = Settings
   { steping      :: Bool
-  , prelude      :: String
-  , input        :: Input
+  , lset         :: LoadSettings
   , quiet        :: Bool
   , forceStg     :: Bool
   , toGC         :: Bool
@@ -72,8 +75,7 @@ stgState sc ss sh st@(StgState {code, stack, heap}) =
 
 defaultSettings = Settings {
     steping      = True
-  , prelude      = "Prelude.hls"
-  , input        = defaultInput
+  , lset         = LSettings "Prelude.hls" defaultInput False
   , quiet        = False
   , forceStg     = False
   , toGC         = True
@@ -88,43 +90,26 @@ defaultSettings = Settings {
 data InterpreterState = IS
     { settings :: Settings
     , stgm     :: StgMState String
-    , history  :: [Result]
-    , breakPoints  :: [BreakPoint]
+    , history  :: ![Result]
+    , breakPoints  :: ![BreakPoint]
+    , nrRules  :: !Int
+    , saveHist :: !Bool
     }
 
--- note that PrintCt must be the first thing on the stack
-forceInterpreter :: Settings -> FilePath -> IO String
-forceInterpreter settings file = do
-    dir     <- getCurrentDirectory
-    prelude <- readFile (dir </>  "prelude" </> prelude settings)
-    res     <- readFile (dir </>  "testsuite" </> file)
-    case parseSugar (res ++ "\n" ++ prelude) of
-      Right fs -> let res = eval (input settings) (run prePrelude fs)
-                      lc  = code . snd . last $ res
-                   in  case lc of
-                        (ESVal x) -> return $ show $ prExprN PP.text lc
-                        x         -> putStrLn ("fail: Didn't end with ESVal ") 
-                                   >> return "Fail"
-      Left  r  -> putStrLn ("fail: " ++ show r) 
-                  >> return "Fail"
 
 testInterpreter :: Settings -> FilePath -> IO ()
 testInterpreter set file = do
-    dir     <- getCurrentDirectory
-    prelude <- readFile (dir </> "prelude" </> prelude set)
-    res     <- readFile (dir </> "testsuite" </> file)
-    -- prelude must be last, otherwise parse error messages get wrong line numbers!
-    case parseSugar (res ++ "\n" ++ prelude) of  
-      Right fs -> do
-        let st = initialState (run (createGetFuns (input set)
-                              ++ prePrelude) fs)
-        evalStateT (Hl.runInputT Hl.defaultSettings (loop st)) IS
+    fs <- loadFileSpecifyOutput True (lset set) file 
+    let st = initialState fs
+    evalStateT (Hl.runInputT Hl.defaultSettings (loop st)) IS
             { settings = set
             , stgm     = initialStgMState
             , history  = []
             , breakPoints = []
+            , nrRules  = 0
+            , saveHist = not False
             } 
-      Left  r  -> do putStrLn $ "fail: " ++ show r
+
 
 loop :: StgState String -> InputT (StateT InterpreterState IO) ()
 loop originalState  = do
@@ -151,11 +136,13 @@ loop originalState  = do
   --          [":force", var] -> forceit st var >> loop st
             [":h"] -> printHelp >> loop st
             [":help"] -> printHelp >> loop st
+            [":popFrame"] -> loop st
             input -> do
                 outputStrLn $ "oh hoi: " ++ unwords input
                 loop st
   where
     gc = mkGC ["$True", "$False"]
+
 
     bp :: [BreakPoint] -> Result -> Maybe BreakPoint
     bp [] _ = Nothing
@@ -182,8 +169,9 @@ loop originalState  = do
         case hist of
             [] -> printSummary s
             (_, s') : xs -> do
-                lift . modify $ \set -> set { history = xs }
+                lift . modify $ \set -> set { history = xs, nrRules = nrRules set - 1}
                 evalStep (n + 1) s'
+
                  | otherwise = do
         stg <- lift $ gets stgm
         bps <- lift . gets $ breakPoints
@@ -191,17 +179,23 @@ loop originalState  = do
             (Nothing, stg') -> do
                 outputStrLn "No Rule applied"
                 loop s
-            (Just res@(_, s'), stg') | Just b <- bp bps res -> do
-                addHistory res
-                lift . modify $ \set -> set { stgm = stg' }
-                outputStrLn $ "BreakPoint! " ++ show b
-                printSummary s'
-                                     | otherwise -> do
-                addHistory res
-                lift . modify $ \set -> set { stgm = stg' }
-                evalStep (n - 1) s'
+            (Just res@(_, s'), stg') 
+                | Just b <- bp bps res -> do
+                    addHistory res
+                    lift . modify $ \set -> set { stgm = stg' }
+                    outputStrLn $ "BreakPoint! " ++ show b
+                    printSummary s'
+                | otherwise -> do
+                    addHistory res
+                    lift . modify $ \set -> set { stgm = stg' }
+                    evalStep (n - 1) s'
                 
-    addHistory res = lift . modify $ \set -> set { history = res : history set }
+    addHistory res = do
+        sv <- lift . gets $ saveHist
+        lift . modify $ \set -> set { history = if sv
+                                        then res : history set
+                                        else history set
+                                    , nrRules = nrRules set + 1}
 
     addbp xs = case xs of
         "rule": rs -> case reads (unwords rs) of 
@@ -225,14 +219,15 @@ loop originalState  = do
             [] -> do
                 outputStrLn $ "Rule: " ++ show RInitial
                 printCode  $ code  st
-                printStack $ stack st
+                printCStack True $ cstack st
                 outputStrLn $ "heap("  ++ show (M.size $ heap st) ++ ")"
                 loop st
             (rule, st) : _ -> do
                 outputStrLn $ "Rule: " ++ show rule
                 printCode   $ code  st
-                printStack  $ stack st
+                printCStack True $ cstack st
                 outputStrLn $ "heap("  ++ show (M.size $ heap st) ++ ")"
+                outputStrLn $ "astack\n" ++ showDoc (prAStack PP.text $ astack st)
                 loop st
                 
 
@@ -244,8 +239,8 @@ loop originalState  = do
             "h":fs -> mapM_ (printHeapLookup (heap st)) fs
             ["set"]  -> printSetting =<< lift (gets settings)
             ["settings"] -> printSetting =<< lift (gets settings)
-            ["s"]     -> printStack (stack st)
-            ["stack"] -> printStack (stack st)
+            ["s"]     -> printCStack False (cstack st)
+            ["stack"] -> printCStack False (cstack st)
             ["c"]     -> printCode (code st)
             ["code"]  -> printCode (code st)
             ["rules"] -> printRules
@@ -269,8 +264,12 @@ loop originalState  = do
 
     printCode code = outputStrLn $ "code: " ++ show (prExpr PP.text code)
 
-    printStack stack = outputStrLn $ "stack(" ++ show (length stack) ++ "):\n" 
-                                  ++ show (prStack PP.text stack) 
+    printCStack b cstack = do
+         outputStrLn $ "stack(" ++ show (length cstack) ++ "):" 
+         outputStrLn $ show (prCStack PP.text (if b then take 5 cstack else id cstack)) 
+         if b && length cstack >= 5
+            then outputStrLn "..."
+            else return ()
 
     printHeapLookup heap f = outputStrLn $ printHeapFunctions $ M.filterWithKey (\k _ -> k == f) heap
 
@@ -292,6 +291,8 @@ loop originalState  = do
             
     printRules = do
         ruls <- lift $ gets history
+        nrR  <- lift . gets $ nrRules
+        outputStrLn $ "number of rules: " ++ show (nrR)
         outputStrLn $ "number of rules: " ++ show (length ruls)
         outputStrLn . show . map (\ list -> (head list, length list))
                     . group . sort . map fst $ ruls 
@@ -319,6 +320,9 @@ loop originalState  = do
             , "Happy Hacking !!"
             ]
 
+showDoc :: Doc -> String
+showDoc x = PP.displayS (PP.renderPretty 0.8 80 x) ""
+
 main :: IO ()
 main = do
     -- First argument is the filename
@@ -327,9 +331,10 @@ main = do
     case getOpt RequireOrder options args of
         (flags, [],      [])     -> do
              opts <- foldl (>>=) (return defaultSettings) flags
-             if forceStg opts 
-                then forceInterpreter opts file >> return ()
-                else testInterpreter opts file
+--             if forceStg opts 
+--                then loadFile opts file >>= forceInterpreter >> return ()
+--                else testInterpreter opts file
+             testInterpreter opts file
         (_,     nonOpts, [])     -> error $ "unrecognized arguments: " ++ unwords nonOpts
         (_,     _,       msgs)   -> error $ concat msgs ++ usageInfo header options
 
@@ -340,12 +345,21 @@ options =
     [ Option ['S'] ["step"] (ReqArg setSteping "BOOL") "step through"
     , Option ['F'] ["force"] (ReqArg setForce "Bool") "force evaluation"
 --    , Option ['V'] ["visible"] (ReqArg setVisible "\"BOOL BOOL BOOL\"") "show code stack heap"
-    , Option ['I'] ["integerinput"] 
+    , Option ['i'] ["integer-input"] 
         (ReqArg setInputInteger "Integer") 
         "single integer input"
-    , Option ['L'] ["listinput"] 
+    , Option ['d'] ["double-input"] 
+        (ReqArg setInputDouble "Double") 
+        "single double input"
+    , Option ['I'] ["list-integer-input"] 
         (ReqArg setInputIntegers "[Integer]") 
         "integer list input"
+    , Option ['D'] ["list-double-input"]
+         (ReqArg setInputDoubles "[Double]") 
+        "double list input"
+    , Option ['s'] ["string-input"]
+          (ReqArg setInputString "String") 
+        "string input"       
     ]
 
 
@@ -366,11 +380,23 @@ setForce arg set = return $ set { forceStg = read arg }
 
 setInputInteger :: String -> Settings -> IO Settings
 setInputInteger arg s = 
-    return $ s { input = (input s) { inputInteger = Just (read arg) }}
+    return $ s { lset = (lset s) {input = (input (lset s)) { inputInteger = Just (read arg) }}}
 
 setInputIntegers :: String -> Settings -> IO Settings
 setInputIntegers arg s = 
-    return $ s { input = (input s) { inputIntegers = Just (read arg) }}
+    return $ s { lset = (lset s) { input = (input (lset s)) { inputIntegers = Just (read arg) }}}
+
+setInputDouble :: String -> Settings -> IO Settings
+setInputDouble arg s = 
+    return $ s { lset = (lset s) {input = (input (lset s)) { inputDouble = Just (read arg) }}}
+
+setInputDoubles :: String -> Settings -> IO Settings
+setInputDoubles arg s = 
+    return $ s { lset = (lset s) { input = (input (lset s)) { inputDoubles = Just (read arg) }}}
+
+setInputString :: String -> Settings -> IO Settings
+setInputString arg s = 
+    return $ s { lset = (lset s) { input = (input (lset s)) { inputString = Just  arg }}}
 
 
 header = "Usage: main [OPTION...]"

@@ -1,3 +1,14 @@
-take3 = optimise take 3 with {casebranches};
+-- main = let f = optimise (const 5) in f  2;
 
-main = length (take3 (repeat 4)); 
+--main = let f = optimise (id id id id const 5) in f 2;
+
+main = let g = optimise f 3 in g 4;
+
+f x y = let
+    { g z = case x > 0 of
+        { True -> z + 1
+        ; False -> z
+        }
+    } in g y;
+    
+    -- vi valde inte branch :????

@@ -4,8 +4,12 @@ module Types
   , runTests -- [Test] -> IO ()
   ) where
 
+import Prelude hiding (catch)
+
 import Data.Ratio
 import Test.QuickCheck
+
+import Control.Exception
 
 data Test where
   QCTest 

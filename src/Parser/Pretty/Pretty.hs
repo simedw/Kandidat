@@ -7,6 +7,7 @@ import Unsafe.Coerce
 
 import Stg.AST
 import Stg.Types
+import Stg.Stack
 
 import Text.PrettyPrint.ANSI.Leijen
 
@@ -56,7 +57,8 @@ data PPrinters t = PPrinters
     , ppExpr  :: Expr t     -> Doc
     , ppObj   :: Obj t      -> Doc
     , ppAtom  :: Atom t     -> Doc
-    , ppStack :: Stack t    -> Doc
+    , ppCStack :: ContStack t    -> Doc
+    , ppAStack :: ArgStack t    -> Doc
     }
 
 mkC = mkPretty . syntaxColour
@@ -79,8 +81,11 @@ prObj  = ppObj . mkC
 prAtomN = ppAtom . mkN
 prAtom  = ppAtom . mkC
 
-prStackN = ppStack . mkN
-prStack  = ppStack . mkC
+prCStackN = ppCStack . mkN
+prCStack  = ppCStack . mkC
+
+prAStackN = ppAStack . mkN
+prAStack  = ppAStack . mkC
 
 seppis syn = vcat . punctuate (text "" <$> symbol syn semi <+> text "")
 
@@ -93,7 +98,7 @@ mkPretty (Syntax {..})  = PPrinters {..}
     ppExpr :: Expr t -> Doc
     ppExpr e = case e of
         EAtom atom -> ppAtom atom
-        ECall id as -> var id <+> hsep [ ppAtom a | a <- as ]
+        ECall id as -> ppVar id <+> hsep [ ppAtom a | a <- as ]
         ELet binds e -> (key $ case isRecursive binds of
             True  -> "letrec"
             False -> "let" ) <$>  indent 4 (ppLetBind binds) 
@@ -107,6 +112,7 @@ mkPretty (Syntax {..})  = PPrinters {..}
     mparens, mbraces :: Doc -> Doc
     mparens = enclose (symbol lparen) (symbol rparen)
     mbraces = enclose (symbol lbrace) (symbol rbrace)
+    mbrackets = enclose (symbol lbracket) (symbol (rbracket))
     
     
     mkBrace :: [Doc] -> Doc
@@ -132,20 +138,26 @@ mkPretty (Syntax {..})  = PPrinters {..}
     
     ppAtom :: Atom t -> Doc
     ppAtom atom = case atom of
-        AVar x -> var x
+        AVar x -> ppVar x
         ANum n -> num $ integer n
         ADec f -> num $ double f
         AChr c -> chr c
+        AUnknown i t -> mbraces $ ppVar (Local i t)
+
+    ppVar :: Var t -> Doc
+    ppVar v = case v of
+        Heap x    -> var x
+        Local n t -> chr '<' <> int n <> comma <> var t <> chr '>'
     
     ppObj :: Obj t -> Doc
     ppObj obj = case obj of
-        OFun args e -> object "FUN" <+> mparens (hsep (map bindVar args) 
+        OFun args size e -> object "FUN" <+> chr '<' <> int size <> chr '>' <+> mparens (hsep (map bindVar args) 
                         <+> operator "->" <+> ppExpr e)
         OPap obj args -> object "PAP" <+> mparens (var obj 
                                                 <+> hsep (map ppAtom args))
         OCon name args -> object "CON" <+> mparens (conVar name 
                                                  <+> hsep (map ppAtom args))
-        OThunk e -> object "THUNK" <+> mparens (ppExpr e)
+        OThunk fv s e -> object "THUNK" <+> mbrackets (hsep $ map ppAtom fv) <+> int s <+> mparens (ppExpr e)
         OOpt   a set -> object "OPT" <+> mparens (ppAtom a) <+> text (show set)
         OBlackhole -> object "BLACKHOLE"
 
@@ -156,8 +168,19 @@ mkPretty (Syntax {..})  = PPrinters {..}
         SCon c sval | null sval -> conVar c
                     | otherwise -> mparens $ conVar c <+> hsep (map ppSVal sval)
 
-    ppStack :: Stack t -> Doc
-    ppStack = vsep . map ppCont
+    ppAStack :: ArgStack t -> Doc
+    ppAStack = vsep . map ppStackFrame
+
+    ppStackFrame :: StackFrame t -> Doc
+    ppStackFrame as = list (map ppAtom $ snd as) {-(StackFrame {..}) = (mparens (int lock)) 
+        <+> semiBraces [ if p == spointer 
+                           then mbrackets (ppAtom a) 
+                           else ppAtom a 
+                       | (p, a) <- zip [0..] args
+                       ] -}
+
+    ppCStack :: ContStack t -> Doc
+    ppCStack = vsep . map ppCont
 
 
     ppCont :: Cont t -> Doc
@@ -170,9 +193,9 @@ mkPretty (Syntax {..})  = PPrinters {..}
         CtPrint -> key "Print"
         CtPrintCon c pr ne -> key "PrintCont" <+> conVar c <+> text (show pr) 
                        <+> mparens (hsep (map ppAtom ne)) 
-        CtOFun xs a -> key "OFun" <+> bindVar a 
+        CtOFun xs i a -> key "OFun" <+> int i <+> bindVar a 
                        <+> mparens (hsep (map bindVar xs) <+> operator "->" <+> ppHole)
-        CtOApp app  -> key "OApp" <+> ppHole <+> hsep (map ppAtom app)
+        CtOApp f app  -> key "OApp" <+> ppVar f <+> ppHole <+> hsep (map ppAtom app)
         CtOCase brs -> key "OCase" <+> ppCont (CtCase brs)
         CtOLet x -> key "Olet" <+> bindVar x <+> operator "=" <+> operator "?" <+> key "in" <+> ppHole 
         CtOBranch e brdone brleft ->

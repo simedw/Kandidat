@@ -12,6 +12,8 @@ import qualified Data.Map as M
 import Stg.AST
 import Stg.Rules
 
+import Stg.Stack
+
 import Stg.Heap
 import qualified Stg.Heap as H
 
@@ -22,8 +24,8 @@ data Cont t
   | CtPrint
   | CtPrintCon t [SValue t] [Atom t]
   | CtOpt t
-  | CtOFun  [t] t
-  | CtOApp [Atom t]
+  | CtOFun [t] Int t
+  | CtOApp (Var t) [Atom t]
   | CtOCase [Branch t]
   | CtOLet t
   | CtOBranch (Expr t) [Branch t] [Branch t]  
@@ -31,40 +33,43 @@ data Cont t
   | CtOInstant Int
  deriving Show
 
-type Stack t = [Cont t]
-
+type ContStack t = [Cont t]
 
 data StgState t 
   = StgState
-      { code  :: Expr  t
-      , stack :: Stack t
-      , heap  :: Heap  t
-      , settings :: [StgSettings t]
+      { code     :: !(Expr  t)
+      , cstack   :: !(ContStack t)
+      , astack   :: !(ArgStack t)
+      , heap     :: !(Heap  t)
+      , settings :: ![StgSettings t]
       }
   | OmegaState
-      { code  :: Expr  t
-      , stack :: Stack t
-      , heap  :: Heap  t
-      , settings :: [StgSettings t]
+      { code     :: !(Expr  t)
+      , cstack   :: !(ContStack t)
+      , astack   :: !(ArgStack t)
+      , heap     :: !(Heap  t)
+      , settings :: ![StgSettings t]
       }
   | PsiState
-      { code  :: Expr  t
-      , stack :: Stack t
-      , heap  :: Heap  t
-      , letBinds :: [t]
-      , settings :: [StgSettings t]
+      { code     :: !(Expr  t)
+      , cstack   :: !(ContStack t)
+      , astack   :: !(ArgStack t)
+      , heap     :: !(Heap  t)
+      , letBinds :: ![t]
+      , settings :: ![StgSettings t]
       }
   | IrrState
-      { code  :: Expr  t
-      , stack :: Stack t
-      , heap  :: Heap  t
-      , settings :: [StgSettings t]
+      { code     :: !(Expr  t)
+      , cstack   :: !(ContStack t)
+      , astack   :: !(ArgStack t)
+      , heap     :: !(Heap  t)
+      , settings :: ![StgSettings t]
       }
   
 
 data StgSettings t = StgSettings
   { globalInline :: Integer
-  , inlines  :: Map t Integer
+  , inlines      :: Map t Integer
   , caseBranches :: Bool
   }
 
@@ -91,8 +96,8 @@ decrementInline :: Ord t => t -> StgSettings t -> StgSettings t
 decrementInline f s = s 
     { inlines = M.update (Just . (subtract 1)) f (inlines s)  }
 
-makeSettings :: Ord t => Heap t -> [Setting t] -> StgSettings t
-makeSettings h = foldr
+makeSettings :: Ord t => ArgStack t -> Heap t -> [Setting t] -> StgSettings t
+makeSettings astack h = foldr
     (\setting s -> case setting of
           Inlinings a  -> s { globalInline = lookupInteger a }
           Inline f a   -> s { inlines = M.insert f (lookupInteger a) (inlines s) }
@@ -100,13 +105,15 @@ makeSettings h = foldr
     defaultOptSettings
   where
     lookupInteger (ANum x) = x
-    lookupInteger (AVar v) = case H.lookup v h of
+    lookupInteger (AVar (Heap v)) = case H.lookup v h of
         Just (OCon _ [ANum x]) -> x
         Nothing -> error "makeSettings, invalid arguments to optimise with"
+    lookupInteger (AVar (Local i v)) = lookupInteger (lookupStackFrame i astack)
+
 
 data StgMState t = StgMState
     { nameSupply :: [t]
-    , mkCons     :: String -> t
+    , mkCons     :: t -> t
     }
 
 type StgM t a = State (StgMState t) a

@@ -1,0 +1,79 @@
+concatMap f y = case y of
+	{ Nil -> Nil
+    ; Cons x xs -> append (f x) (concatMap f xs)
+	};
+
+parse cs = case parse' cs Nil of
+    { Cons x ys -> x
+    ; ys        -> Empty
+    };
+
+parse' cs stack = case cs of
+    { Cons c rest -> 
+		if (c ==: ',') (parse' rest (Empty 'a' : stack))
+	   (if (c ==: '*') (parse' rest ((Star (head stack)) : tail stack))
+	   (if (c ==: '.') (parse' rest (Seq (head (tail stack)) (head stack) : drop 2 stack))
+	   (if (c ==: '|') (parse' rest (Union (head (tail stack)) (head stack) : drop 2 stack))
+	   (parse' rest (Symbol c : stack)))))
+   ; Nil       -> stack 
+    };
+
+c x = Cons x Nil;
+
+-- match :: Eq a => Regexp a -> List a -> List (Either (List a) (List a))
+match r l = case r of
+    { Empty u -> c (Right l)
+    ; Symbol a -> case l of
+        { Cons x xs -> case (x==:a) of
+                      { True  -> c (Right xs)
+                      ; False -> c (Left l)
+                      }
+        ; hs       -> c (Left l)
+		}
+    ; Star p -> concatMap (either (\o . c (Right o)) (match r))  (match p l)
+
+    ; Union p q -> append (match p l)  (match q l)
+    ; Seq p q -> concatMap (either (\o . c (Left o)) (match q)) (match p l)
+    };
+
+elem' y ys f = case ys of
+	{ Nil -> False
+	; Cons x xs -> if (f y x) True (elem' y xs f)
+    };
+
+--mothermatch p l = (Right "") `elem` match p l
+mothermatch p l = elem' (Right Nil) (p l) magic;
+
+magic x y = case x of
+	{ Right xs -> case y of
+		{ Right ys -> length xs == length ys
+		; hs -> False
+		}
+	; Left xs -> case y of
+		{ Left ys -> length xs == length ys
+		; hs -> False
+		}
+	};
+
+splitAt' p xs ys = case xs of
+	{ Nil -> Tuple ys Nil
+	; Cons z zs -> if (p z) (Tuple ys zs) 
+	                        (splitAt' p zs (ys ++ Cons z Nil))
+	};
+
+splittingAt p xs ys = case xs of
+	{ Nil -> Cons ys Nil
+	; Cons z zs -> if (p z) (Cons ys (splittingAt p zs Nil)) 
+		                (splittingAt p zs (ys ++ Cons z Nil))
+	};
+
+main = let sp = id (\f . splittingAt (\x . x ==: ' ') f Nil) 
+        in case sp getString of
+	{Cons a b -> let optM =  optimise mothermatch (match (parse a)) in
+	    map (optM) b};
+	   
+{-
+main = case splittingAt (\x . x ==: ' ') getString Nil of
+	{Cons a b -> let optM = optimise mothermatch (match (parse a)) in
+	    map (optM) b};
+-}

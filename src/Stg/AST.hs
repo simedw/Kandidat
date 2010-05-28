@@ -1,17 +1,19 @@
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE PackageImports #-}
 module Stg.AST where 
 -- The data type of the language, and auxilliary functions.
---
 
-import Data.Generics
+import "syb" Data.Generics
 import Data.Generics.PlateData
+import Data.Function
+import Shared.Primitives
 
 data Function t = Function t (Obj t)
   deriving (Data, Eq, Show, Typeable)
 
 data Expr t   = EAtom (Atom t)
-              | ECall t [Atom t]
-              | EPop (Pop t) [Atom t]
+              | ECall (Var t) [Atom t]
+              | EPop (Primitive t) [Atom t]
               | ELet (Bind t) (Expr t)
               | ECase (Expr t) [Branch t]
               | ESVal (SValue t)
@@ -32,55 +34,41 @@ getBinds (Rec binds)    = binds
 
 mkELet :: Bool -> [(t, Obj t)] -> Expr t -> Expr t
 mkELet True  = ELet . Rec
-mkELet False = flip $ foldr (\(t, obj) e' -> ELet (NonRec t obj) e')
+mkELet False = flip $ foldr (ELet . uncurry NonRec)
+ 
 
-data Pop t    = PBinOp t
-                  (Integer -> Integer -> Integer)
-                  (Double  -> Double  -> Double)
-              | PUnOp t
-                  (Integer -> Integer)
-                  (Double  -> Double)
-              | PBinBool t
-                  (Integer -> Integer -> Bool)
-                  (Double  -> Double  -> Bool)
-  deriving (Data, Typeable)
+data Var t = Heap t
+           | Local Int t
+  deriving (Show, Eq, Ord, Data, Typeable)
 
-instance Show t => Show (Pop t) where
-  show (PBinOp   op _ _) = show op ++ "#"
-  show (PUnOp    op _ _) = show op ++ "#"
-  show (PBinBool op _ _) = show op ++ "#"
+isLocal (Local _ _) = True
+isLocal _           = False
 
-instance Eq t => Eq (Pop t) where
-  PBinOp   op1 _ _ == PBinOp   op2 _ _ = op1 == op2
-  PUnOp    op1 _ _ == PUnOp    op2 _ _ = op1 == op2
-  PBinBool op1 _ _ == PBinBool op2 _ _ = op1 == op2
-  _ == _ = False
+isVar (AVar _) = True
+isVar _        = False
 
-instance Ord t => Ord (Pop t) where
-  PBinOp op1 _ _   `compare` PBinOp op2 _ _   = op1 `compare` op2
-  PUnOp  op1 _ _   `compare` PUnOp op2 _ _    = op1 `compare` op2
-  PBinBool op1 _ _ `compare` PBinBool op2 _ _ = op1 `compare` op2
 
 isAtom (EAtom _) = True
 isAtom _         = False
 
-data Atom t   = AVar t
+data Atom t   = AVar (Var t)
               | ANum Integer
               | ADec Double
               | AChr Char
+              | AUnknown Int t
   deriving (Data, Eq, Ord, Show, Typeable)
 
-isVar (AVar _) = True
-isVar _        = False
 
 data Branch t = BCon t [t] (Expr t)
               | BDef t (Expr t)
   deriving (Data, Eq, Ord, Show, Typeable)
 
-data Obj t    = OFun [t] (Expr t)
-              | OPap t [Atom t]   
-              | OCon t [Atom t]        
-              | OThunk (Expr t)
+data Obj t    =   -- args, size, body
+                OFun [t]   Int   (Expr t)
+              | OPap t [Atom t]
+              | OCon t [Atom t]
+                    -- free vars, size, body
+              | OThunk [Atom t]   Int   (Expr t)
               | OBlackhole
               | OOpt (Atom t) [Setting t]
   deriving (Data, Eq, Ord, Show, Typeable)

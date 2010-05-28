@@ -12,6 +12,8 @@ import Control.Applicative hiding ((<|>), many)
 
 import Parser.SugarTree
 
+import Shared.Primitives
+
 
 -- The reserved operators
 operators :: [String]
@@ -84,11 +86,12 @@ expr :: P (Expr String)
 expr = buildExpressionParser table expr'
   where
     table = [ map (op AssocRight) [".",".."]
-            , map (op AssocLeft) ["*","/","%"]
-            , map (op AssocLeft) ["+","-"]
-            , map (op AssocRight) ["++", ":"]
-            , map (op AssocNone) ["<","<=","==",">=",">"]
-            , map (op AssocRight) ["&&"]
+            , map (op AssocRight) [":","++"]
+            ]
+         ++ map 
+                (map (\prim -> op (toParsecAssoc prim) (opDesc prim))) 
+                priorities
+         ++ [ map (op AssocRight) ["&&"]
             , map (op AssocRight) ["||"]
             , map (dollar AssocRight) ["$"]
             ]
