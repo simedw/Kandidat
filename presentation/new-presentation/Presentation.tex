@@ -138,7 +138,7 @@ Daniel Gustafsson \and Dan Rosén}
 \begin{frame}
 \begin{figure}[H]
 \centering
-    \includegraphics{img/interface.png} 
+    \includegraphics{img/draw.pdf}
 \end{figure}
 
 \end{frame}
@@ -146,9 +146,9 @@ Daniel Gustafsson \and Dan Rosén}
 \begin{frame}[fragile]
 \centering
 \begin{tabular}{ m{3.5cm} m{0.5cm} m{5cm} }
-    \verb|"sin(x) + x * 5"| &  $\Rightarrow$
+    \verb|"sin(x) + x * 0.5"| &  $\Rightarrow$
     &
-	\tree{sin}{+}{*}{x}{5}
+	\tree{sin}{+}{*}{x}{0.5}
 \\
 \end{tabular}
 \end{frame}
@@ -156,9 +156,9 @@ Daniel Gustafsson \and Dan Rosén}
 \begin{frame}[fragile]
 \centering
 \begin{tabular}{ m{3.5cm} m{0.5cm} m{5cm} }
-    \verb|"sin(x) + x * 5"| & $\Rightarrow$
+    \verb|"sin(x) + x * 0.5"| & $\Rightarrow$
     &
-	\tree{Sin}{Add}{Mul}{Var}{Num 5}
+	\tree{Sin}{Add}{Mul}{Var}{Num 0.5}
 \\
 \end{tabular}
 \end{frame}
@@ -166,7 +166,7 @@ Daniel Gustafsson \and Dan Rosén}
 \begin{frame}[fragile]
 \centering
 \begin{tabular}{ m{10cm} }
-\tree{Sin}{Add}{Mul}{Var}{Num 5} \\
+\tree{Sin}{Add}{Mul}{Var}{Num 0.5} \\
 \begin{codeEx}
 eval :: Expr -> Double -> Double
 eval (Add l r) x = eval l x + eval r x 
