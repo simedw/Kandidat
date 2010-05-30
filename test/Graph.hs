@@ -1,7 +1,7 @@
 {-# LANGUAGE GADTs #-}
 module Graph where
 
-import Data.Char (isSpace)
+import Data.Char (isSpace, isNumber)
 
 import System.Environment
 import System.Exit
@@ -42,9 +42,8 @@ convertD :: SValue String -> Double
 convertD (SCon "D#" [SAtom (ADec d)]) = d
 
 data PExpr
-    = Add PExpr PExpr
-    | Mul PExpr PExpr
-    | Sin PExpr
+    = Bin String PExpr PExpr
+    | Uno String PExpr
     | Var
     | Lit Double
 
@@ -53,32 +52,39 @@ pretty e = unwords (pretty' e)
 
 pretty' :: PExpr -> [String]
 pretty' e = case e of
-    Add e1 e2 -> pretty' e1 ++ pretty' e2 ++ ["+"]
-    Mul e1 e2 -> pretty' e1 ++ pretty' e2 ++ ["*"]
-    Sin e     -> pretty' e  ++ ["sin"]
+    Bin s e1 e2 -> pretty' e1 ++ pretty' e2 ++ [s]
+    Uno f e     -> pretty' e  ++ [f]
     Var       -> ["x"]
     Lit d     -> [show d]
 
 data Tok
     = TX
     | TSin
-    | TPlus
+    | TCos
+    | TAdd
+    | TSub
     | TMul
+    | TDiv
     | TOpenP
     | TCloseP
     | TLit Double
-    deriving (Eq)
+    deriving (Eq, Show)
 
 lexx :: String -> Maybe [Tok]
 lexx str = case dropWhile isSpace str of
     [] -> return []
     's':'i':'n':' ' :rest -> (TSin :) `fmap` lexx rest
-    '+' : rest -> (TPlus :) `fmap` lexx rest
+    's':'i':'n':'(' :rest -> (\xs -> TSin : TOpenP : xs) `fmap` lexx rest
+    'c':'o':'s':' ' :rest -> (TCos :) `fmap` lexx rest
+    'c':'o':'s':'(' :rest -> (\xs -> TCos : TOpenP : xs) `fmap` lexx rest
+    '+' : rest -> (TAdd :) `fmap` lexx rest
+    '-' : rest -> (TSub :) `fmap` lexx rest
     '*' : rest -> (TMul :) `fmap` lexx rest
+    '/' : rest -> (TDiv :) `fmap` lexx rest
     '(' : rest -> (TOpenP :) `fmap` lexx rest
     ')' : rest -> (TCloseP :) `fmap` lexx rest
     'x' : rest -> (TX :) `fmap` lexx rest
-    str' -> let (mnum, rest) = break isSpace str'
+    str' -> let (mnum, rest) = break (\x -> not $ isNumber x || x == '.') str'
         in case filter (null . snd) $ reads mnum of
                 [(d, _)] -> (TLit d :) `fmap` lexx rest
                 _ -> Nothing
@@ -145,12 +151,14 @@ type PP = P Tok PExpr
 expr :: PP
 expr = chainLeft plusP termP
     where
-      plusP = this TPlus >> return Add
+      plusP = do { this TAdd ; return (Bin "+") }
+         +++  do { this TSub ; return (Bin "-") }
 
 termP :: PP
 termP = chainLeft mulP facP
   where
-    mulP = this TMul >> return Mul
+    mulP = do { this TMul ; return (Bin "*") }
+       +++ do { this TDiv ; return (Bin "/") }
 
 facP :: PP
 facP = sinus +++ expr'
@@ -164,10 +172,8 @@ expr' = do { this TX ; return Var }
            ; return e}
 
 sinus :: PP
-sinus = do
-    this TSin
-    e <- expr'
-    return $ Sin e
+sinus = do { this TSin ; e <- expr' ; return $ Uno "sin" e}
+    +++ do { this TCos ; e <- expr' ; return $ Uno "cos" e}
 
 dblP :: PP
 dblP = do 

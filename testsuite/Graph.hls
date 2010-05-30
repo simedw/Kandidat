@@ -17,9 +17,12 @@ parse xs = case parse' (words xs) Nil of
 parse' xs stack = case xs of
     { Nil -> stack
     ; Cons item rest 
-       -> if (strEq item "+") (parse' rest (applyBin (\x y . Add x y) stack))
-        $ if (strEq item "*") (parse' rest (applyBin (\x y . Mul x y) stack))
+       -> if (strEq item "+") (parse' rest (applyBin (\x y . Add y x) stack))
+        $ if (strEq item "*") (parse' rest (applyBin (\x y . Mul y x) stack))
+        $ if (strEq item "-") (parse' rest (applyBin (\x y . Sub y x) stack))
+        $ if (strEq item "/") (parse' rest (applyBin (\x y . Div y x) stack))
         $ if (strEq item "sin") (parse' rest (applyUn (\x . Sin x) stack))
+        $ if (strEq item "cos") (parse' rest (applyUn (\x . Cos x) stack))
         $ if (strEq item "x") (parse' rest (Var : stack))
         $ parse' rest (parseNum item : stack)
     };
@@ -81,9 +84,12 @@ splitAt' p xs ys = case xs of
 eval expr val = case expr of
     { Add e1 e2 -> eval e1 val +. eval e2 val
     ; Mul e1 e2 -> eval e1 val *. eval e2 val
+    ; Sub e1 e2 -> eval e1 val -. eval e2 val
+    ; Div e1 e2 -> eval e1 val /. eval e2 val
     ; Lit lit   -> lit
     ; Var       -> val
     ; Sin e     -> sin (eval e val)
+    ; Cos e     -> cos (eval e val)
     };
 
 construct = case getDoubleList of
